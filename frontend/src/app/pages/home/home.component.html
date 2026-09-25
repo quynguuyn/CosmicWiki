@@ -264,12 +264,13 @@
         Bản tin thiên văn hàng tuần của CosmicWiki — sự kiện thiên thể sắp tới, nghiên cứu mới nhất, và các phát hiện từ
         vành đai viễn vọng.
       </p>
-      <form class="newsletter-form" (submit)="$event.preventDefault()">
-        <input type="email" placeholder="observatory@cosmicwiki.space" class="newsletter-input font-body-md" />
+      <form class="newsletter-form" (submit)="$event.preventDefault(); subscribeNewsletter(newsletterEmail.value)">
+        <input #newsletterEmail type="email" required placeholder="observatory@cosmicwiki.space" class="newsletter-input font-body-md" />
         <button type="submit" class="btn-primary font-label-md">
           Đăng ký quan trắc
         </button>
       </form>
+      <p *ngIf="newsletterSubmitted" class="newsletter-note font-label-sm">Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.</p>
       <p class="newsletter-note font-label-sm">Không spam • Hủy đăng ký bất kỳ lúc nào • Dữ liệu được mã hóa
         quantum-grade</p>
     </div>

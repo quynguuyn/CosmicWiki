@@ -11,6 +11,9 @@ public static class Permissions
     public const string ProductRead = "product.read";
     public const string ProductWrite = "product.write";
 
+    public const string StoryRead = "story.read";
+    public const string StoryWrite = "story.write";
+
     public const string DiscoveryRead = "discovery.read";
     public const string DiscoveryWrite = "discovery.write";
 

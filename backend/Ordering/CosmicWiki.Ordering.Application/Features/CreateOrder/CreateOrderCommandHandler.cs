@@ -43,7 +43,12 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
                 throw new InvalidOperationException(
                     "The Idempotency-Key was already used for a different order request.");
 
-            return new(existing.Id, existing.PaymentIntentId ?? string.Empty, existing.TotalAmount, existing.Currency, existing.Status.ToString());
+            return new(
+                existing.Id,
+                existing.PaymentIntentId ?? string.Empty,
+                existing.TotalAmount,
+                existing.Currency,
+                existing.Status.ToString());
         }
 
         var snapshots = new List<(CreateOrderLineRequest Request, ProductSnapshot Product)>();
@@ -84,7 +89,13 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
             _outbox.Add(new OrderCreatedIntegrationEvent(
                 Guid.NewGuid(), 1, DateTime.UtcNow, order.Id, order.CustomerId, order.TotalAmount, order.Currency), "cosmicwiki.ordering");
             await _orders.SaveChangesAsync(cancellationToken);
-            return new(order.Id, intent.PaymentIntentId, order.TotalAmount, order.Currency, order.Status.ToString());
+            return new(
+                order.Id,
+                intent.PaymentIntentId,
+                order.TotalAmount,
+                order.Currency,
+                order.Status.ToString(),
+                intent.ClientSecret);
         }
         catch
         {

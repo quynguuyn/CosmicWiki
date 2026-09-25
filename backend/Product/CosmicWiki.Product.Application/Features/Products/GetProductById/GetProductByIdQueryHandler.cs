@@ -44,6 +44,14 @@ public sealed class GetProductByIdQueryHandler
         if (product is null)
             return null;
 
+        var images = product.Images
+            .OrderBy(x => x.DisplayOrder)
+            .Select(x => new ProductImageResponse(
+                x.Id,
+                x.Url,
+                x.DisplayOrder))
+            .ToList();
+
         var result = new ProductResponse(
             product.Id,
             product.SKU,
@@ -55,12 +63,10 @@ public sealed class GetProductByIdQueryHandler
             product.StockQuantity,
             product.Status,
             product.CategoryId,
+            images,
             product.Images
                 .OrderBy(x => x.DisplayOrder)
-                .Select(x => new ProductImageResponse(
-                    x.Id,
-                    x.Url,
-                    x.DisplayOrder))
+                .SelectMany(x => x.Urls)
                 .ToList());
 
         var ttl = TimeSpan.FromSeconds(_cachingOptions.ProductDetailTtlSeconds);

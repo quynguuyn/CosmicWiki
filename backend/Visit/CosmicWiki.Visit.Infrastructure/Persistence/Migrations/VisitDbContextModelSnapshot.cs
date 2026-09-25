@@ -23,6 +23,182 @@ namespace CosmicWiki.Visit.Infrastructure.Persistence.Migrations
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CosmicWiki.Visit.Domain.Entities.Exhibition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("CATEGORY");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("NCLOB")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("NVARCHAR2(2000)")
+                        .HasColumnName("IMAGE_URL");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("BOOLEAN")
+                        .HasColumnName("IS_PUBLISHED");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("NVARCHAR2(32)")
+                        .HasColumnName("NUMBER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)")
+                        .HasColumnName("TITLE");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATED_AT_UTC");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsPublished", "DisplayOrder");
+
+                    b.ToTable("EXHIBITIONS", "COSMICWIKI_VISIT");
+                });
+
+            modelBuilder.Entity("CosmicWiki.Visit.Domain.Entities.Faq", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("NCLOB")
+                        .HasColumnName("ANSWER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("BOOLEAN")
+                        .HasColumnName("IS_PUBLISHED");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)")
+                        .HasColumnName("QUESTION");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATED_AT_UTC");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsPublished", "DisplayOrder");
+
+                    b.ToTable("FAQS", "COSMICWIKI_VISIT");
+                });
+
+            modelBuilder.Entity("CosmicWiki.Visit.Domain.Entities.VisitEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("ACTION");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("NCLOB")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<DateTime>("EventDateUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("EVENT_DATE_UTC");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("BOOLEAN")
+                        .HasColumnName("IS_PUBLISHED");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("LOCATION");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)")
+                        .HasColumnName("NAME");
+
+                    b.Property<string>("Specification")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("SPECIFICATION");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<string>("StatusType")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("STATUS_TYPE");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATED_AT_UTC");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsPublished", "EventDateUtc");
+
+                    b.ToTable("EVENTS", "COSMICWIKI_VISIT");
+                });
+
             modelBuilder.Entity("CosmicWiki.Visit.Domain.Entities.VisitRequest", b =>
                 {
                     b.Property<Guid>("Id")

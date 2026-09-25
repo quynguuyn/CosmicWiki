@@ -16,4 +16,12 @@ export interface Product {
   status: string;
   categoryId: string;
   images: ProductImage[];
+  urls?: string[];
+}
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
 }

@@ -13,4 +13,5 @@ public sealed record ProductResponse(
     int StockQuantity,
     ProductStatus Status,
     Guid CategoryId,
-    IReadOnlyCollection<ProductImageResponse> Images);
+    IReadOnlyCollection<ProductImageResponse> Images,
+    IReadOnlyCollection<string>? Urls = null);

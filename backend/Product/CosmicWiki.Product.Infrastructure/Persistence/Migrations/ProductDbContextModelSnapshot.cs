@@ -141,6 +141,11 @@ namespace CosmicWiki.Product.Infrastructure.Persistence.Migrations
                         .HasColumnType("NVARCHAR2(2000)")
                         .HasColumnName("URL");
 
+                    b.Property<string>("Urls")
+                        .IsRequired()
+                        .HasColumnType("CLOB")
+                        .HasColumnName("URLS");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId", "DisplayOrder");

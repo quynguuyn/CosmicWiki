@@ -1,0 +1,21 @@
+@CosmicWiki.Newsletter.Api_HostAddress = http://localhost:5009
+
+POST {{CosmicWiki.Newsletter.Api_HostAddress}}/api/newsletter/subscriptions
+Content-Type: application/json
+
+{
+  "email": "reader@example.com"
+}
+
+###
+
+GET {{CosmicWiki.Newsletter.Api_HostAddress}}/api/newsletter/confirm/{token}
+
+###
+
+POST {{CosmicWiki.Newsletter.Api_HostAddress}}/api/newsletter/unsubscribe
+Content-Type: application/json
+
+{
+  "token": "{token}"
+}

@@ -12,6 +12,10 @@ public sealed class CachingOptions
     /// <summary>TTL cho cache GET /products (giây). Mặc định 30s.</summary>
     public int ProductListTtlSeconds { get; init; } = 30;
 
+    public int StoryDetailTtlSeconds { get; init; } = 60;
+
+    public int StoryListTtlSeconds { get; init; } = 30;
+
     /// <summary>TTL cho cache chi tiết Catalog (giây). Mặc định 120s.</summary>
     public int CatalogDetailTtlSeconds { get; init; } = 120;
 

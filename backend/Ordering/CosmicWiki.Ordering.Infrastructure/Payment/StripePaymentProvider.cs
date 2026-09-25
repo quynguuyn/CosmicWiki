@@ -53,10 +53,11 @@ public sealed class StripePaymentProvider(
         var root = document.RootElement;
         var paymentIntentId = root.GetProperty("id").GetString();
         var status = root.GetProperty("status").GetString();
+        var clientSecret = root.GetProperty("client_secret").GetString();
         if (string.IsNullOrWhiteSpace(paymentIntentId) || string.IsNullOrWhiteSpace(status))
             throw new InvalidOperationException("Stripe returned an incomplete payment intent.");
 
-        return new PaymentIntentResult(paymentIntentId, status);
+        return new PaymentIntentResult(paymentIntentId, status, clientSecret);
     }
 
     private static bool IsZeroDecimalCurrency(string currency) =>

@@ -23,6 +23,8 @@ public static class DependencyInjection
             services.AddSingleton<ICacheStore, NoOpCacheStore>();
             services.AddSingleton<IProductCache, ProductCache>();
             services.AddSingleton<IStarCache, StarCache>();
+            services.AddSingleton<IStoryCache, StoryCache>();
+            services.AddSingleton<ICategoryCache, CategoryCache>();
             return services;
         }
 
@@ -34,6 +36,7 @@ public static class DependencyInjection
         services.AddSingleton<ICacheStore, JsonCacheStore>();
         services.AddSingleton<IProductCache, ProductCache>();
         services.AddSingleton<IStarCache, StarCache>();
+        services.AddSingleton<IStoryCache, StoryCache>();
         services.AddSingleton<ICategoryCache, CategoryCache>();
         return services;
     }

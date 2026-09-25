@@ -82,6 +82,9 @@ public static class AuthDataSeeder
             (Permissions.ProductRead, "Read Product"),
             (Permissions.ProductWrite, "Write Product"),
 
+            (Permissions.StoryRead, "Read Stories"),
+            (Permissions.StoryWrite, "Write Stories"),
+
             (Permissions.DiscoveryRead, "Read Discovery"),
             (Permissions.DiscoveryWrite, "Write Discovery"),
 
@@ -178,6 +181,7 @@ public static class AuthDataSeeder
         {
             "catalog.read",
             "product.read",
+            Permissions.StoryRead,
             "discovery.read",
             "visit.read",
             Permissions.OrderingWrite

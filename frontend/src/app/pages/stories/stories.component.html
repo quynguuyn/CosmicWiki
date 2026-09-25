@@ -63,19 +63,19 @@
               </span>
 
               <span class="era-badge">
-                {{ heroStory.era }}
+                {{ heroStory?.era }}
               </span>
 
             </div>
 
 
             <h1>
-              {{ heroStory.title }}
+              {{ heroStory?.title }}
             </h1>
 
 
             <p class="hero-description">
-              {{ heroStory.description }}
+              {{ heroStory?.description }}
             </p>
 
 
@@ -89,7 +89,7 @@
 
               <div>
                 <span class="author-name">
-                  {{ heroStory.author }}
+                  {{ heroStory?.author }}
                 </span>
 
                 <span class="author-org">
@@ -105,7 +105,7 @@
                 </span>
 
                 <span>
-                  {{ heroStory.readTime }} phút đọc
+                  {{ heroStory?.readTime }} phút đọc
                 </span>
               </div>
 
@@ -152,7 +152,7 @@
 
             <div class="hero-image-frame">
 
-              <img [src]="heroStory.image" [alt]="heroStory.alt" />
+              <img [src]="heroStory?.image" [alt]="heroStory?.alt" />
 
               <div class="image-gradient"></div>
 
@@ -623,7 +623,7 @@
 
         <div class="reader-image">
 
-          <img [src]="heroStory.image" alt="Voyager Golden Record archival artifact" />
+          <img [src]="heroStory?.image" alt="Voyager Golden Record archival artifact" />
 
           <div class="reader-image-caption">
 

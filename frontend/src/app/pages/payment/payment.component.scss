@@ -6,4 +6,8 @@
 .payment-details div { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid var(--outline-variant); }
 .payment-details span { color: var(--on-surface-variant); } .payment-details strong { text-align: right; word-break: break-all; } .status { color: var(--tertiary); }
 .error { color: var(--error) !important; } .state { padding: var(--space-2xl) 0; }
+.btn-secondary { margin: 0 var(--space-sm) var(--space-md); }
+.stripe-payment { margin: var(--space-xl) 0; text-align: left; }
+.stripe-payment h2 { margin-bottom: var(--space-md); }
+.stripe-element { padding: var(--space-md) 0; }
 @media (max-width: 600px) { .commerce-page { padding: var(--space-xl) var(--gutter-mobile); } .payment-card { padding: var(--space-lg); } .payment-details div { flex-direction: column; } .payment-details strong { text-align: left; } }
