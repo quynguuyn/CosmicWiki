@@ -8,4 +8,8 @@ export class ProductService {
   getProducts(page = 1, pageSize = 50) {
     return this.api.getProducts(page, pageSize);
   }
+
+  getCategories() {
+    return this.api.getCategories();
+  }
 }

@@ -7,9 +7,13 @@ namespace CosmicWiki.Visit.Infrastructure.Persistence;
 public sealed class VisitDbContext(DbContextOptions<VisitDbContext> options) : DbContext(options), IVisitUnitOfWork
 {
     public DbSet<VisitRequest> VisitRequests => Set<VisitRequest>();
+    public DbSet<Exhibition> Exhibitions => Set<Exhibition>();
+    public DbSet<VisitEvent> Events => Set<VisitEvent>();
+    public DbSet<Faq> Faqs => Set<Faq>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("COSMICWIKI_VISIT");
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(VisitDbContext).Assembly);
         var entity = modelBuilder.Entity<VisitRequest>();
         entity.ToTable("VISIT_REQUESTS");
         entity.HasKey(x => x.Id);

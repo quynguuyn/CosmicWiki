@@ -117,6 +117,26 @@ services:
       redis:
         condition: service_healthy
 
+  stories:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Stories/CosmicWiki.Stories.Api/CosmicWiki.Stories.Api.csproj
+        DLL: CosmicWiki.Stories.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__StoriesDatabase: ${STORIES_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_STORIES;******;Data Source=oracle:1521/FREEPDB1}
+      Jwt__PublicKeyPath: Keys/public_key.pem
+      Caching__Enabled: "true"
+      Caching__Redis__ConnectionString: redis:6379
+    depends_on:
+      oracle:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   discovery:
     build:
       context: ./backend
@@ -146,6 +166,9 @@ services:
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
       InternalOrdering__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
+      PaymentProvider__Mode: ${PAYMENT_PROVIDER_MODE:-disabled}
+      PaymentProvider__SecretKey: ${STRIPE_SECRET_KEY:-}
+      PaymentProvider__ApiBaseUrl: https://api.stripe.com
     depends_on:
       oracle:
         condition: service_healthy
@@ -191,6 +214,22 @@ services:
       oracle:
         condition: service_healthy
 
+  newsletter:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Newsletter/CosmicWiki.Newsletter.Api/CosmicWiki.Newsletter.Api.csproj
+        DLL: CosmicWiki.Newsletter.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__NewsletterDatabase: ${NEWSLETTER_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_NEWSLETTER;Password=change-me;Data Source=oracle:1521/FREEPDB1}
+      Newsletter__ConfirmationBaseUrl: ${NEWSLETTER_CONFIRMATION_BASE_URL:-http://localhost:5000/api/newsletter/confirm}
+    depends_on:
+      oracle:
+        condition: service_healthy
+
   gateway:
     build:
       context: ./backend
@@ -204,25 +243,31 @@ services:
       ReverseProxy__Clusters__auth-cluster__Destinations__auth-api__Address: http://auth:8080/
       ReverseProxy__Clusters__catalog-cluster__Destinations__catalog-api__Address: http://catalog:8080/
       ReverseProxy__Clusters__product-cluster__Destinations__product-api__Address: http://product:8080/
+      ReverseProxy__Clusters__stories-cluster__Destinations__stories-api__Address: http://stories:8080/
       ReverseProxy__Clusters__discovery-cluster__Destinations__discovery-api__Address: http://discovery:8080/
       ReverseProxy__Clusters__ordering-cluster__Destinations__ordering-api__Address: http://ordering:8080/
       ReverseProxy__Clusters__payments-cluster__Destinations__payments-api__Address: http://payments:8080/
       ReverseProxy__Clusters__visit-cluster__Destinations__visit-api__Address: http://visit:8080/
+      ReverseProxy__Clusters__newsletter-cluster__Destinations__newsletter-api__Address: http://newsletter:8080/
     ports:
       - "${GATEWAY_PORT:-5000}:8080"
     depends_on:
       - auth
       - catalog
       - product
+      - stories
       - discovery
       - ordering
       - payments
       - visit
+      - newsletter
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
     ports:
       - "${FRONTEND_PORT:-4200}:80"
     depends_on:

@@ -15,6 +15,7 @@ export interface CreateOrderResult {
   totalAmount: number;
   currency: string;
   status: string;
+  clientSecret?: string | null;
 }
 
 export interface OrderStatus {

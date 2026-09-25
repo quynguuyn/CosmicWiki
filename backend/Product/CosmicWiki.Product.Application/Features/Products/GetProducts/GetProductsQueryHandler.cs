@@ -84,6 +84,14 @@ public sealed class GetProductsQueryHandler
     private static ProductResponse Map(
         CosmicWiki.Product.Domain.Entities.Product product)
     {
+        var images = product.Images
+            .OrderBy(x => x.DisplayOrder)
+            .Select(x => new ProductImageResponse(
+                x.Id,
+                x.Url,
+                x.DisplayOrder))
+            .ToList();
+
         return new ProductResponse(
             product.Id,
             product.SKU,
@@ -95,12 +103,10 @@ public sealed class GetProductsQueryHandler
             product.StockQuantity,
             product.Status,
             product.CategoryId,
+            images,
             product.Images
                 .OrderBy(x => x.DisplayOrder)
-                .Select(x => new ProductImageResponse(
-                    x.Id,
-                    x.Url,
-                    x.DisplayOrder))
+                .SelectMany(x => x.Urls)
                 .ToList());
     }
 }

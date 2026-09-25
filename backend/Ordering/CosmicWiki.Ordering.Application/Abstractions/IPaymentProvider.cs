@@ -1,6 +1,9 @@
 namespace CosmicWiki.Ordering.Application.Abstractions;
 
-public sealed record PaymentIntentResult(string PaymentIntentId, string Status);
+public sealed record PaymentIntentResult(
+    string PaymentIntentId,
+    string Status,
+    string? ClientSecret = null);
 
 public interface IPaymentProvider
 {

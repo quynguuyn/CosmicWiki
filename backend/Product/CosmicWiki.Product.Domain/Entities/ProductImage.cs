@@ -17,12 +17,16 @@ public sealed class ProductImage : Entity<Guid>
     {
         ProductId = productId;
         Url = url;
+        Urls = new[] { url };
         DisplayOrder = displayOrder;
     }
 
     public Guid ProductId { get; private set; }
 
     public string Url { get; private set; }
+
+    public IReadOnlyCollection<string> Urls { get; private set; } =
+        Array.Empty<string>();
 
     public int DisplayOrder { get; private set; }
 
@@ -60,6 +64,7 @@ public sealed class ProductImage : Entity<Guid>
                 nameof(displayOrder));
 
         Url = url.Trim();
+        Urls = new[] { Url };
         DisplayOrder = displayOrder;
     }
 }

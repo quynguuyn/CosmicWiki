@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.31" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.26301" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CosmicWiki.Stories.Application\CosmicWiki.Stories.Application.csproj" />
+    <ProjectReference Include="..\CosmicWiki.Stories.Domain\CosmicWiki.Stories.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -274,7 +274,31 @@
         <!-- Image -->
         <div class="quick-view-image">
 
-          <img [src]="selectedProduct.image" [alt]="selectedProduct.title">
+          <div class="detail-main-image">
+            <img [src]="selectedProduct.image" [alt]="selectedProduct.title">
+          </div>
+
+          <div class="image-thumbnails image-thumbnails-side" *ngIf="detailImages.length > 1">
+            <button
+              type="button"
+              *ngFor="let image of detailImages | slice:0:2"
+              [class.active]="selectedProduct.image === image"
+              (click)="selectProductImage(image)"
+              [attr.aria-label]="'Xem ảnh ' + selectedProduct.title">
+              <img [src]="image" [alt]="selectedProduct.title">
+            </button>
+          </div>
+
+          <div class="image-thumbnails image-thumbnails-bottom" *ngIf="detailImages.length > 2">
+            <button
+              type="button"
+              *ngFor="let image of detailImages | slice:2:5"
+              [class.active]="selectedProduct.image === image"
+              (click)="selectProductImage(image)"
+              [attr.aria-label]="'Xem ảnh ' + selectedProduct.title">
+              <img [src]="image" [alt]="selectedProduct.title">
+            </button>
+          </div>
 
         </div>
 

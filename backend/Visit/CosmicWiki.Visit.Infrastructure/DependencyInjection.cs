@@ -14,6 +14,9 @@ public static class DependencyInjection
                 ?? throw new InvalidOperationException("VisitDatabase connection string is not configured.")));
         services.AddScoped<IVisitUnitOfWork>(sp => sp.GetRequiredService<VisitDbContext>());
         services.AddScoped<IVisitRequestRepository, VisitRequestRepository>();
+        services.AddScoped<IExhibitionRepository, ExhibitionRepository>();
+        services.AddScoped<IVisitEventRepository, VisitEventRepository>();
+        services.AddScoped<IFaqRepository, FaqRepository>();
         return services;
     }
 }

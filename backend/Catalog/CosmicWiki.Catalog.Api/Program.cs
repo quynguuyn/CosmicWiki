@@ -1,6 +1,7 @@
 using CosmicWiki.Catalog.Infrastructure.Persistence;
 using System.Security.Cryptography;
 using CosmicWiki.Api.Common.Middleware;
+using CosmicWiki.Caching;
 using CosmicWiki.Catalog.Api.Authorization;
 using CosmicWiki.Catalog.Application;
 using CosmicWiki.Messaging.Kafka;
@@ -10,8 +11,8 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCatalogApplication();
-builder.Services.AddCatalogInfrastructure(
-    builder.Configuration);
+builder.Services.AddCatalogInfrastructure(builder.Configuration);
+builder.Services.AddCosmicWikiCaching(builder.Configuration);
 builder.Services.AddKafkaMessaging(builder.Configuration);
 
 builder.Services.AddControllers();
