@@ -1,0 +1,6 @@
+@CosmicWiki.Gateway_HostAddress = http://localhost:5031
+
+GET {{CosmicWiki.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

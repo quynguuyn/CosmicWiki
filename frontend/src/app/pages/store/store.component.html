@@ -1,0 +1,596 @@
+﻿<main class="store-page">
+
+  <!-- ==================== STORE HERO ==================== -->
+  <section class="store-hero cosmic-glass">
+
+    <div class="hero-glow hero-glow-primary"></div>
+    <div class="hero-glow hero-glow-gold"></div>
+
+    <div class="hero-content">
+
+      <div class="hero-kicker">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        <span>CỬA HÀNG HIỆN VẬT & ẤN PHẨM KHÔNG GIAN</span>
+      </div>
+
+      <h1>
+        Cửa Hàng Quà Lưu Niệm Bảo Tàng Vũ Trụ
+      </h1>
+
+      <p class="hero-description">
+        Sở hữu những mảnh ghép đích thực của lịch sử vũ trụ — từ thiên thạch
+        sắt-niken 4.5 tỷ năm tuổi đến các bản phục chế khí cụ thiên văn cổ điển
+        được chứng nhận lưu trữ.
+      </p>
+
+      <!-- Museum Trust Badges -->
+      <div class="trust-grid">
+
+        <div class="trust-item">
+          <span class="material-symbols-outlined gold">
+            verified_user
+          </span>
+
+          <div>
+            <strong>100% Giám định</strong>
+            <span>Chứng thư địa chất quốc tế</span>
+          </div>
+        </div>
+
+        <div class="trust-item">
+          <span class="material-symbols-outlined blue">
+            inventory_2
+          </span>
+
+          <div>
+            <strong>Bảo hiểm Lưu kho</strong>
+            <span>Hộp chân không bảo quản</span>
+          </div>
+        </div>
+
+        <div class="trust-item">
+          <span class="material-symbols-outlined gold">
+            explore
+          </span>
+
+          <div>
+            <strong>Độ hiếm Cấp I</strong>
+            <span>Số lượng phân bổ hữu hạn</span>
+          </div>
+        </div>
+
+        <div class="trust-item">
+          <span class="material-symbols-outlined blue">
+            local_shipping
+          </span>
+
+          <div>
+            <strong>Giao hàng Chuyên biệt</strong>
+            <span>Chống va đập niêm phong</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ==================== FILTER & SORT ==================== -->
+  <section class="filter-toolbar cosmic-glass">
+
+    <div class="category-list">
+
+      <button *ngFor="let category of categories" type="button" class="category-pill"
+        [class.active]="activeCategory === category.value" (click)="setCategory(category.value)">
+        {{ category.label }}
+
+        <span *ngIf="category.value === 'all'">
+          ({{ products.length }})
+        </span>
+      </button>
+
+    </div>
+
+    <div class="sort-wrapper">
+
+      <span class="sort-label">
+        Sắp xếp:
+      </span>
+
+      <div class="select-wrapper">
+        <select [value]="sortMode" (change)="setSort($event)">
+          <option value="newest">
+            Mới nhất trong kho
+          </option>
+
+          <option value="price-asc">
+            Giá tăng dần
+          </option>
+
+          <option value="price-desc">
+            Giá giảm dần
+          </option>
+
+          <option value="rarity">
+            Độ hiếm bảo tàng
+          </option>
+        </select>
+
+        <span class="material-symbols-outlined">
+          expand_more
+        </span>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ==================== PRODUCT GRID ==================== -->
+  <section class="product-grid">
+
+    <article *ngFor="let product of filteredProducts" class="product-card cosmic-glass">
+
+      <!-- Product Badge -->
+      <div class="product-badge">
+        <span class="badge-icon" *ngIf="product.rarity >= 5">
+          <span class="material-symbols-outlined">
+            workspace_premium
+          </span>
+        </span>
+
+        {{ product.badge }}
+      </div>
+
+
+      <!-- Product Image -->
+      <div class="product-image">
+
+        <img [src]="product.image" [alt]="product.title" loading="lazy">
+
+        <div class="image-overlay"></div>
+
+      </div>
+
+
+      <!-- Product Meta -->
+      <div class="product-meta">
+        <span>{{ product.origin }}</span>
+        <span>Mã: {{ product.code }}</span>
+      </div>
+
+
+      <!-- Product Title -->
+      <h3 class="product-title" [title]="product.title">
+        {{ product.title }}
+      </h3>
+
+
+      <!-- Product Description -->
+      <p class="product-description">
+        {{ product.desc }}
+      </p>
+
+
+      <!-- Product Price -->
+      <div class="product-price">
+        <span>Giá lưu trữ:</span>
+
+        <strong>
+          {{ formatCurrency(product.price) }}
+        </strong>
+      </div>
+
+
+      <!-- Product Actions -->
+      <div class="product-actions">
+
+        <button type="button" class="btn-secondary" (click)="openQuickView(product)">
+          Xem chi tiết
+        </button>
+
+        <button type="button" class="btn-primary" (click)="addToCart(product)">
+          <span class="material-symbols-outlined">
+            shopping_bag
+          </span>
+
+          <span>
+            Thêm vào giỏ
+          </span>
+        </button>
+
+      </div>
+
+    </article>
+
+  </section>
+
+
+  <!-- Empty State -->
+  <div *ngIf="filteredProducts.length === 0" class="empty-state cosmic-glass">
+    <span class="material-symbols-outlined">
+      inventory_2
+    </span>
+
+    <h3>Không tìm thấy hiện vật</h3>
+
+    <p>
+      Không có hiện vật nào thuộc danh mục này.
+    </p>
+  </div>
+
+
+  <!-- ==================== CURATORIAL BANNER ==================== -->
+  <section class="curatorial-banner cosmic-glass">
+
+    <div class="curatorial-content">
+
+      <h2>
+        Bảo Tàng Chứng Thực & Niêm Phong Vũ Trụ
+      </h2>
+
+      <p>
+        Mỗi hiện vật mua tại CosmicWiki đều đi kèm Hồ sơ Tọa độ Thiên văn,
+        Thẻ RFID chống giả mạo và Hộp bảo lưu khí trơ bảo đảm không bị oxy hóa
+        hay suy giảm qua hàng thập kỷ.
+      </p>
+
+    </div>
+
+    <div class="curatorial-actions">
+
+      <button type="button" class="btn-outline">
+        Tra cứu Mã định danh RFID
+      </button>
+
+      <button type="button" class="btn-primary large">
+        Quy chuẩn Giám định
+      </button>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- ==================== QUICK VIEW MODAL ==================== -->
+<div class="modal-backdrop" [class.open]="isQuickViewOpen" (click)="closeQuickView()">
+
+  <div class="quick-view-modal cosmic-glass" [class.open]="isQuickViewOpen" (click)="$event.stopPropagation()">
+
+    <button type="button" class="modal-close" aria-label="Đóng" (click)="closeQuickView()">
+      <span class="material-symbols-outlined">
+        close
+      </span>
+    </button>
+
+
+    <ng-container *ngIf="selectedProduct">
+
+      <div class="quick-view-grid">
+
+        <!-- Image -->
+        <div class="quick-view-image">
+
+          <img [src]="selectedProduct.image" [alt]="selectedProduct.title">
+
+        </div>
+
+
+        <!-- Details -->
+        <div class="quick-view-details">
+
+          <div>
+
+            <div class="quick-view-meta">
+
+              <span class="modal-badge">
+                {{ selectedProduct.badge }}
+              </span>
+
+              <span class="modal-code">
+                ID: {{ selectedProduct.code }}
+              </span>
+
+            </div>
+
+
+            <h2>
+              {{ selectedProduct.title }}
+            </h2>
+
+
+            <div class="origin-grid">
+
+              <div>
+                <span>Xuất xứ / Khám phá:</span>
+                <strong>
+                  {{ selectedProduct.origin }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Kỷ nguyên / Niên đại:</span>
+                <strong>
+                  {{ selectedProduct.epoch }}
+                </strong>
+              </div>
+
+            </div>
+
+
+            <p class="modal-description">
+              {{ selectedProduct.desc }}
+            </p>
+
+          </div>
+
+
+          <div class="modal-bottom">
+
+            <div class="modal-price">
+
+              <span>Đơn giá lưu trữ:</span>
+
+              <strong>
+                {{ formatCurrency(selectedProduct.price) }}
+              </strong>
+
+            </div>
+
+            <button type="button" class="btn-primary modal-cart-button" (click)="addToCart(selectedProduct)">
+              <span class="material-symbols-outlined">
+                shopping_bag
+              </span>
+
+              Thêm vào giỏ hàng ngay
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </ng-container>
+
+  </div>
+</div>
+
+
+<!-- ==================== CART BACKDROP ==================== -->
+<div class="cart-backdrop" [class.open]="isCartOpen" (click)="closeCart()"></div>
+
+
+<!-- ==================== CART DRAWER ==================== -->
+<aside class="cart-drawer" [class.open]="isCartOpen">
+
+  <div class="cart-header">
+
+    <div class="cart-title">
+
+      <span class="material-symbols-outlined">
+        shopping_bag
+      </span>
+
+      <h2>
+        Giỏ Hiện Vật Vũ Trụ
+      </h2>
+
+      <span class="cart-count">
+        {{ cartCount }} món
+      </span>
+
+    </div>
+
+    <button type="button" class="drawer-close" (click)="closeCart()">
+      <span class="material-symbols-outlined">
+        close
+      </span>
+    </button>
+
+  </div>
+
+
+  <!-- Cart Items -->
+  <div class="cart-items">
+
+    <div *ngFor="let item of cart; let i = index" class="cart-item cosmic-glass">
+
+      <img [src]="item.image" [alt]="item.title">
+
+      <div class="cart-item-info">
+
+        <h4>
+          {{ item.title }}
+        </h4>
+
+        <div class="cart-item-bottom">
+
+          <strong>
+            {{ formatCurrency(item.price) }}
+          </strong>
+
+          <span>
+            Số lượng: {{ item.qty }}
+          </span>
+
+        </div>
+
+      </div>
+
+      <button type="button" class="remove-item" title="Xóa" (click)="removeFromCart(i)">
+        <span class="material-symbols-outlined">
+          delete
+        </span>
+      </button>
+
+    </div>
+
+
+    <!-- Empty Cart -->
+    <div *ngIf="cart.length === 0" class="empty-cart">
+      <span class="material-symbols-outlined">
+        inventory_2
+      </span>
+
+      <p>
+        Giỏ hiện vật đang trống.
+      </p>
+    </div>
+
+  </div>
+
+
+  <!-- Checkout -->
+  <div class="checkout-section">
+
+    <div class="subtotal">
+
+      <span>
+        Tổng giá trị lưu trữ:
+      </span>
+
+      <strong>
+        {{ formatCurrency(cartSubtotal) }}
+      </strong>
+
+    </div>
+
+
+    <form #checkoutForm="ngForm" (ngSubmit)="submitCheckout()" class="checkout-form">
+
+      <div class="form-field">
+
+        <label>
+          Họ tên Nhà nghiên cứu / Khách phục vụ *
+        </label>
+
+        <input type="text" name="customerName" [(ngModel)]="customerName" required placeholder="GS. Nguyễn Văn An">
+
+      </div>
+
+
+      <div class="form-field">
+
+        <label>
+          Email gửi Hồ sơ Định danh Hiện vật *
+        </label>
+
+        <input type="email" name="customerEmail" [(ngModel)]="customerEmail" required
+          placeholder="an.nguyen@observatory.vn">
+
+      </div>
+
+
+      <div class="form-field">
+
+        <label>
+          Địa chỉ Giao nhận Niêm phong Chuyên biệt *
+        </label>
+
+        <input type="text" name="customerAddress" [(ngModel)]="customerAddress" required
+          placeholder="Tòa nhà Viện Hàn Lâm, Hà Nội">
+
+      </div>
+
+
+      <button type="submit" class="checkout-button" [disabled]="
+          checkoutForm.invalid ||
+          cart.length === 0 ||
+          isCheckoutLoading
+        ">
+
+        <span *ngIf="!isCheckoutLoading">
+          Xác nhận Lưu trữ & Thanh toán
+        </span>
+
+        <span *ngIf="isCheckoutLoading" class="loading-state">
+          <span class="spinner"></span>
+          Đang niêm phong & xác thực hồ sơ...
+        </span>
+
+      </button>
+
+
+      <p class="secure-note">
+
+        <span class="material-symbols-outlined">
+          lock
+        </span>
+
+        Giao dịch được mã hóa lượng tử & bảo vệ bởi Bảo Tàng
+
+      </p>
+
+    </form>
+
+  </div>
+
+</aside>
+
+
+<!-- ==================== SUCCESS MODAL ==================== -->
+<div class="modal-backdrop success-backdrop" [class.open]="isSuccessOpen" (click)="closeSuccessModal()">
+
+  <div class="success-modal cosmic-glass" (click)="$event.stopPropagation()">
+
+    <div class="success-icon">
+
+      <span class="material-symbols-outlined">
+        check
+      </span>
+
+    </div>
+
+    <h3>
+      Đăng Ký Lưu Trữ Thành Công!
+    </h3>
+
+    <p>
+      Hệ thống đã phát hành mã niêm phong hiện vật và chuyển hồ sơ giám định
+      thiên văn tới địa chỉ email của bạn.
+    </p>
+
+
+    <div class="archive-info">
+
+      <p>
+        <span>Mã Lưu Kho:</span>
+        #CW-2025-ARCHIVE-994
+      </p>
+
+      <p>
+        Thời gian xác thực:
+        <strong>Vừa xong</strong>
+      </p>
+
+      <p class="status">
+        Trạng thái: Đã niêm phong chân không
+      </p>
+
+    </div>
+
+
+    <button type="button" class="checkout-button" (click)="closeSuccessModal()">
+      Tiếp tục Khám phá Bảo Tàng
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- Ambient audio control -->
+<button type="button" class="ambient-toggle" [class.active]="isAudioPlaying" (click)="toggleAudio()"
+  title="Bật/Tắt âm thanh môi trường không gian sâu">
+  <span class="material-symbols-outlined">
+    {{ isAudioPlaying ? 'volume_off' : 'graphic_eq' }}
+  </span>
+
+  <span>
+    AMBIENT
+  </span>
+</button>

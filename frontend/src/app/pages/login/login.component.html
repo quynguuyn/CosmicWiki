@@ -1,0 +1,192 @@
+<main class="login-page">
+
+    <!-- Background -->
+    <div class="star-field"></div>
+    <div class="hero-grid-bg"></div>
+
+    <div class="halo halo-primary"></div>
+    <div class="halo halo-secondary"></div>
+
+    <!-- Login -->
+    <section class="login-container">
+
+        <div class="login-card cosmic-glass">
+
+            <!-- Brand -->
+            <div class="brand">
+                <div class="brand-symbol">
+                    <span class="material-symbols-outlined">
+                        auto_awesome
+                    </span>
+                </div>
+
+                <div class="brand-text">
+                    <span class="brand-name">CosmicWiki</span>
+                    <span class="brand-caption">
+                        Explore the universe
+                    </span>
+                </div>
+            </div>
+
+            <!-- Heading -->
+            <div class="login-heading">
+                <span class="eyebrow">
+                    COSMIC ACCESS
+                </span>
+
+                <h1>
+                    Welcome back
+                </h1>
+
+                <p>
+                    Continue your journey through the universe.
+                </p>
+            </div>
+
+            <!-- Form -->
+            <form class="login-form" (ngSubmit)="submit()">
+                <!-- Login Error -->
+                @if (errorMessage) {
+                <div class="login-error">
+                    <span class="material-symbols-outlined">
+                        error
+                    </span>
+
+                    <span>
+                        {{ errorMessage }}
+                    </span>
+                </div>
+                }
+
+                <!-- Username -->
+                <div class="form-group">
+
+                    <label for="username">
+                        Username
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <span class="material-symbols-outlined input-icon">
+                            person
+                        </span>
+
+                        <input id="username" name="username" type="text" [(ngModel)]="username"
+                            placeholder="Enter your username" autocomplete="username" required />
+
+                    </div>
+
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+
+                    <div class="label-row">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <a routerLink="/auth/forgot-password" class="forgot-password">
+                            Forgot password?
+                        </a>
+
+                    </div>
+
+                    <div class="input-wrapper">
+
+                        <span class="material-symbols-outlined input-icon">
+                            lock
+                        </span>
+
+                        <input id="password" name="password" [type]="showPassword ? 'text' : 'password'"
+                            [(ngModel)]="password" placeholder="Enter your password" autocomplete="current-password"
+                            required />
+
+                        <button type="button" class="password-toggle" (click)="togglePassword()" [attr.aria-label]="
+                showPassword
+                  ? 'Hide password'
+                  : 'Show password'
+              ">
+                            <span class="material-symbols-outlined">
+                                {{ showPassword ? 'visibility_off' : 'visibility' }}
+                            </span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- Options -->
+                <div class="form-options">
+
+                    <label class="remember-me">
+
+                        <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
+
+                        <span class="custom-checkbox"></span>
+
+                        <span>
+                            Remember me
+                        </span>
+
+                    </label>
+
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="login-button" [disabled]="isLoading">
+
+                    @if (!isLoading) {
+                    <span>Enter CosmicWiki</span>
+
+                    <span class="material-symbols-outlined">
+                        arrow_forward
+                    </span>
+                    }
+
+                    @if (isLoading) {
+                    <span class="spinner"></span>
+                    <span>Authenticating...</span>
+                    }
+
+                </button>
+
+            </form>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span></span>
+                <p>OR</p>
+                <span></span>
+            </div>
+
+            <!-- Register -->
+            <div class="register-section">
+
+                <span>
+                    Don't have an account?
+                </span>
+
+                <a routerLink="/auth/register">
+                    Create account
+                </a>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <span class="material-symbols-outlined">
+                    public
+                </span>
+
+                <span>
+                    Your gateway to the cosmos
+                </span>
+            </div>
+
+        </div>
+
+    </section>
+
+</main>

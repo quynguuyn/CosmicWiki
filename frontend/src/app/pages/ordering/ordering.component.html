@@ -1,0 +1,20 @@
+<main class="commerce-page">
+  <section class="commerce-hero cosmic-glass">
+    <div class="section-eyebrow font-label-sm"><span class="material-symbols-outlined">receipt_long</span> ORDERING API</div>
+    <h1 class="font-display-xl-mobile">Lập đơn lưu trữ</h1>
+    <p class="font-body-lg">Đơn hàng được tạo qua Ordering API và bảo vệ bằng Idempotency-Key.</p>
+  </section>
+  <section class="checkout-card cosmic-glass">
+    <div class="section-eyebrow font-label-sm">HIỆN VẬT ĐÃ CHỌN</div>
+    <div class="checkout-line" *ngFor="let line of cart.lines()">
+      <span>{{ line.product.name }} × {{ line.quantity }}</span>
+      <strong>{{ line.product.salePrice * line.quantity | number:'1.0-0' }} ₫</strong>
+    </div>
+    <div class="checkout-total"><span>Tổng cộng</span><strong>{{ cart.total | number:'1.0-0' }} ₫</strong></div>
+    <label class="field">Email nhận thông báo trạng thái
+      <input type="email" [(ngModel)]="customerEmail" placeholder="observatory@cosmicwiki.space">
+    </label>
+    <p class="error" *ngIf="error">{{ error }}</p>
+    <div class="actions"><a routerLink="/cart" class="btn-secondary">Quay lại giỏ</a><button class="btn-primary" (click)="submit()" [disabled]="isSubmitting">{{ isSubmitting ? 'Đang tạo đơn...' : 'Tạo đơn hàng' }}</button></div>
+  </section>
+</main>

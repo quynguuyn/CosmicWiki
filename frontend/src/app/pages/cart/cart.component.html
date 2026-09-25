@@ -1,0 +1,41 @@
+<main class="commerce-page">
+  <section class="commerce-hero cosmic-glass">
+    <div class="section-eyebrow font-label-sm"><span class="material-symbols-outlined">shopping_bag</span> KHO LƯU TRỮ CÁ NHÂN</div>
+    <h1 class="font-display-xl-mobile">Giỏ Hiện Vật Vũ Trụ</h1>
+    <p class="font-body-lg">Kiểm tra các hiện vật đã chọn trước khi chuyển sang quy trình lập đơn hàng.</p>
+  </section>
+
+  <section class="commerce-grid">
+    <div class="commerce-list cosmic-glass">
+      <div class="empty-state" *ngIf="cart.lines().length === 0">
+        <span class="material-symbols-outlined">inventory_2</span>
+        <h2 class="font-headline-sm">Giỏ hiện vật đang trống</h2>
+        <a routerLink="/store" class="btn-primary">Khám phá cửa hàng</a>
+      </div>
+      <article class="cart-line" *ngFor="let line of cart.lines()">
+        <img [src]="line.product.images.length > 0 ? line.product.images[0].url : 'assets/images/cosmic-placeholder.svg'" [alt]="line.product.name">
+        <div class="cart-line-content">
+          <span class="font-label-sm">{{ line.product.sku }}</span>
+          <h2 class="font-title-md">{{ line.product.name }}</h2>
+          <strong>{{ formatCurrency(line.product.salePrice) }}</strong>
+        </div>
+        <div class="quantity">
+          <button (click)="cart.setQuantity(line.product.id, line.quantity - 1)">−</button>
+          <span>{{ line.quantity }}</span>
+          <button (click)="cart.setQuantity(line.product.id, line.quantity + 1)">+</button>
+        </div>
+        <button class="remove" (click)="cart.remove(line.product.id)" aria-label="Xóa">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </article>
+    </div>
+
+    <aside class="summary cosmic-glass">
+      <div class="section-eyebrow font-label-sm">TÓM TẮT ĐƠN HÀNG</div>
+      <div class="summary-row"><span>Số hiện vật</span><strong>{{ cart.count }}</strong></div>
+      <div class="summary-row total"><span>Tạm tính</span><strong>{{ formatCurrency(cart.total) }}</strong></div>
+      <a routerLink="/ordering" class="btn-primary full" [class.disabled]="cart.lines().length === 0">Tiếp tục lập đơn</a>
+      <a routerLink="/store" class="btn-secondary full">Tiếp tục sưu tầm</a>
+    </aside>
+  </section>
+</main>

@@ -1,0 +1,13 @@
+@CosmicWiki.Visit.Api_HostAddress = http://localhost:5094
+
+POST {{CosmicWiki.Visit.Api_HostAddress}}/api/visit/requests
+Content-Type: application/json
+
+{
+  "name": "Observatory visitor",
+  "email": "visitor@example.com",
+  "requestedDateUtc": "2030-01-01T18:00:00Z",
+  "partySize": 2,
+  "notes": "Wheelchair access requested"
+}
+Accept: application/json

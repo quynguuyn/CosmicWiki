@@ -1,0 +1,505 @@
+<main class="library-page">
+
+    <!-- HERO -->
+    <section class="hero-section">
+
+        <div class="hero-halo hero-halo-primary"></div>
+        <div class="hero-halo hero-halo-tertiary"></div>
+
+        <div class="hero-copy">
+
+            <div class="classification-badge">
+                <span class="status-dot"></span>
+
+                <span>
+                    VIỆN NGHIÊN CỨU &amp; QUAN SÁT VŨ TRỤ • KHO LƯU TRỮ VĨ MÔ
+                </span>
+            </div>
+
+            <h1 class="display-xl">
+                Kho Lưu Trữ Thiên Hà Kỹ Thuật Số
+            </h1>
+
+            <p class="body-lg hero-description">
+                Hệ thống biên mục tương tác hiển thị hơn 1,248 thực thể vũ trụ,
+                quang phổ thiên thể và dữ liệu viễn thám từ các mạng lưới đài
+                thiên văn mặt đất và kính không gian.
+            </p>
+
+        </div>
+
+        <!-- LIVE TELEMETRY -->
+        <div class="telemetry-bar">
+
+            <div class="telemetry-item">
+                <span class="material-symbols-outlined primary-icon">
+                    auto_awesome
+                </span>
+
+                <div>
+                    <div class="label-sm muted">
+                        Tổng số thực thể chỉ mục
+                    </div>
+
+                    <div class="title-md">
+                        1,248 thiên thể
+                    </div>
+                </div>
+            </div>
+
+            <div class="telemetry-item">
+                <span class="material-symbols-outlined tertiary-icon">
+                    radar
+                </span>
+
+                <div>
+                    <div class="label-sm muted">
+                        Kính thiên văn kết nối
+                    </div>
+
+                    <div class="title-md">
+                        JWST &amp; Hubble Online
+                    </div>
+                </div>
+            </div>
+
+            <div class="telemetry-item">
+                <span class="material-symbols-outlined secondary-icon">
+                    explore
+                </span>
+
+                <div>
+                    <div class="label-sm muted">
+                        Tọa độ vòm quan trắc
+                    </div>
+
+                    <div class="title-md">
+                        RA 18h 36m / Dec +38° 47′
+                    </div>
+                </div>
+            </div>
+
+            <div class="telemetry-item">
+                <span class="material-symbols-outlined primary-fixed-icon">
+                    history_toggle_off
+                </span>
+
+                <div>
+                    <div class="label-sm muted">
+                        Cập nhật quang phổ
+                    </div>
+
+                    <div class="title-md">
+                        12 phút trước
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FILTER & SEARCH -->
+    <section class="filter-section">
+
+        <div class="search-sort-row">
+
+            <!-- SEARCH -->
+            <div class="search-box">
+
+                <span class="material-symbols-outlined search-icon">
+                    search
+                </span>
+
+                <input #searchInput type="text" class="library-search"
+                    placeholder="Tìm theo mã biên mục (M31, NGC 1976, Kepler, Barnard 33)..." [value]="searchQuery"
+                    (input)="onSearch($event)" />
+
+                <div class="search-shortcut">
+                    ⌘K
+                </div>
+
+            </div>
+
+
+            <!-- CONTROLS -->
+            <div class="controls">
+
+                <div class="sort-control">
+                    <span class="material-symbols-outlined">
+                        swap_vert
+                    </span>
+
+                    <span>
+                        Sắp xếp: Khoảng cách ánh sáng ↓
+                    </span>
+                </div>
+
+                <div class="view-switcher">
+
+                    <button type="button" class="view-button active" title="Chế độ xem Lưới">
+                        <span class="material-symbols-outlined">
+                            grid_view
+                        </span>
+                    </button>
+
+                    <button type="button" class="view-button" title="Chế độ xem Quang phổ">
+                        <span class="material-symbols-outlined">
+                            format_clear
+                        </span>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CATEGORY CHIPS -->
+        <div class="category-list">
+
+            <button *ngFor="let category of categories" type="button" class="category-chip"
+                [class.active]="selectedCategory === category.label" (click)="selectCategory(category.label)">
+                {{ category.label }} ({{ category.count | number }})
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- CELESTIAL SPECIMENS -->
+    <section class="specimen-grid">
+
+        <article *ngFor="
+        let specimen of filteredSpecimens;
+        trackBy: trackById
+      " class="glass-card specimen-card">
+
+            <!-- IMAGE -->
+            <div class="specimen-image-wrapper">
+
+                <img class="specimen-image" [src]="specimen.image" [alt]="specimen.alt" loading="lazy" />
+
+                <div class="image-gradient"></div>
+
+                <span class="specimen-badge">
+                    {{ specimen.badge }}
+                </span>
+
+            </div>
+
+
+            <!-- CONTENT -->
+            <div class="specimen-content">
+
+                <div class="specimen-distance">
+                    {{ specimen.distance }}
+                </div>
+
+                <h2 class="specimen-title">
+                    {{ specimen.name }}
+                </h2>
+
+                <p class="specimen-description">
+                    {{ specimen.description }}
+                </p>
+
+                <div class="specimen-footer">
+
+                    <span class="specimen-detail">
+                        {{ specimen.detail }}
+                    </span>
+
+                    <button type="button" class="detail-button" (click)="openDossier(specimen)">
+                        <span>
+                            Xem chi tiết
+                        </span>
+
+                        <span class="material-symbols-outlined">
+                            arrow_forward
+                        </span>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- EMPTY STATE -->
+    <div *ngIf="filteredSpecimens.length === 0" class="empty-state glass-card">
+        <span class="material-symbols-outlined">
+            search_off
+        </span>
+
+        <h3>
+            Không tìm thấy thực thể
+        </h3>
+
+        <p>
+            Hãy thử một mã biên mục hoặc danh mục khác.
+        </p>
+    </div>
+
+
+    <!-- PAGINATION -->
+    <div class="pagination-bar">
+
+        <div class="pagination-info label-md">
+            Hiển thị
+            <span class="surface-text">
+                1 - 8
+            </span>
+            trong số
+            <span class="tertiary-text">
+                1,248
+            </span>
+            thực thể vũ trụ đã lập chỉ mục
+        </div>
+
+        <div class="pagination-controls">
+
+            <button type="button" class="pagination-button" [disabled]="currentPage === 1"
+                (click)="setPage(currentPage - 1)">
+                <span class="material-symbols-outlined">
+                    chevron_left
+                </span>
+            </button>
+
+            <button type="button" class="pagination-button" [class.current]="currentPage === 1" (click)="setPage(1)">
+                1
+            </button>
+
+            <button type="button" class="pagination-button" [class.current]="currentPage === 2" (click)="setPage(2)">
+                2
+            </button>
+
+            <button type="button" class="pagination-button" [class.current]="currentPage === 3" (click)="setPage(3)">
+                3
+            </button>
+
+            <span class="pagination-dots">
+                ...
+            </span>
+
+            <button type="button" class="pagination-button" [class.current]="currentPage === 156"
+                (click)="setPage(156)">
+                156
+            </button>
+
+            <button type="button" class="pagination-button" [disabled]="currentPage === totalPages"
+                (click)="setPage(currentPage + 1)">
+                <span class="material-symbols-outlined">
+                    chevron_right
+                </span>
+            </button>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- AMBIENT AUDIO -->
+<button type="button" class="ambient-audio-button" [class.active]="isAmbientPlaying" (click)="toggleAmbientAudio()"
+    title="Không gian âm thanh vũ trụ">
+    <span class="material-symbols-outlined">
+        graphic_eq
+    </span>
+
+    <span>
+        AMBIENT
+    </span>
+</button>
+
+
+<!-- DOSSIER MODAL -->
+<div *ngIf="isDossierOpen" class="dossier-overlay" (click)="closeDossier()">
+
+    <div class="dossier-modal" (click)="$event.stopPropagation()">
+
+        <!-- MODAL HEADER -->
+        <div class="dossier-header">
+
+            <div class="dossier-heading">
+
+                <div class="dossier-label-row">
+
+                    <span class="dossier-ping"></span>
+
+                    <span class="label-sm tertiary-text">
+                        HỒ SƠ VIỄN THÁM THIÊN VĂN: CW-DS-087
+                    </span>
+
+                </div>
+
+                <h3 class="headline-sm">
+                    {{
+                    selectedSpecimen
+                    ? selectedSpecimen.name + ' - Hồ Sơ Quan Trắc Kỹ Thuật Số'
+                    : 'Chi Tiết Thực Thể Vũ Trụ'
+                    }}
+                </h3>
+
+            </div>
+
+            <button type="button" class="modal-close" (click)="closeDossier()">
+                <span class="material-symbols-outlined">
+                    close
+                </span>
+            </button>
+
+        </div>
+
+
+        <!-- SPLIT CONTENT -->
+        <div class="dossier-content-grid">
+
+            <!-- VISUAL -->
+            <div class="dossier-image-frame">
+
+                <img *ngIf="selectedSpecimen" [src]="selectedSpecimen.image" [alt]="selectedSpecimen.alt" />
+
+                <div class="dossier-image-meta">
+
+                    <span>
+                        Kênh viễn thám: F160W + F200W
+                    </span>
+
+                    <span class="primary-text mono">
+                        JWST / NIRCam
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- DATA -->
+            <div class="dossier-data">
+
+                <h4 class="title-md data-title">
+
+                    <span class="material-symbols-outlined primary-text">
+                        dataset
+                    </span>
+
+                    Bảng Dữ Liệu Tọa Độ &amp; Vật Lý Thiên Văn
+
+                </h4>
+
+                <div class="data-table mono body-sm">
+
+                    <div class="data-row">
+                        <span>
+                            Xích kinh (Right Ascension):
+                        </span>
+
+                        <strong>
+                            18h 36m 56.3s
+                        </strong>
+                    </div>
+
+                    <div class="data-row">
+                        <span>
+                            Xích vĩ (Declination):
+                        </span>
+
+                        <strong>
+                            +38° 47′ 01.2″
+                        </strong>
+                    </div>
+
+                    <div class="data-row">
+                        <span>
+                            Độ dịch chuyển đỏ (z):
+                        </span>
+
+                        <strong>
+                            +0.00428 ± 0.00002
+                        </strong>
+                    </div>
+
+                    <div class="data-row">
+                        <span>
+                            Vận tốc xuyên tâm:
+                        </span>
+
+                        <strong>
+                            −296.3 km/s
+                        </strong>
+                    </div>
+
+                    <div class="data-row">
+                        <span>
+                            Khối lượng ước tính:
+                        </span>
+
+                        <strong>
+                            1.5 × 10¹² M☉
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="curator-note body-sm">
+
+                    <span class="tertiary-text">
+                        Ghi chú giám tuyển:
+                    </span>
+
+                    Mẫu vật thiên văn này thể hiện sự cân bằng tĩnh học hoàn hảo
+                    giữa áp suất bức xạ photon và lực hấp dẫn lượng tử co cụm.
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- MODAL FOOTER -->
+        <div class="dossier-footer">
+
+            <div class="copyright-notice label-sm">
+
+                <span class="material-symbols-outlined tertiary-text">
+                    lock_open
+                </span>
+
+                <span>
+                    Dữ liệu mở theo Quy chế Bản quyền Đài Quan Sát Quốc Tế
+                </span>
+
+            </div>
+
+            <div class="dossier-actions">
+
+                <button type="button" class="close-dossier-button" (click)="closeDossier()">
+                    Đóng hồ sơ
+                </button>
+
+                <button type="button" class="download-button">
+                    <span class="material-symbols-outlined">
+                        download
+                    </span>
+
+                    <span>
+                        Tải bộ dữ liệu FITS
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

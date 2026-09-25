@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.SharedKernel\CosmicWiki.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Ordering\CosmicWiki.Ordering.Api\CosmicWiki.Ordering.Api.csproj" />
+    <ProjectReference Include="..\..\Ordering\CosmicWiki.Ordering.Application\CosmicWiki.Ordering.Application.csproj" />
+    <ProjectReference Include="..\..\Visit\CosmicWiki.Visit.Application\CosmicWiki.Visit.Application.csproj" />
+    <ProjectReference Include="..\..\Visit\CosmicWiki.Visit.Domain\CosmicWiki.Visit.Domain.csproj" />
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="Confluent.Kafka" Version="2.15.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,277 @@
+<main class="home-page">
+  <!-- ===== HERO SECTION ===== -->
+  <section class="hero-section">
+    <!-- Background grid -->
+    <div class="hero-grid-bg"></div>
+    <!-- Halo effects -->
+    <div class="halo-primary"></div>
+    <div class="halo-tertiary"></div>
+
+    <div class="hero-content">
+      <!-- Badge -->
+      <div class="cosmic-badge cosmic-glass font-label-sm">
+        <span class="badge-dot"></span>
+        BẢO TÀNG KỸ THUẬT SỐ VŨ TRỤ • PHIÊN BẢN VIỄN VỌNG 2025
+      </div>
+
+      <!-- Headline -->
+      <h1 class="hero-headline font-display-xl-mobile">
+        Vũ trụ chứa đựng nhiều câu chuyện hơn những gì chúng ta có thể tưởng tượng.
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="hero-subtitle font-body-lg">
+        Hành trình bước qua hàng tỷ năm ánh sáng, từ vụ nổ Big Bang nguyên thủy đến ranh giới hư vô của chân trời sự
+        kiện.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="hero-ctas">
+        <a href="#journey" class="btn-primary font-title-md">
+          Bắt đầu hành trình vũ trụ
+        </a>
+        <a href="#archives" class="btn-secondary font-title-md cosmic-glass">
+          Khám phá phòng triển lãm
+        </a>
+      </div>
+
+      <!-- Telemetry ribbon -->
+      <div class="telemetry-ribbon cosmic-glass font-body-sm">
+        <div class="telemetry-item">
+          <span class="material-symbols-outlined">public</span>
+          <span>Vị trí: <strong>Dải Ngân Hà (Orion Spur)</strong></span>
+        </div>
+        <div class="telemetry-sep"></div>
+        <div class="telemetry-item">
+          <span class="material-symbols-outlined">radar</span>
+          <span>Chân trời quan sát: <strong>46.5 tỷ năm ánh sáng</strong></span>
+        </div>
+        <div class="telemetry-sep"></div>
+        <div class="telemetry-item">
+          <span class="material-symbols-outlined">sensors</span>
+          <span>Tần số nền vi ba: <strong>160.2 GHz (CMB)</strong></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== JOURNEY / CHAPTERS SECTION ===== -->
+  <section class="section-container" id="journey">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow font-label-sm">
+          <span class="material-symbols-outlined">timeline</span>
+          Hành trình không gian
+        </div>
+        <h2 class="section-title font-headline-md">Năm Chương Sử Thi Của Vũ Trụ</h2>
+      </div>
+      <p class="section-desc font-body-sm">
+        Trình tự tiến hóa từ trường hấp dẫn sơ khai đến kỳ quan kiến tạo vạn vật được lưu trữ theo quy chuẩn giám tuyển
+        thiên văn.
+      </p>
+    </div>
+
+    <div class="chapters-grid">
+      @for (chapter of chapters; track chapter.id) {
+      <div class="chapter-card cosmic-glass cosmic-card-hover group" [class.chapter-wide]="chapter.wide"
+        [class.chapter-wide-inner]="chapter.wide">
+
+        @if (!chapter.wide) {
+        <!-- Normal card layout -->
+        <div class="card-image-wrap">
+          <img [src]="chapter.imageUrl" [alt]="chapter.imageAlt" class="card-img" loading="lazy">
+          <div class="card-img-gradient"></div>
+          <div class="card-badge-top font-label-sm cosmic-glass">{{ chapter.label }}</div>
+          <div class="card-chapter-label font-label-sm">{{ chapter.chapterNum }} • {{ chapter.chapterSub }}</div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title font-title-md line-clamp-2">{{ chapter.emoji }} {{ chapter.title }}</h3>
+          <p class="card-desc font-body-sm line-clamp-3">{{ chapter.description }}</p>
+          <div class="card-footer">
+            <span class="font-label-sm card-meta">{{ chapter.meta }}</span>
+            <button class="card-link font-label-md">
+              <span>Đi vào chương này</span>
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+        } @else {
+        <!-- Wide card (chapter 5) -->
+        <div class="card-image-wrap wide-image">
+          <img [src]="chapter.imageUrl" [alt]="chapter.imageAlt" class="card-img" loading="lazy">
+          <div class="card-img-gradient"></div>
+          <div class="card-badge-top font-label-sm cosmic-glass">{{ chapter.label }}</div>
+          <div class="card-chapter-label font-label-sm">{{ chapter.chapterNum }} • {{ chapter.chapterSub }}</div>
+        </div>
+        <div class="card-body wide-body">
+          <div class="wide-tags">
+            @for (tag of chapter.tags; track tag) {
+            <span class="wide-tag font-label-sm">{{ tag }}</span>
+            }
+            <span class="font-label-sm wide-date">• {{ chapter.date }}</span>
+          </div>
+          <h3 class="card-title font-headline-sm">{{ chapter.emoji }} {{ chapter.title }}</h3>
+          <p class="card-desc font-body-md">{{ chapter.description }}</p>
+          <div class="card-footer">
+            <div class="wide-meta font-body-sm">
+              <span class="material-symbols-outlined">satellite_alt</span>
+              <span>{{ chapter.meta }}</span>
+            </div>
+            <button class="btn-outline font-label-md">
+              <span>Khảo sát biên niên viễn chinh</span>
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== ARCHIVES SECTION ===== -->
+  <section class="section-container border-section" id="archives">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow font-label-sm">
+          <span class="material-symbols-outlined">collections_bookmark</span>
+          Lưu trữ thiên thể
+        </div>
+        <h2 class="section-title font-headline-md">Bảo tàng Hiện vật & Tri thức</h2>
+      </div>
+      <a routerLink="/library" class="btn-outline font-label-md">
+        <span>Xem toàn bộ 1,248 mục lưu trữ</span>
+        <span class="material-symbols-outlined">north_east</span>
+      </a>
+    </div>
+
+    <div class="archive-grid">
+      @for (item of archiveItems; track item.code) {
+      <article class="chapter-card cosmic-glass cosmic-card-hover group">
+        <div class="card-image-wrap">
+          <img [src]="item.imageUrl" [alt]="item.imageAlt" class="card-img" loading="lazy">
+          <div class="card-img-gradient"></div>
+          <span class="card-badge-top font-label-sm cosmic-glass">{{ item.code }}</span>
+        </div>
+        <div class="card-body">
+          <div class="archive-category font-label-sm">{{ item.category }} • {{ item.distance }}</div>
+          <h3 class="card-title font-title-md line-clamp-2">{{ item.title }}</h3>
+          <p class="card-desc font-body-sm line-clamp-3">{{ item.description }}</p>
+          <div class="card-footer">
+            <span class="font-label-sm card-meta">{{ item.classification }}</span>
+            <a href="javascript:void(0)" class="card-link font-label-md">
+              Chi tiết <span class="material-symbols-outlined">chevron_right</span>
+            </a>
+          </div>
+        </div>
+      </article>
+      }
+    </div>
+  </section>
+
+  <!-- ===== STORE SECTION ===== -->
+  <section class="section-container border-section" id="souvenirs">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow font-label-sm">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          Cửa hàng lưu niệm
+        </div>
+        <h2 class="section-title font-headline-md">Chạm vào Những Mảnh Ghép Vũ Trụ</h2>
+      </div>
+      <p class="section-desc font-body-sm">
+        Các mẫu vật thiên thạch được kiểm định niên đại, bản đồ cổ phục chế từ các đài thiên văn châu Âu thế kỷ 17.
+      </p>
+    </div>
+
+    <div class="archive-grid">
+      @for (item of storeItems; track item.title) {
+      <div class="chapter-card cosmic-glass cosmic-card-hover">
+        <div class="card-image-wrap">
+          <img [src]="item.imageUrl" [alt]="item.imageAlt" class="card-img" loading="lazy">
+          <div class="store-badge font-label-sm cosmic-glass">{{ item.badge }}</div>
+        </div>
+        <div class="card-body">
+          <span class="archive-category font-label-sm">{{ item.origin }}</span>
+          <h3 class="card-title font-title-md">{{ item.title }}</h3>
+          <p class="card-desc font-body-sm line-clamp-2">{{ item.description }}</p>
+          <div class="card-footer store-footer">
+            <span class="store-price font-headline-sm">{{ item.price }}</span>
+            <button class="btn-add-cart font-label-sm" (click)="addToCart(item.title, item.price)">
+              <span class="material-symbols-outlined">shopping_bag</span>
+              Thêm vào giỏ
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== EDITORIAL FEATURE SECTION ===== -->
+  <section class="section-container border-section" id="chronicles">
+    <div class="editorial-feature cosmic-glass">
+      <!-- Decorative rings -->
+      <div class="deco-ring deco-ring-1"></div>
+      <div class="deco-ring deco-ring-2"></div>
+
+      <div class="editorial-grid">
+        <div class="editorial-text">
+          <div class="section-eyebrow font-label-sm">
+            <span class="material-symbols-outlined">auto_stories</span>
+            Chuyên khảo Viễn vọng • Biên niên sử CosmicWiki
+          </div>
+          <h2 class="editorial-headline font-headline-md">
+            Tiếng vọng từ thời điểm 380,000 năm sau Big Bang: Bức xạ tàn dư hé lộ điều gì?
+          </h2>
+          <p class="font-body-md editorial-body">
+            Trước thời điểm tái kết hợp, vũ trụ là một màn sương mù plasma mờ đục chứa các hạt proton và electron tự do
+            giam hãm photon. Khi nhiệt độ hạ xuống 3,000 Kelvin, những tia sáng tự do đầu tiên bắt đầu cuộc hành trình
+            vô tận kéo dài 13.8 tỷ năm...
+          </p>
+          <div class="author-row font-body-sm">
+            <div class="author-avatar">DT</div>
+            <span>GS. David Trần (Ban Nghiên cứu Viễn vọng)</span>
+            <span class="sep">•</span>
+            <span>12 phút đọc</span>
+            <span class="sep">•</span>
+            <span>CW-ESSAY-849</span>
+          </div>
+          <a routerLink="/stories" class="btn-outline font-label-md editorial-cta">
+            <span>Đọc toàn văn nghiên cứu</span>
+            <span class="material-symbols-outlined">menu_book</span>
+          </a>
+        </div>
+
+        <div class="editorial-image cosmic-glass">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ7vCDj8E_KsE0Bn4FhvVf5-l5Pba7bhRzWPUv5WRNyOBOOCGc_MUdHhwFXRpKHiqmwPJXx98F0vSeSFfIFOVMWF1R2j3j1r_LJsT4tMd4ZSNgZTMa0sAGcXHMxLbOJGj3C4mmLHJpAYt0w2D-5tEtlDd_BFXM5VixSX5L9Nn1sxWQP0TH7m2A-C0K_PcLqxwxS2G3Q_a8c-XZ6p5Uo02KhGOjDnU8g_J33TlmKvKEkIDHnkq5dHX8BH_JkKpIi3j72g_gCYWGA"
+            alt="Cosmic Microwave Background radiation map" class="editorial-img" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NEWSLETTER SECTION ===== -->
+  <section class="section-container border-section" id="newsletter">
+    <div class="newsletter-inner cosmic-glass">
+      <div class="section-eyebrow font-label-sm" style="justify-content: center;">
+        <span class="material-symbols-outlined">mail</span>
+        Thiên văn điện tín
+      </div>
+      <h2 class="section-title font-headline-md" style="text-align: center;">Nhận Tín Hiệu Từ Vũ Trụ</h2>
+      <p class="font-body-md newsletter-desc">
+        Bản tin thiên văn hàng tuần của CosmicWiki — sự kiện thiên thể sắp tới, nghiên cứu mới nhất, và các phát hiện từ
+        vành đai viễn vọng.
+      </p>
+      <form class="newsletter-form" (submit)="$event.preventDefault()">
+        <input type="email" placeholder="observatory@cosmicwiki.space" class="newsletter-input font-body-md" />
+        <button type="submit" class="btn-primary font-label-md">
+          Đăng ký quan trắc
+        </button>
+      </form>
+      <p class="newsletter-note font-label-sm">Không spam • Hủy đăng ký bất kỳ lúc nào • Dữ liệu được mã hóa
+        quantum-grade</p>
+    </div>
+  </section>
+</main>

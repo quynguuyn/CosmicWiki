@@ -1,0 +1,6 @@
+**/*.log
+**/*.err
+**/bin/
+**/obj/
+**/private_key.pem
+**/*private-key*.pem

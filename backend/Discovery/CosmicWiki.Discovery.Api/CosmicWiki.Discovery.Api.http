@@ -1,0 +1,6 @@
+@CosmicWiki.Discovery.Api_HostAddress = http://localhost:5268
+
+GET {{CosmicWiki.Discovery.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

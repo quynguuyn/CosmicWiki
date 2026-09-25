@@ -1,0 +1,635 @@
+﻿<main class="visit-page">
+
+  <!-- ======================================================= -->
+  <!-- HERO -->
+  <!-- ======================================================= -->
+
+  <section class="visit-container hero-section">
+
+    <div class="hero-meta">
+      <div class="breadcrumb">
+        <span>MỤC LỤC LƯU TRỮ</span>
+        <span>/</span>
+        <span class="text-tertiary">Đài thiên văn &amp; Hướng dẫn tham quan</span>
+      </div>
+
+      <div class="live-status">
+        <span class="status-pulse"></span>
+        TRỰC TUYẾN 24/7 • TRẠNG THÁI QUAN SÁT TỐI ƯU
+      </div>
+    </div>
+
+    <div class="hero-content">
+
+      <h1 class="display-title">
+        Đài Thiên Văn Viễn Vọng &amp; Hướng Dẫn Tham Quan Số
+      </h1>
+
+      <p class="hero-description">
+        Khám phá chiều sâu vô tận của bầu trời đêm thông qua mạng lưới
+        kính viễn vọng viễn thám độ phân giải cực cao và các phân khu
+        triển lãm số tái hiện vũ trụ từ thời sơ khai.
+      </p>
+
+      <div class="hero-actions">
+        <button type="button" class="btn btn-gold" (click)="scrollToBooking()">
+
+          <span class="material-symbols-outlined">
+            calendar_month
+          </span>
+
+          Đặt Lịch Quan Sát Trực Tiếp
+        </button>
+
+        <a class="btn btn-secondary" href="#exhibitions">
+
+          <span class="material-symbols-outlined">
+            view_in_ar
+          </span>
+
+          Tham Quan Thực Tế Ảo 3D (VR Tour)
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Instrument HUD -->
+
+    <div class="spec-grid" id="observatory-specs">
+
+      <article class="glass-panel spec-card">
+
+        <div class="spec-header">
+          <span>Tọa độ thiên văn</span>
+
+          <span class="material-symbols-outlined gold">
+            explore
+          </span>
+        </div>
+
+        <div class="spec-value primary">
+          RA 18h 36m 56s
+        </div>
+
+        <div class="spec-footer">
+          <span>Dec +38° 47′ 1″</span>
+          <span class="gold">Vega Sector</span>
+        </div>
+
+      </article>
+
+      <article class="glass-panel spec-card">
+
+        <div class="spec-header">
+          <span>Thị kính viễn thám</span>
+
+          <span class="material-symbols-outlined primary">
+            adjust
+          </span>
+        </div>
+
+        <div class="spec-value">
+          Khẩu độ 10.4m
+        </div>
+
+        <div class="spec-description">
+          Gương phản xạ phức hợp Gran Telescopio
+        </div>
+
+      </article>
+
+      <article class="glass-panel spec-card">
+
+        <div class="spec-header">
+          <span>Điều kiện khí quyển</span>
+
+          <span class="material-symbols-outlined secondary">
+            air
+          </span>
+        </div>
+
+        <div class="spec-value gold">
+          0.45" arcsec
+        </div>
+
+        <div class="spec-footer">
+          <span>Seeing Tối ưu</span>
+          <span class="primary">Bortle Cấp 1</span>
+        </div>
+
+      </article>
+
+      <article class="glass-panel spec-card">
+
+        <div class="spec-header">
+          <span>Băng thông quang phổ</span>
+
+          <span class="material-symbols-outlined primary">
+            wifi_tethering
+          </span>
+        </div>
+
+        <div class="spec-value primary">
+          100 Gbps
+        </div>
+
+        <div class="spec-description">
+          Liên kết trực tiếp JWST &amp; Hubble
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- EXHIBITIONS -->
+  <!-- ======================================================= -->
+
+  <section class="visit-container section" id="exhibitions">
+
+    <div class="section-heading">
+
+      <div>
+
+        <div class="eyebrow">
+          <span></span>
+          Hồ sơ hiện vật bảo tàng
+        </div>
+
+        <h2>
+          Không Gian Trưng Bày &amp; Khám Phá Trực Tuyến
+        </h2>
+
+      </div>
+
+      <p>
+        Bốn cánh triển lãm độc lập kết hợp giữa thiết bị thiên văn học
+        lịch sử, mô phỏng cơ học thiên thể và luồng dữ liệu vũ trụ sâu
+        thời gian thực.
+      </p>
+
+    </div>
+
+    <div class="exhibition-grid">
+
+      <article class="glass-panel exhibition-card" *ngFor="let exhibition of exhibitions">
+
+        <div class="exhibition-image">
+
+          <img [src]="exhibition.image" [alt]="exhibition.title" />
+
+          <div class="image-gradient"></div>
+
+          <span class="archive-badge">
+            PHÂN KHU {{ exhibition.number }}
+          </span>
+
+        </div>
+
+        <div class="exhibition-content">
+
+          <span class="category">
+            {{ exhibition.category }}
+          </span>
+
+          <h3>
+            {{ exhibition.title }}
+          </h3>
+
+          <p>
+            {{ exhibition.description }}
+          </p>
+
+          <div class="card-footer">
+
+            <span class="data-status">
+              <span></span>
+              {{ exhibition.status }}
+            </span>
+
+            <button type="button">
+              Khám phá
+
+              <span class="material-symbols-outlined">
+                arrow_forward
+              </span>
+            </button>
+
+          </div>
+
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- EVENT CALENDAR -->
+  <!-- ======================================================= -->
+
+  <section class="visit-container section">
+
+    <div class="section-heading">
+
+      <div>
+
+        <div class="eyebrow">
+          Biên Niên Hiện Tượng Bầu Trời
+        </div>
+
+        <h2>
+          Lịch Quan Sát Thiên Văn Trực Tiếp
+        </h2>
+
+      </div>
+
+      <div class="filter-status">
+        <span>Lọc trạng thái:</span>
+
+        <strong>
+          Tất cả hiện tượng 2025
+        </strong>
+      </div>
+
+    </div>
+
+    <div class="glass-panel event-table">
+
+      <div class="table-scroll">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Thời gian dự kiến</th>
+              <th>Hiện tượng thiên văn</th>
+              <th>Thông số trắc địa &amp; Bộ lọc</th>
+              <th>Trạng thái quan sát</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr *ngFor="let event of events">
+
+              <td class="event-date">
+                {{ event.date }}
+              </td>
+
+              <td>
+
+                <div class="event-name">
+                  {{ event.name }}
+                </div>
+
+                <div class="event-description">
+                  {{ event.description }}
+                </div>
+
+              </td>
+
+              <td>
+
+                <div>
+                  {{ event.specification }}
+                </div>
+
+                <div class="event-location">
+                  {{ event.location }}
+                </div>
+
+              </td>
+
+              <td>
+
+                <span class="event-status" [ngClass]="'status-' + event.statusType">
+
+                  <span></span>
+                  {{ event.status }}
+
+                </span>
+
+              </td>
+
+              <td class="event-action">
+
+                <button type="button">
+                  {{ event.action }}
+                </button>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- TRANSMISSION FORM -->
+  <!-- ======================================================= -->
+
+  <section class="visit-container section" id="booking-transmission">
+
+    <div class="transmission-grid">
+
+      <!-- LEFT -->
+
+      <div class="transmission-info">
+
+        <div class="eyebrow">
+          <span></span>
+          Giao thức liên lạc viễn thám
+        </div>
+
+        <h2>
+          Gửi Tín Hiệu &amp; Đặt Lịch Làm Việc Với Đài Thiên Văn
+        </h2>
+
+        <p>
+          Kênh liên lạc dành cho các viện nghiên cứu vật lý thiên văn,
+          sinh viên thiên văn học và khách tham quan cá nhân mong muốn
+          tiếp cận thị kính quang phổ hoặc kho dữ liệu FITS.
+        </p>
+
+        <div class="glass-panel protocol-card">
+
+          <div class="protocol-item">
+
+            <span class="material-symbols-outlined primary">
+              lock
+            </span>
+
+            <div>
+              <h4>
+                Mã hóa lượng tử &amp; Lưu trữ hồ sơ
+              </h4>
+
+              <p>
+                Tín hiệu gửi đi được xác thực và gán mã định danh
+                thiên văn độc bản (Telemetry ID).
+              </p>
+            </div>
+
+          </div>
+
+          <div class="protocol-item">
+
+            <span class="material-symbols-outlined gold">
+              schedule
+            </span>
+
+            <div>
+              <h4>
+                Thời gian phản hồi nghiệp vụ
+              </h4>
+
+              <p>
+                Hội đồng giám tuyển và chuyên viên đài quan sát sẽ
+                phản hồi trong vòng &lt; 24 giờ viễn thông.
+              </p>
+            </div>
+
+          </div>
+
+          <div class="protocol-item">
+
+            <span class="material-symbols-outlined secondary">
+              travel_explore
+            </span>
+
+            <div>
+              <h4>
+                Tọa độ thực địa trạm quan sát
+              </h4>
+
+              <p>
+                Đỉnh Roque de los Muchachos, La Palma &amp; Mauna Kea
+                Summit Archive Station.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+
+      <div>
+
+        <form class="glass-panel transmission-form" #transmissionForm="ngForm" (ngSubmit)="submitTransmission()">
+
+          <div class="form-grid">
+
+            <div class="form-field">
+
+              <label for="researcher-name">
+                Họ và tên nhà nghiên cứu / Khách tham quan *
+              </label>
+
+              <input id="researcher-name" name="name" type="text" [(ngModel)]="form.name" required
+                placeholder="GS. Nguyễn Thiên Hải" />
+
+            </div>
+
+            <div class="form-field">
+
+              <label for="researcher-email">
+                Hộp thư điện tử (Email) *
+              </label>
+
+              <input id="researcher-email" name="email" type="email" [(ngModel)]="form.email" required email
+                placeholder="hai.nguyen@observatory.edu.vn" />
+
+            </div>
+
+          </div>
+
+          <div class="form-field">
+
+            <label for="transmission-subject">
+              Chủ đề truyền tin viễn thám *
+            </label>
+
+            <select id="transmission-subject" name="subject" [(ngModel)]="form.subject" required>
+
+              <option value="booking">
+                Đặt lịch kính viễn vọng (10.4m Gran Telescopio)
+              </option>
+
+              <option value="visit">
+                Đăng ký tham quan học thuật theo đoàn
+              </option>
+
+              <option value="fits">
+                Yêu cầu trích xuất dữ liệu quang phổ FITS
+              </option>
+
+              <option value="partnership">
+                Hợp tác giám tuyển &amp; Lưu trữ số
+              </option>
+
+            </select>
+
+          </div>
+
+          <div class="form-field">
+
+            <label for="transmission-message">
+              Nội dung thông điệp truyền tin &amp; Yêu cầu kỹ thuật *
+            </label>
+
+            <textarea id="transmission-message" name="message" [(ngModel)]="form.message" required rows="5"
+              placeholder="Mô tả chi tiết khung giờ quan sát, bước sóng mong muốn hoặc mục tiêu khảo sát...">
+              </textarea>
+
+          </div>
+
+          <p class="submission-error" *ngIf="submissionError" role="alert">
+            {{ submissionError }}
+          </p>
+
+          <button type="submit" class="submit-button" [disabled]="transmissionForm.invalid || isSubmitting">
+
+            <span *ngIf="!isSubmitting" class="material-symbols-outlined">
+              send
+            </span>
+
+            <span *ngIf="isSubmitting" class="material-symbols-outlined spinning">
+              sync
+            </span>
+
+            <span>
+              {{
+              isSubmitting
+              ? 'Đang mã hóa tín hiệu...'
+              : 'Phát Tín Hiệu Đến Đài Quan Sát'
+              }}
+            </span>
+
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- FAQ -->
+  <!-- ======================================================= -->
+
+  <section class="visit-container section faq-section">
+
+    <div class="faq-heading">
+
+      <div class="eyebrow centered">
+        Giải Đáp Chuyên Môn
+      </div>
+
+      <h2>
+        Câu Hỏi Thường Gặp Về Đài Thiên Văn
+      </h2>
+
+    </div>
+
+    <div class="faq-container">
+
+      <details class="glass-panel faq-item" *ngFor="let faq of faqs">
+
+        <summary>
+
+          <span>
+            {{ faq.question }}
+          </span>
+
+          <span class="material-symbols-outlined">
+            expand_more
+          </span>
+
+        </summary>
+
+        <div class="faq-answer">
+          {{ faq.answer }}
+        </div>
+
+      </details>
+
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ========================================================= -->
+<!-- CONFIRMATION MODAL -->
+<!-- ========================================================= -->
+
+<div class="modal-backdrop" *ngIf="showConfirmationModal" (click)="closeModal()">
+
+  <div class="glass-panel confirmation-modal" (click)="$event.stopPropagation()">
+
+    <button class="modal-close" type="button" (click)="closeModal()">
+
+      <span class="material-symbols-outlined">
+        close
+      </span>
+
+    </button>
+
+    <div class="confirmation-icon">
+
+      <span class="material-symbols-outlined">
+        satellite_alt
+      </span>
+
+    </div>
+
+    <span class="modal-eyebrow">
+      XÁC THỰC VIỄN THÁM THÀNH CÔNG
+    </span>
+
+    <h3>
+      Tín Hiệu Đã Được Ghi Nhận!
+    </h3>
+
+    <p>
+      Thông điệp và yêu cầu kỹ thuật của bạn đã được mã hóa vào hệ
+      thống phân tích phổ của Đài Thiên Văn. Chuyên viên trực trạm
+      sẽ liên hệ qua email của bạn trong thời gian sớm nhất.
+    </p>
+
+    <div class="reference-code">
+
+      <span>MÃ THAM CHIẾU:</span>
+
+      <strong>
+        {{ referenceCode }}
+      </strong>
+
+    </div>
+
+    <button class="modal-dismiss" type="button" (click)="closeModal()">
+
+      Đóng &amp; Quay Lại Hồ Sơ
+
+    </button>
+
+  </div>
+
+</div>

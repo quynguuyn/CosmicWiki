@@ -1,0 +1,714 @@
+﻿<div class="stories-page">
+
+  <!-- ============================================================
+       COSMIC BACKGROUND
+  ============================================================ -->
+
+  <div class="cosmic-background">
+    <div class="star star-1"></div>
+    <div class="star star-2"></div>
+    <div class="star star-3"></div>
+    <div class="star star-4"></div>
+
+    <div class="nebula nebula-primary"></div>
+    <div class="nebula nebula-tertiary"></div>
+  </div>
+
+
+  <!-- ============================================================
+       MAIN
+  ============================================================ -->
+
+  <main class="stories-main">
+
+    <!-- ============================================================
+         HERO EDITORIAL CHRONICLE
+    ============================================================ -->
+
+    <section class="content-container hero-section">
+
+      <!-- Breadcrumb -->
+
+      <div class="archive-meta">
+        <div class="archive-breadcrumb">
+          <span class="gold">MỤC LỤC LƯU TRỮ</span>
+          <span>/</span>
+          <span>BIÊN NIÊN SỬ VŨ TRỤ</span>
+          <span>/</span>
+          <span class="blue">VĂN THUYẾT ĐẶC BIỆT</span>
+        </div>
+
+        <div class="archive-coordinates">
+          <span>SECTOR: SOL-3 // INTERSTELLAR</span>
+          <span>CHRONO: 1977-2025</span>
+        </div>
+      </div>
+
+
+      <!-- Hero Card -->
+
+      <div class="hero-card cosmic-card">
+
+        <div class="hero-grid">
+
+          <!-- Hero Text -->
+
+          <div class="hero-content">
+
+            <div class="hero-badges">
+
+              <span class="featured-badge">
+                <span class="pulse-dot"></span>
+                BIÊN NIÊN SỬ TIÊU BIỂU • SỐ XUẤT BẢN #42
+              </span>
+
+              <span class="era-badge">
+                {{ heroStory.era }}
+              </span>
+
+            </div>
+
+
+            <h1>
+              {{ heroStory.title }}
+            </h1>
+
+
+            <p class="hero-description">
+              {{ heroStory.description }}
+            </p>
+
+
+            <div class="hero-author">
+
+              <div class="author-icon">
+                <span class="material-symbols-outlined">
+                  history_edu
+                </span>
+              </div>
+
+              <div>
+                <span class="author-name">
+                  {{ heroStory.author }}
+                </span>
+
+                <span class="author-org">
+                  Lưu trữ Khoa học Quốc tế NASA/JPL
+                </span>
+              </div>
+
+              <span class="separator">•</span>
+
+              <div class="read-time">
+                <span class="material-symbols-outlined">
+                  schedule
+                </span>
+
+                <span>
+                  {{ heroStory.readTime }} phút đọc
+                </span>
+              </div>
+
+            </div>
+
+
+            <!-- Hero Actions -->
+
+            <div class="hero-actions">
+
+              <button type="button" class="btn btn-primary" (click)="openModal(heroStory)">
+                <span class="material-symbols-outlined">
+                  menu_book
+                </span>
+
+                <span>
+                  Đọc toàn bộ bài viết
+                </span>
+              </button>
+
+
+              <button type="button" class="btn btn-secondary" (click)="toggleHeroAudio()">
+                <span class="material-symbols-outlined">
+                  {{ isHeroAudioPlaying ? 'pause' : 'multitrack_audio' }}
+                </span>
+
+                <span>
+                  {{
+                  isHeroAudioPlaying
+                  ? 'Đang phát thuyết minh... (14:20)'
+                  : 'Nghe bản thuyết minh (14:20)'
+                  }}
+                </span>
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- Hero Image -->
+
+          <div class="hero-media">
+
+            <div class="hero-image-frame">
+
+              <img [src]="heroStory.image" [alt]="heroStory.alt" />
+
+              <div class="image-gradient"></div>
+
+
+              <div class="curatorial-overlay">
+
+                <div>
+                  <span class="archive-label">
+                    HIỆN VẬT LƯU TRỮ VOYAGER-01
+                  </span>
+
+                  <span class="archive-item">
+                    Bản sao mạ vàng đĩa đồng khắc âm thanh Trái Đất
+                  </span>
+                </div>
+
+                <span class="material-symbols-outlined verified">
+                  verified
+                </span>
+
+              </div>
+
+            </div>
+
+            <div class="image-halo"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         FILTER / SEARCH
+    ============================================================ -->
+
+    <section class="content-container archive-section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <div class="eyebrow">
+
+            <span class="material-symbols-outlined">
+              auto_stories
+            </span>
+
+            <span>
+              BẢNG TỔNG MỤC BIÊN NIÊN SỬ
+            </span>
+
+          </div>
+
+          <h2>
+            Những Chương Ký Ức Vô Tận
+          </h2>
+
+        </div>
+
+
+        <p>
+          Khám phá 24 văn thuyết chọn lọc từ các nhà thiên văn học,
+          ghi lại những khoảnh khắc làm thay đổi vĩnh viễn tầm nhìn
+          của con người vào vũ trụ.
+        </p>
+
+      </div>
+
+
+      <!-- Toolbar -->
+
+      <div class="archive-toolbar">
+
+        <!-- Categories -->
+
+        <div class="category-tabs">
+
+          <button *ngFor="let category of categories" type="button" class="category-pill"
+            [class.active]="selectedCategory === category.id" (click)="selectCategory(category.id)">
+
+            {{ category.label }}
+
+            <span *ngIf="category.count">
+              ({{ category.count }})
+            </span>
+
+          </button>
+
+        </div>
+
+
+        <!-- Search + Sort -->
+
+        <div class="toolbar-actions">
+
+          <div class="search-box">
+
+            <span class="material-symbols-outlined">
+              search
+            </span>
+
+            <input type="text" placeholder="Tìm tác giả, niên đại..." [value]="searchTerm" (input)="onSearch($event)" />
+
+          </div>
+
+
+          <div class="sort-box">
+
+            <select [value]="sortMode" (change)="onSortChange($event)">
+              <option value="newest">
+                Mới nhất
+              </option>
+
+              <option value="popular">
+                Được đọc nhiều nhất
+              </option>
+
+              <option value="duration">
+                Thời lượng đọc
+              </option>
+            </select>
+
+            <span class="material-symbols-outlined">
+              expand_more
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         STORY GRID
+    ============================================================ -->
+
+    <section class="content-container story-section">
+
+      <div class="story-grid" *ngIf="filteredStories.length > 0">
+
+        <article *ngFor="let story of filteredStories" class="story-card cosmic-card">
+
+          <!-- Image -->
+
+          <div class="story-image">
+
+            <img [src]="story.image" [alt]="story.alt" loading="lazy" />
+
+            <div class="story-image-gradient"></div>
+
+            <span class="story-category">
+              {{ getCategoryLabel(story.category) }}
+            </span>
+
+            <span class="story-code">
+              {{ story.code }}
+            </span>
+
+          </div>
+
+
+          <!-- Content -->
+
+          <div class="story-content">
+
+            <div class="story-era">
+              {{ story.era }}
+            </div>
+
+
+            <h3>
+              {{ story.title }}
+            </h3>
+
+
+            <p>
+              {{ story.description }}
+            </p>
+
+
+            <div class="story-footer">
+
+              <div class="story-author">
+
+                <span class="author-name">
+                  {{ story.author }}
+                </span>
+
+                <span class="story-read-time">
+                  {{ story.readTime }} phút đọc
+                </span>
+
+              </div>
+
+
+              <button type="button" class="read-button" (click)="openModal(story)">
+                Đọc bài viết
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+
+
+      <!-- Empty State -->
+
+      <div *ngIf="filteredStories.length === 0" class="empty-state cosmic-card">
+        <span class="material-symbols-outlined">
+          search_off
+        </span>
+
+        <h3>
+          Không tìm thấy biên niên sử
+        </h3>
+
+        <p>
+          Không có tư liệu nào phù hợp với bộ lọc hiện tại.
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         NEWSLETTER
+    ============================================================ -->
+
+    <section class="content-container newsletter-section">
+
+      <div class="newsletter-card cosmic-card">
+
+        <div class="newsletter-orbit orbit-large"></div>
+        <div class="newsletter-orbit orbit-small"></div>
+
+
+        <div class="newsletter-content">
+
+          <div class="eyebrow">
+
+            <span class="material-symbols-outlined">
+              mark_email_read
+            </span>
+
+            <span>
+              BẢN TIN VIỄN KÍNH THIÊN VĂN
+            </span>
+
+          </div>
+
+
+          <h2>
+            Đăng Ký Nhận Bản Thảo &amp;
+            Tạp Chí Thiên Văn Định Kỳ
+          </h2>
+
+
+          <p>
+            Mỗi tuần trăng mới, viện lưu trữ gửi tới bạn một tiểu luận
+            độc bản về những phát kiến thiên văn, bản đồ tinh vân
+            phục chế và nhật ký thám hiểm liên hành tinh.
+          </p>
+
+
+          <form class="subscribe-form" #newsletterForm="ngForm" (ngSubmit)="subscribe(emailInput.value)">
+
+            <input #emailInput type="email" name="email" required placeholder="Nhập địa chỉ hòm thư của bạn..." />
+
+
+            <button type="submit" [disabled]="isSubscribing">
+
+              <span>
+                {{
+                isSubscribing
+                ? 'Đang ghi danh...'
+                : 'Gửi bản thảo cho tôi'
+                }}
+              </span>
+
+              <span class="material-symbols-outlined">
+                send
+              </span>
+
+            </button>
+
+          </form>
+
+
+          <div class="newsletter-notes">
+
+            <span>
+              <span class="material-symbols-outlined">
+                shield
+              </span>
+
+              Bảo mật danh tính thiên văn
+            </span>
+
+            <span>•</span>
+            <span>Không thư rác</span>
+            <span>•</span>
+            <span>Hủy đăng ký bất kỳ lúc nào</span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       READER MODAL
+  ============================================================ -->
+
+  <div *ngIf="isModalOpen && selectedStory" class="reader-modal" (click)="onModalBackdropClick($event)">
+
+    <div class="reader-window cosmic-card">
+
+      <!-- Modal Header -->
+
+      <div class="reader-header">
+
+        <div class="reader-reference">
+
+          <span class="reader-pulse"></span>
+
+          <span>
+            HỒ SƠ LƯU TRỮ VĂN BẢN #{{ selectedStory.code }}
+          </span>
+
+        </div>
+
+
+        <div class="reader-actions">
+
+          <button type="button" title="Chia sẻ bài viết">
+            <span class="material-symbols-outlined">
+              share
+            </span>
+          </button>
+
+          <button type="button" title="Đóng cửa sổ" (click)="closeModal()">
+            <span class="material-symbols-outlined">
+              close
+            </span>
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- Audio Bar -->
+
+      <div class="reader-audio">
+
+        <div>
+
+          <button type="button" class="audio-play" (click)="toggleModalAudio()">
+            <span class="material-symbols-outlined">
+              {{ isModalAudioPlaying ? 'pause' : 'play_arrow' }}
+            </span>
+          </button>
+
+          <span>
+            Thuyết minh âm thanh phòng đọc
+            (Carl Sagan AI Master Record)
+          </span>
+
+        </div>
+
+        <span class="audio-duration">
+          14:20 / HD FLAC
+        </span>
+
+      </div>
+
+
+      <!-- Scroll Body -->
+
+      <div class="reader-body">
+
+        <div class="reader-heading">
+
+          <span class="special-badge">
+            SỐ ĐẶC BIỆT THƯ VIỆN KHOA HỌC
+          </span>
+
+          <h2>
+            {{ selectedStory.title }}
+          </h2>
+
+          <div class="reader-coordinate">
+            TỌA ĐỘ PHÁT HÀNH: CAPE CANAVERAL
+            • NGÀY 5 THÁNG 9 NĂM 1977
+            • VẬN TỐC HIỆN TẠI: 17 KM/S
+          </div>
+
+        </div>
+
+
+        <!-- Pull Quote -->
+
+        <blockquote>
+
+          “Đây là một món quà từ một thế giới nhỏ bé,
+          xa xôi, một minh chứng cho những thanh âm,
+          khoa học, hình ảnh, âm nhạc, suy tư và cảm xúc
+          của chúng tôi.”
+
+          <footer>
+            — Thông điệp của Tổng thống Jimmy Carter
+            gắn trên Đĩa Vàng Voyager
+          </footer>
+
+        </blockquote>
+
+
+        <!-- Article -->
+
+        <div class="article-content">
+
+          <p>
+            Vào mùa thu năm 1977, hai con tàu thám hiểm Voyager 1
+            và 2 rời khỏi bệ phóng tại Florida mang theo sứ mệnh
+            lịch sử: Khảo sát các hành tinh khí khổng lồ ở vành đai
+            ngoài của Hệ Mặt Trời.
+          </p>
+
+          <p>
+            Nhưng vượt lên trên tất cả mục tiêu kỹ thuật,
+            mỗi con tàu đều mang một thông điệp vĩnh cửu gửi đến
+            bất kỳ nền văn minh ngoài Trái Đất nào có thể bắt gặp chúng.
+          </p>
+
+          <p>
+            Chiếc đĩa mạ vàng đường kính 12-inch làm bằng đồng
+            mạ vàng, bọc trong lớp vỏ nhôm bảo vệ mạ đồng vị
+            Uranium-238 siêu tinh khiết.
+          </p>
+
+          <p>
+            Trên mặt đĩa được khắc 115 hình ảnh mã hóa tương tự,
+            những lời chào bằng 55 ngôn ngữ cổ xưa và hiện đại,
+            cùng 90 phút những bản nhạc từ nhiều nền văn hóa
+            khác nhau trên Trái Đất.
+          </p>
+
+        </div>
+
+
+        <!-- Inline Image -->
+
+        <div class="reader-image">
+
+          <img [src]="heroStory.image" alt="Voyager Golden Record archival artifact" />
+
+          <div class="reader-image-caption">
+
+            <span>
+              Chi tiết bản ghi âm đĩa mạ vàng lưu giữ
+              tại bảo tàng CosmicWiki
+            </span>
+
+            <span>
+              ARCHIVE REF: VOY-GOLD-01
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Modal Footer -->
+
+      <div class="reader-footer">
+
+        <span>
+          Thời gian đọc còn lại: ~10 phút
+        </span>
+
+        <button type="button" (click)="closeModal()">
+          Đóng cửa sổ đọc
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================================================
+       SUCCESS TOAST
+  ============================================================ -->
+
+  <div class="toast" [class.show]="isSubscribed">
+
+    <div class="toast-icon">
+
+      <span class="material-symbols-outlined">
+        check_circle
+      </span>
+
+    </div>
+
+    <div>
+
+      <p>
+        Đăng ký bản thảo thành công!
+      </p>
+
+      <span>
+        Bản tin kỳ trăng tới sẽ được gửi tới hòm thư của bạn.
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================================================
+       AMBIENT BUTTON
+  ============================================================ -->
+
+  <button type="button" class="ambient-button" [class.active]="isAmbientOn" [title]="
+      isAmbientOn
+        ? 'Đang phát tiếng vọng không gian vũ trụ'
+        : 'Phát âm thanh không gian sâu'
+    " (click)="toggleAmbient()">
+
+    <span class="material-symbols-outlined">
+      {{ isAmbientOn ? 'graphic_eq' : 'volume_off' }}
+    </span>
+
+    <span>
+      AMBIENT
+    </span>
+
+  </button>
+
+</div>

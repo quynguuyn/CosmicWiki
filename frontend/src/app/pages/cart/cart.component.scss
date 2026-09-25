@@ -1,0 +1,23 @@
+.commerce-page { max-width: var(--container-max); margin: 0 auto; padding: var(--space-2xl) var(--gutter-desktop); }
+.commerce-hero { padding: var(--space-2xl); border-radius: var(--radius-xl); margin-bottom: var(--space-xl); }
+.commerce-hero h1 { margin: var(--space-md) 0; }
+.commerce-hero p { color: var(--on-surface-variant); max-width: 42rem; }
+.section-eyebrow { color: var(--tertiary); display: flex; gap: var(--space-xs); align-items: center; }
+.commerce-grid { display: grid; grid-template-columns: 1fr 22rem; gap: var(--space-xl); align-items: start; }
+.commerce-list, .summary { border-radius: var(--radius-lg); padding: var(--space-lg); }
+.cart-line { display: grid; grid-template-columns: 5rem 1fr auto auto; gap: var(--space-md); align-items: center; padding: var(--space-md) 0; border-bottom: 1px solid var(--outline-variant); }
+.cart-line:last-child { border-bottom: 0; }
+.cart-line img { width: 5rem; height: 5rem; object-fit: cover; border-radius: var(--radius); }
+.cart-line-content h2 { margin: .25rem 0; }
+.cart-line-content strong, .total strong { color: var(--tertiary); }
+.quantity { display: flex; gap: .75rem; align-items: center; }
+.quantity button, .remove { background: transparent; border: 1px solid var(--outline-variant); color: var(--on-surface); border-radius: var(--radius); padding: .35rem .6rem; cursor: pointer; }
+.remove { border: 0; color: var(--error); }
+.summary { position: sticky; top: 6rem; }
+.summary-row { display: flex; justify-content: space-between; padding: var(--space-md) 0; border-bottom: 1px solid var(--outline-variant); }
+.summary-row.total { font-size: 1.15rem; border-bottom: 0; }
+.full { display: block; text-align: center; width: 100%; margin-top: var(--space-md); text-decoration: none; }
+.disabled { opacity: .45; pointer-events: none; }
+.empty-state { text-align: center; padding: var(--space-2xl); color: var(--on-surface-variant); }
+.empty-state .material-symbols-outlined { font-size: 3rem; color: var(--primary); }
+@media (max-width: 760px) { .commerce-page { padding: var(--space-xl) var(--gutter-mobile); } .commerce-grid { grid-template-columns: 1fr; } .summary { position: static; } .cart-line { grid-template-columns: 4rem 1fr auto; } .cart-line img { width: 4rem; height: 4rem; } .quantity { grid-column: 2; } .remove { grid-column: 3; grid-row: 1; } }

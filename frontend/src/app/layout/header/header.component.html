@@ -1,0 +1,59 @@
+<header class="cosmic-header" [class.scrolled]="scrolled()">
+  <div class="header-inner">
+    <!-- Brand -->
+    <a class="brand" routerLink="/">
+      <div class="brand-icon">
+        <span class="material-symbols-outlined">all_inclusive</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">CosmicWiki</span>
+        <span class="brand-subtitle">Digital Museum</span>
+      </div>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="nav-desktop">
+      @for (link of navLinks; track link.route) {
+      <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{exact: link.route === '/'}"
+        class="nav-link font-label-md">{{ link.label }}</a>
+      }
+    </nav>
+
+    <!-- Right Actions -->
+    <div class="header-actions">
+      <button class="icon-btn" title="Tìm kiếm biên mục">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+
+      <div class="cart-wrapper">
+        <a class="icon-btn" routerLink="/cart" title="Giỏ lưu niệm không gian">
+          <span class="material-symbols-outlined">shopping_bag</span>
+        </a>
+        @if (cartCount() > 0) {
+        <span class="cart-badge">{{ cartCount() }}</span>
+        }
+      </div>
+
+      <button class="observatory-btn font-label-md">
+        <!-- <span class="material-symbols-outlined">telescope</span> -->
+        <span class="w-2 h-2 rounded-full bg-surface animate-ping"></span>
+        <span>Đài quan sát</span>
+      </button>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="icon-btn mobile-menu-btn" (click)="toggleMobileMenu()" title="Menu">
+        <span class="material-symbols-outlined">{{ mobileMenuOpen() ? 'close' : 'menu' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  @if (mobileMenuOpen()) {
+  <div class="mobile-menu cosmic-glass">
+    @for (link of navLinks; track link.route) {
+    <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{exact: link.route === '/'}"
+      class="mobile-nav-link font-label-md" (click)="toggleMobileMenu()">{{ link.label }}</a>
+    }
+  </div>
+  }
+</header>

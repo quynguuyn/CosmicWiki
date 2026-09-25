@@ -1,0 +1,233 @@
+name: cosmicwiki
+
+services:
+  oracle:
+    image: gvenzl/oracle-free:latest
+    container_name: cosmicwiki-oracle
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?Set ORACLE_PASSWORD before starting}
+      APP_USER: ${ORACLE_APP_USER:-COSMICWIKI_AUTH}
+      APP_USER_PASSWORD: ${ORACLE_APP_USER_PASSWORD:?Set ORACLE_APP_USER_PASSWORD before starting}
+    ports:
+      - "${ORACLE_PORT:-1523}:1521"
+    volumes:
+      - oradata:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  kafka:
+    image: apache/kafka:4.1.2
+    container_name: cosmicwiki-kafka
+    hostname: kafka
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:${KAFKA_PORT:-9092}
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: cosmicwiki-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Auth/CosmicWiki.Auth.Api/CosmicWiki.Auth.Api.csproj
+        DLL: CosmicWiki.Auth.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__AuthDatabase: ${AUTH_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_AUTH;Password=CosmicWikiAuth;Data Source=oracle:1521/FREEPDB1}
+      Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
+    depends_on:
+      oracle:
+        condition: service_healthy
+
+  catalog:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Catalog/CosmicWiki.Catalog.Api/CosmicWiki.Catalog.Api.csproj
+        DLL: CosmicWiki.Catalog.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__CatalogDatabase: ${CATALOG_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_CATALOG;Password=CosmicWikiCatalog;Data Source=oracle:1521/FREEPDB1}
+      Jwt__PublicKeyPath: Keys/public_key.pem
+      Kafka__BootstrapServers: kafka:29092
+    depends_on:
+      oracle:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  product:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Product/CosmicWiki.Product.Api/CosmicWiki.Product.Api.csproj
+        DLL: CosmicWiki.Product.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ProductDatabase: ${PRODUCT_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_PRODUCT;Password=CosmicWikiProduct;Data Source=oracle:1521/FREEPDB1}
+      Jwt__PublicKeyPath: Keys/public_key.pem
+      Kafka__BootstrapServers: kafka:29092
+      Caching__Enabled: "true"
+      Caching__Redis__ConnectionString: redis:6379
+    depends_on:
+      oracle:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  discovery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Discovery/CosmicWiki.Discovery.Api/CosmicWiki.Discovery.Api.csproj
+        DLL: CosmicWiki.Discovery.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Jwt__PublicKeyPath: Keys/public_key.pem
+      Kafka__BootstrapServers: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  ordering:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Ordering/CosmicWiki.Ordering.Api/CosmicWiki.Ordering.Api.csproj
+        DLL: CosmicWiki.Ordering.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Jwt__PublicKeyPath: Keys/public_key.pem
+      Kafka__BootstrapServers: kafka:29092
+      InternalOrdering__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
+    depends_on:
+      oracle:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  payments:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Payments/CosmicWiki.Payments.Api/CosmicWiki.Payments.Api.csproj
+        DLL: CosmicWiki.Payments.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Kafka__BootstrapServers: kafka:29092
+      OrderingService__BaseUrl: http://ordering:8080
+      OrderingService__AllowHttp: "true"
+      OrderingService__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
+      PaymentWebhook__SharedSecret: ${PAYMENT_WEBHOOK_SECRET:-local-payment-secret}
+      StripeWebhook__SigningSecret: ${STRIPE_WEBHOOK_SECRET:-local-stripe-secret}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      ordering:
+        condition: service_started
+
+  visit:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Visit/CosmicWiki.Visit.Api/CosmicWiki.Visit.Api.csproj
+        DLL: CosmicWiki.Visit.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      Jwt__PublicKeyPath: Keys/public_key.pem
+    depends_on:
+      oracle:
+        condition: service_healthy
+
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PROJECT: Gateway/CosmicWiki.Gateway.Api/CosmicWiki.Gateway.Api.csproj
+        DLL: CosmicWiki.Gateway.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ReverseProxy__Clusters__auth-cluster__Destinations__auth-api__Address: http://auth:8080/
+      ReverseProxy__Clusters__catalog-cluster__Destinations__catalog-api__Address: http://catalog:8080/
+      ReverseProxy__Clusters__product-cluster__Destinations__product-api__Address: http://product:8080/
+      ReverseProxy__Clusters__discovery-cluster__Destinations__discovery-api__Address: http://discovery:8080/
+      ReverseProxy__Clusters__ordering-cluster__Destinations__ordering-api__Address: http://ordering:8080/
+      ReverseProxy__Clusters__payments-cluster__Destinations__payments-api__Address: http://payments:8080/
+      ReverseProxy__Clusters__visit-cluster__Destinations__visit-api__Address: http://visit:8080/
+    ports:
+      - "${GATEWAY_PORT:-5000}:8080"
+    depends_on:
+      - auth
+      - catalog
+      - product
+      - discovery
+      - ordering
+      - payments
+      - visit
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
+    depends_on:
+      - gateway
+
+volumes:
+  oradata:
+  redisdata:
