@@ -95,7 +95,14 @@ public sealed class ProductInventoryReservationService(
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None);
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+                // ORA-50045: connection already closed by server, ignore rollback error
+            }
             throw;
         }
     }
@@ -136,7 +143,13 @@ public sealed class ProductInventoryReservationService(
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None);
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+            }
             throw;
         }
     }
@@ -189,7 +202,13 @@ public sealed class ProductInventoryReservationService(
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None);
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+            }
             throw;
         }
     }
@@ -262,7 +281,13 @@ public sealed class ProductInventoryReservationService(
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None);
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+            }
             throw;
         }
     }
@@ -278,7 +303,13 @@ public sealed class ProductInventoryReservationService(
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None);
+            try
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+            }
+            catch
+            {
+            }
             throw;
         }
     }

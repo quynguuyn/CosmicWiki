@@ -1,9 +1,11 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Visit.Api.Authorization;
 using CosmicWiki.Visit.Api.Health;
 using CosmicWiki.Visit.Application;
 using CosmicWiki.Visit.Infrastructure;
+using CosmicWiki.Visit.Infrastructure.Persistence;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -53,6 +55,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<VisitDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 if (app.Environment.IsDevelopment())

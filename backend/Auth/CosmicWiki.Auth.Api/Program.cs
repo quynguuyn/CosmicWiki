@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Auth.Api.Authorization;
 using CosmicWiki.Auth.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -141,6 +142,8 @@ using (var scope = app.Services.CreateScope())
     var dbContext =
         scope.ServiceProvider
             .GetRequiredService<AuthDbContext>();
+
+    await dbContext.Database.MigrateAsync();
 
     await AuthDataSeeder.SeedAsync(
         dbContext);

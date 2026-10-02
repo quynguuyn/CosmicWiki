@@ -1,6 +1,8 @@
 using System.Threading.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Newsletter.Application;
 using CosmicWiki.Newsletter.Infrastructure;
+using CosmicWiki.Newsletter.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +31,12 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<NewsletterDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())

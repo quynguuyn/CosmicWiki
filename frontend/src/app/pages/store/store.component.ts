@@ -23,6 +23,7 @@ interface StoreProduct {
   urls?: string[];
   images?: string[];
   desc: string;
+  stockQuantity: number;
 }
 
 interface CartItem {
@@ -271,7 +272,7 @@ export class StoreComponent {
         description: product.desc,
         originalPrice: product.price,
         salePrice: product.price,
-        stockQuantity: 1,
+        stockQuantity: product.stockQuantity,
         status: 'Active',
         categoryId: product.category,
         urls: [product.image],
@@ -304,7 +305,8 @@ export class StoreComponent {
       url,
       urls,
       images: urls.length > 0 ? urls : [url],
-      desc: product.description ?? 'Hiện vật được tuyển chọn trong bộ sưu tập CosmicWiki.'
+      desc: product.description ?? 'Hiện vật được tuyển chọn trong bộ sưu tập CosmicWiki.',
+      stockQuantity: product.stockQuantity
     };
   }
 

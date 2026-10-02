@@ -1,4 +1,4 @@
-﻿<main class="store-page">
+<main class="store-page">
 
   <!-- ==================== STORE HERO ==================== -->
   <section class="store-hero cosmic-glass">
@@ -173,13 +173,16 @@
       </p>
 
 
-      <!-- Product Price -->
+      <!-- Product Price & Stock -->
       <div class="product-price">
         <span>Giá lưu trữ:</span>
-
         <strong>
           {{ formatCurrency(product.price) }}
         </strong>
+      </div>
+
+      <div class="product-stock" style="font-size: 0.85rem; color: #a1a1aa; margin-top: 4px;">
+        <span>Kho: {{ product.stockQuantity > 0 ? product.stockQuantity : 'Hết hàng' }}</span>
       </div>
 
 
@@ -190,7 +193,7 @@
           Xem chi tiết
         </button>
 
-        <button type="button" class="btn-primary" (click)="addToCart(product)">
+        <button type="button" class="btn-primary" (click)="addToCart(product)" [disabled]="product.stockQuantity <= 0">
           <span class="material-symbols-outlined">
             shopping_bag
           </span>
@@ -279,22 +282,16 @@
           </div>
 
           <div class="image-thumbnails image-thumbnails-side" *ngIf="detailImages.length > 1">
-            <button
-              type="button"
-              *ngFor="let image of detailImages | slice:0:2"
-              [class.active]="selectedProduct.image === image"
-              (click)="selectProductImage(image)"
+            <button type="button" *ngFor="let image of detailImages | slice:0:2"
+              [class.active]="selectedProduct.image === image" (click)="selectProductImage(image)"
               [attr.aria-label]="'Xem ảnh ' + selectedProduct.title">
               <img [src]="image" [alt]="selectedProduct.title">
             </button>
           </div>
 
           <div class="image-thumbnails image-thumbnails-bottom" *ngIf="detailImages.length > 2">
-            <button
-              type="button"
-              *ngFor="let image of detailImages | slice:2:5"
-              [class.active]="selectedProduct.image === image"
-              (click)="selectProductImage(image)"
+            <button type="button" *ngFor="let image of detailImages | slice:2:5"
+              [class.active]="selectedProduct.image === image" (click)="selectProductImage(image)"
               [attr.aria-label]="'Xem ảnh ' + selectedProduct.title">
               <img [src]="image" [alt]="selectedProduct.title">
             </button>
@@ -362,9 +359,14 @@
                 {{ formatCurrency(selectedProduct.price) }}
               </strong>
 
+              <div style="font-size: 0.85rem; color: #a1a1aa; margin-top: 4px;">
+                Kho: {{ selectedProduct.stockQuantity > 0 ? selectedProduct.stockQuantity : 'Hết hàng' }}
+              </div>
+
             </div>
 
-            <button type="button" class="btn-primary modal-cart-button" (click)="addToCart(selectedProduct)">
+            <button type="button" class="btn-primary modal-cart-button" (click)="addToCart(selectedProduct)"
+              [disabled]="selectedProduct.stockQuantity <= 0">
               <span class="material-symbols-outlined">
                 shopping_bag
               </span>

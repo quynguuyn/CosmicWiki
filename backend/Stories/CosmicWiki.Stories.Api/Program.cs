@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Caching;
 using CosmicWiki.Stories.Api.Authorization;
@@ -44,6 +45,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<StoriesDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 app.UseMiddleware<SecurityHeadersMiddleware>();
 if (app.Environment.IsDevelopment())
 {

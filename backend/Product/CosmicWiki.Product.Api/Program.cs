@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Caching;
 using CosmicWiki.Messaging.Kafka;
@@ -82,6 +83,30 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
+    
+    // Wait for database to be ready
+    var maxRetries = 30;
+    var retryDelay = TimeSpan.FromSeconds(2);
+    for (int i = 0; i < maxRetries; i++)
+    {
+        try
+        {
+            await dbContext.Database.CanConnectAsync();
+            break;
+        }
+        catch
+        {
+            if (i == maxRetries - 1) throw;
+            await Task.Delay(retryDelay);
+        }
+    }
+    
+    await dbContext.Database.MigrateAsync();
+}
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
