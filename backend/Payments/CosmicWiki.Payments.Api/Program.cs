@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Messaging.Kafka;
 using CosmicWiki.Payments.Api.Health;
@@ -7,6 +8,7 @@ using CosmicWiki.Payments.Api.Security;
 using CosmicWiki.Payments.Application;
 using CosmicWiki.Payments.Application.Abstractions;
 using CosmicWiki.Payments.Infrastructure;
+using CosmicWiki.Payments.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +59,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 if (app.Environment.IsDevelopment())

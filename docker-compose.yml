@@ -5,9 +5,9 @@ services:
     image: gvenzl/oracle-free:latest
     container_name: cosmicwiki-oracle
     environment:
-      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?Set ORACLE_PASSWORD before starting}
-      APP_USER: ${ORACLE_APP_USER:-COSMICWIKI_AUTH}
-      APP_USER_PASSWORD: ${ORACLE_APP_USER_PASSWORD:?Set ORACLE_APP_USER_PASSWORD before starting}
+      ORACLE_PASSWORD: CosmicWiki
+      APP_USER: COSMICWIKI_AUTH
+      APP_USER_PASSWORD: CosmicWiki
     ports:
       - "${ORACLE_PORT:-1523}:1521"
     volumes:
@@ -69,7 +69,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__AuthDatabase: ${AUTH_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_AUTH;Password=CosmicWikiAuth;Data Source=oracle:1521/FREEPDB1}
+      ConnectionStrings__AuthDatabase: User Id=COSMICWIKI_AUTH;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
     depends_on:
       oracle:
@@ -85,7 +85,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__CatalogDatabase: ${CATALOG_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_CATALOG;Password=CosmicWikiCatalog;Data Source=oracle:1521/FREEPDB1}
+      ConnectionStrings__CatalogDatabase: User Id=COSMICWIKI_CATALOG;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
     depends_on:
@@ -104,7 +104,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__ProductDatabase: ${PRODUCT_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_PRODUCT;Password=CosmicWikiProduct;Data Source=oracle:1521/FREEPDB1}
+      ConnectionStrings__ProductDatabase: User Id=COSMICWIKI_PRODUCT;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
       Caching__Enabled: "true"
@@ -127,7 +127,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__StoriesDatabase: ${STORIES_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_STORIES;******;Data Source=oracle:1521/FREEPDB1}
+      ConnectionStrings__StoriesDatabase: User Id=COSMICWIKI_STORIES;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Jwt__PublicKeyPath: Keys/public_key.pem
       Caching__Enabled: "true"
       Caching__Redis__ConnectionString: redis:6379
@@ -167,8 +167,13 @@ services:
       Kafka__BootstrapServers: kafka:29092
       InternalOrdering__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
       PaymentProvider__Mode: ${PAYMENT_PROVIDER_MODE:-disabled}
-      PaymentProvider__SecretKey: ${STRIPE_SECRET_KEY:-}
+      PaymentProvider__SecretKey: sk_test_51UHN9aKCQRD3Zcj5kKXQ6w9lCg9H6o9oYWtAxwk3ymb9XCj9TQaCLrm0M40bptgiSlm6Va68ketLrr2j1Pwe7K3Z008HnAJHMu
       PaymentProvider__ApiBaseUrl: https://api.stripe.com
+      ConnectionStrings__OrderingDatabase: User Id=COSMICWIKI_ORDERING;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
+      ConnectionStrings__PaymentsDatabase: User Id=COSMICWIKI_PAYMENTS;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
+      ConnectionStrings__ProductDatabase: User Id=COSMICWIKI_PRODUCT;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1;Validate Connection=true
+      Caching__Enabled: "true"
+      Caching__Redis__ConnectionString: redis:6379
     depends_on:
       oracle:
         condition: service_healthy
@@ -193,6 +198,7 @@ services:
       OrderingService__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
       PaymentWebhook__SharedSecret: ${PAYMENT_WEBHOOK_SECRET:-local-payment-secret}
       StripeWebhook__SigningSecret: ${STRIPE_WEBHOOK_SECRET:-local-stripe-secret}
+      ConnectionStrings__PaymentsDatabase: User Id=COSMICWIKI_PAYMENTS;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
     depends_on:
       kafka:
         condition: service_healthy
@@ -210,6 +216,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       Jwt__PublicKeyPath: Keys/public_key.pem
+      ConnectionStrings__VisitDatabase: User Id=COSMICWIKI_VISIT;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
     depends_on:
       oracle:
         condition: service_healthy
@@ -224,7 +231,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__NewsletterDatabase: ${NEWSLETTER_DATABASE_CONNECTION_STRING:-User Id=COSMICWIKI_NEWSLETTER;Password=change-me;Data Source=oracle:1521/FREEPDB1}
+      ConnectionStrings__NewsletterDatabase: User Id=COSMICWIKI_NEWSLETTER;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Newsletter__ConfirmationBaseUrl: ${NEWSLETTER_CONFIRMATION_BASE_URL:-http://localhost:5000/api/newsletter/confirm}
     depends_on:
       oracle:

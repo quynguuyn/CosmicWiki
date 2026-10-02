@@ -32,7 +32,7 @@ export class OrderingComponent {
     this.error = '';
     this.orders.createOrder({
       customerId,
-      currency: 'VND',
+      currency: 'USD',
       lines: this.cart.lines().map(line => ({ productId: line.product.id, quantity: line.quantity }))
     }).subscribe({
       next: order => this.router.navigate(['/payment'], { state: { order } }),

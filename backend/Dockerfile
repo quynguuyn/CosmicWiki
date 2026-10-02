@@ -12,6 +12,12 @@ RUN dotnet publish "$PROJECT" \
     --no-restore \
     --no-self-contained
 
+RUN project_dir="$(dirname "$PROJECT")"; \
+    if [ -f "$project_dir/Keys/public_key.pem" ]; then \
+        mkdir -p /app/publish/Keys; \
+        cp "$project_dir/Keys/public_key.pem" /app/publish/Keys/public_key.pem; \
+    fi
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 ARG DLL

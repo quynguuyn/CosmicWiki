@@ -8,7 +8,10 @@ RUN npm ci
 
 COPY . .
 RUN npm run build -- --configuration=production
-RUN find dist/frontend -type f -name '*.js' -exec sed -i "s|__STRIPE_PUBLISHABLE_KEY__|${STRIPE_PUBLISHABLE_KEY}|g" {} +
+
+# Replace the placeholder with the actual key (using a more robust approach)
+RUN find dist/frontend -type f -name '*.js' -exec sed -i "s|__STRIPE_PUBLISHABLE_KEY__|${STRIPE_PUBLISHABLE_KEY}|g" {} + && \
+    find dist/frontend -type f -name '*.js' -exec sed -i "s|stripePublishableKey:\"\"|stripePublishableKey:\"${STRIPE_PUBLISHABLE_KEY}\"|g" {} +
 
 FROM nginx:1.27-alpine AS runtime
 

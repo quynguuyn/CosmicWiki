@@ -34,13 +34,12 @@ export class PaymentComponent implements OnInit {
   private elements: StripeElements | null = null;
   private paymentControl: StripePaymentElement | null = null;
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const navigationOrder = history.state?.order as CreateOrderResult | undefined;
     const orderId = navigationOrder?.orderId ?? this.route.snapshot.queryParamMap.get('orderId');
     if (!orderId) { this.loading = false; this.error = 'Không tìm thấy đơn hàng.'; return; }
     this.order = navigationOrder ?? null;
-    if (navigationOrder?.clientSecret) void this.mountStripeElement(navigationOrder.clientSecret);
-    this.cart.clear();
+    if (navigationOrder?.clientSecret) await this.mountStripeElement(navigationOrder.clientSecret);
     this.refreshOrder(orderId);
     timer(3000, 5000).pipe(
       switchMap(() => this.orders.getOrder(orderId)),
@@ -73,6 +72,7 @@ export class PaymentComponent implements OnInit {
     if (result.error) {
       this.paymentError = result.error.message ?? 'Không thể xác nhận thanh toán.';
     } else {
+      this.cart.clear();
       this.refresh();
     }
   }

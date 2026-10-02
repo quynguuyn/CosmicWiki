@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderPaymentIntentValidator>(sp => sp.GetRequiredService<OrderRepository>());
         services.AddScoped<IProductSnapshotProvider, ProductSnapshotProvider>();
         services.AddScoped<IInventoryReservationService, ProductInventoryReservationService>();
+        services.AddScoped<ICartRepository, CartRepository>();
         services.AddHostedService<InventoryReservationReaper>();
         services.Configure<PaymentProviderOptions>(
             configuration.GetSection(PaymentProviderOptions.SectionName));

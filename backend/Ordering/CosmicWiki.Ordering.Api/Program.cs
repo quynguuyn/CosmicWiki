@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Messaging.Kafka;
 using CosmicWiki.Ordering.Api.Authorization;
@@ -7,6 +8,7 @@ using CosmicWiki.Ordering.Api.Internal;
 using CosmicWiki.Ordering.Api.RateLimiting;
 using CosmicWiki.Ordering.Application;
 using CosmicWiki.Ordering.Infrastructure;
+using CosmicWiki.Ordering.Infrastructure.Persistence;
 using CosmicWiki.Caching;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -76,6 +78,13 @@ builder.Services.Configure<InternalOrderingOptions>(
     builder.Configuration.GetSection(InternalOrderingOptions.SectionName));
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 if (app.Environment.IsDevelopment())
