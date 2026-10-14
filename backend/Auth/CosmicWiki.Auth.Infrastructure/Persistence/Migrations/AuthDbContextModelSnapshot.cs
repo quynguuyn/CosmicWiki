@@ -53,6 +53,54 @@ namespace CosmicWiki.Auth.Infrastructure.Persistence.Migrations
                     b.ToTable("PERMISSIONS", (string)null);
                 });
 
+            modelBuilder.Entity("CosmicWiki.Auth.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ID");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("EXPIRES_AT_UTC");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("FAMILY_ID");
+
+                    b.Property<string>("ReplacedByTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("NVARCHAR2(64)")
+                        .HasColumnName("REPLACED_BY_TOKEN_HASH");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .IsConcurrencyToken()
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("REVOKED_AT_UTC");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("NVARCHAR2(64)")
+                        .HasColumnName("TOKEN_HASH");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("USER_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "FamilyId");
+
+                    b.ToTable("REFRESH_TOKENS", (string)null);
+                });
+
             modelBuilder.Entity("CosmicWiki.Auth.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -92,14 +140,9 @@ namespace CosmicWiki.Auth.Infrastructure.Persistence.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("ROLE_ID");
 
-                    b.Property<Guid?>("RoleId1")
-                        .HasColumnType("RAW(16)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("PermissionId");
-
-                    b.HasIndex("RoleId1");
 
                     b.HasIndex("RoleId", "PermissionId")
                         .IsUnique();
@@ -167,19 +210,23 @@ namespace CosmicWiki.Auth.Infrastructure.Persistence.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("USER_ID");
 
-                    b.Property<Guid?>("UserId1")
-                        .HasColumnType("RAW(16)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "RoleId")
                         .IsUnique();
 
                     b.ToTable("USER_ROLES", (string)null);
+                });
+
+            modelBuilder.Entity("CosmicWiki.Auth.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("CosmicWiki.Auth.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CosmicWiki.Auth.Domain.Entities.RolePermission", b =>
@@ -191,14 +238,10 @@ namespace CosmicWiki.Auth.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("CosmicWiki.Auth.Domain.Entities.Role", null)
-                        .WithMany()
+                        .WithMany("Permissions")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CosmicWiki.Auth.Domain.Entities.Role", null)
-                        .WithMany("Permissions")
-                        .HasForeignKey("RoleId1");
                 });
 
             modelBuilder.Entity("CosmicWiki.Auth.Domain.Entities.UserRole", b =>
@@ -210,14 +253,10 @@ namespace CosmicWiki.Auth.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("CosmicWiki.Auth.Domain.Entities.User", null)
-                        .WithMany()
+                        .WithMany("Roles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CosmicWiki.Auth.Domain.Entities.User", null)
-                        .WithMany("Roles")
-                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("CosmicWiki.Auth.Domain.Entities.Role", b =>

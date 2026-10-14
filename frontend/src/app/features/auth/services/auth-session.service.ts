@@ -8,23 +8,26 @@ import { LoginResponse } from '../models/login-response.model';
 export class AuthSessionService {
 
     private readonly accessTokenKey = 'cosmicwiki_access_token';
+<<<<<<< HEAD
     private readonly expiresAtKey = 'cosmicwiki_access_token_expires_at';
     readonly authenticated = signal(this.hasValidSession());
+=======
+>>>>>>> 47a0bfc14876280edb5425edba4381ef5de4fc91
 
     saveSession(response: LoginResponse): void {
-        const expiresAt =
-            Date.now() + response.expiresIn * 1000;
-
         localStorage.setItem(
             this.accessTokenKey,
             response.accessToken
         );
+<<<<<<< HEAD
 
         localStorage.setItem(
             this.expiresAtKey,
             expiresAt.toString()
         );
         this.authenticated.set(true);
+=======
+>>>>>>> 47a0bfc14876280edb5425edba4381ef5de4fc91
     }
 
     getAccessToken(): string | null {
@@ -43,27 +46,15 @@ export class AuthSessionService {
 
     clearSession(): void {
         localStorage.removeItem(this.accessTokenKey);
+<<<<<<< HEAD
         localStorage.removeItem(this.expiresAtKey);
         this.authenticated.set(false);
+=======
+>>>>>>> 47a0bfc14876280edb5425edba4381ef5de4fc91
     }
 
     isAuthenticated(): boolean {
-        const token = this.getAccessToken();
-
-        if (!token) {
-            return false;
-        }
-
-        const expiresAt = Number(
-            localStorage.getItem(this.expiresAtKey)
-        );
-
-        if (!expiresAt || Date.now() >= expiresAt) {
-            this.clearSession();
-            return false;
-        }
-
-        return true;
+        return this.getAccessToken() !== null;
     }
 
     private hasValidSession(): boolean {
