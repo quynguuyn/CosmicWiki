@@ -40,6 +40,29 @@ public sealed class OrderRepository(
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync(cancellationToken);
 
+    public async Task<(IReadOnlyCollection<Order> Items, int TotalCount)> GetCreatedSincePageAsync(
+        DateTime sinceUtc,
+        Domain.Enums.OrderStatus? status,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.Orders
+            .Where(x => x.CreatedAtUtc >= sinceUtc);
+        if (status.HasValue)
+            query = query.Where(x => x.Status == status.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ThenBy(x => x.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
     public void Add(Order order) => dbContext.Orders.Add(order);
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
 

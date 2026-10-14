@@ -1,6 +1,7 @@
 using CosmicWiki.Catalog.Application.Abstractions.Persistence;
 using CosmicWiki.Catalog.Application.Research;
 using CosmicWiki.Catalog.Domain.Entities;
+using CosmicWiki.Catalog.Domain.Enums;
 using CosmicWiki.Catalog.Domain.ValueObjects;
 using CosmicWiki.Caching;
 using CosmicWiki.Messaging;
@@ -13,6 +14,12 @@ namespace CosmicWiki.Catalog.Infrastructure.Research;
 
 public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
 {
+    private const string CheckpointCacheKey =
+        "admin:jobs:astronomical-research:checkpoint";
+    private const string LastRunCacheKey =
+        "admin:jobs:astronomical-research:last-run";
+    private static readonly SemaphoreSlim RunLock = new(1, 1);
+
     private readonly IAstronomicalResearchProvider _provider;
     private readonly IStarRepository _starRepository;
     private readonly IAstronomicalObjectRepository _objectRepository;
@@ -50,78 +57,187 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
             return;
         }
 
+        await RunLock.WaitAsync(cancellationToken);
+        try
+        {
+            await RunBatchAsync(cancellationToken);
+        }
+        finally
+        {
+            RunLock.Release();
+        }
+    }
+
+    private async Task RunBatchAsync(CancellationToken cancellationToken)
+    {
         var startedAtUtc = DateTime.UtcNow;
-        var candidates = await _provider.FindCandidatesAsync(cancellationToken);
+        var pageSize = Math.Clamp(_options.PageSize, 1, 500);
+        var maxPages = Math.Clamp(_options.MaxPagesPerRun, 1, 100);
+        var checkpoint = await _cacheStore.GetAsync<ResearchCheckpoint>(
+            CheckpointCacheKey,
+            cancellationToken);
+        var cursor = checkpoint?.AfterMainId;
+        var candidateCount = 0;
         var createdCount = 0;
         var existingCount = 0;
-        var seenIdentifiers = new HashSet<string>(
-            StringComparer.OrdinalIgnoreCase);
+        var pagesProcessed = 0;
+        var sweepCompleted = false;
 
-        foreach (var candidate in candidates)
+        for (var pageNumber = 0; pageNumber < maxPages; pageNumber++)
         {
-            var identifierKey =
-                $"{candidate.Catalog}:{candidate.CatalogValue}";
-
-            if (!seenIdentifiers.Add(identifierKey))
-                continue;
-
-            var existing = await _starRepository.GetByCatalogIdentifierAsync(
-                candidate.Catalog,
-                candidate.CatalogValue,
+            var page = await _provider.FindCandidatesAsync(
+                cursor,
+                pageSize,
                 cancellationToken);
+            pagesProcessed++;
+            candidateCount += page.Candidates.Count;
 
-            if (existing is not null)
+            var uniqueCandidates = page.Candidates
+                .DistinctBy(
+                    candidate =>
+                        $"{candidate.Catalog}:{candidate.CatalogValue}",
+                    StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var existingValues =
+                await _starRepository.GetExistingCatalogIdentifierValuesAsync(
+                    "SIMBAD",
+                    uniqueCandidates.Select(candidate => candidate.CatalogValue).ToArray(),
+                    cancellationToken);
+            var existingSet = existingValues.ToHashSet(
+                StringComparer.OrdinalIgnoreCase);
+            var pageCreatedCount = 0;
+
+            foreach (var candidate in uniqueCandidates)
             {
-                existingCount++;
-                continue;
+                if (existingSet.Contains(candidate.CatalogValue))
+                {
+                    existingCount++;
+                    continue;
+                }
+
+                var astronomicalObject = AstronomicalObject.Create(
+                    candidate.Name,
+                    candidate.Kind,
+                    candidate.ObjectType,
+                    candidate.Catalog,
+                    candidate.CatalogValue,
+                    candidate.RightAscensionDegrees,
+                    candidate.DeclinationDegrees);
+                await _objectRepository.AddAsync(
+                    astronomicalObject,
+                    cancellationToken);
+
+                if (candidate.Kind == AstronomicalObjectKind.Star)
+                {
+                    var star = Star.Create(astronomicalObject.Id, candidate.Name);
+                    star.AddCatalogIdentifier(
+                        CatalogIdentifier.Create(
+                            candidate.Catalog,
+                            candidate.CatalogValue));
+                    star.AddObjectType(
+                        AstronomicalObjectType.Create(
+                            candidate.ObjectType,
+                            candidate.ObjectType,
+                            "Imported by the scheduled astronomical research job."));
+                    if (candidate.RightAscensionDegrees.HasValue &&
+                        candidate.DeclinationDegrees.HasValue)
+                    {
+                        star.AddCoordinate(
+                            AstronomicalCoordinate.Create(
+                                candidate.RightAscensionDegrees.Value,
+                                candidate.DeclinationDegrees.Value,
+                                CoordinateSystem.ICRS,
+                                2000.0));
+                    }
+
+                    if (candidate.ParallaxMas.HasValue)
+                        star.AddParallax(
+                            ParallaxMeasurement.Create(candidate.ParallaxMas.Value));
+
+                    await _starRepository.AddAsync(star, cancellationToken);
+
+                    _outboxWriter.Add(
+                        new StarCreatedIntegrationEvent(
+                            Guid.NewGuid(),
+                            1,
+                            DateTime.UtcNow,
+                            star.Id,
+                            star.Id,
+                            candidate.Name,
+                            null,
+                            null),
+                        KafkaTopics.CatalogStarCreated);
+                }
+                else
+                {
+                    _outboxWriter.Add(
+                        new AstronomicalObjectCreatedIntegrationEvent(
+                            Guid.NewGuid(),
+                            1,
+                            DateTime.UtcNow,
+                            astronomicalObject.Id,
+                            astronomicalObject.Id,
+                            candidate.Kind.ToString(),
+                            candidate.Name,
+                            candidate.ObjectType),
+                        KafkaTopics.CatalogAstronomicalObjectCreated);
+                }
+
+                createdCount++;
+                pageCreatedCount++;
             }
 
-            var astronomicalObject = AstronomicalObject.Create();
-            var star = Star.Create(astronomicalObject.Id, candidate.Name);
-            star.AddCatalogIdentifier(
-                CatalogIdentifier.Create(candidate.Catalog, candidate.CatalogValue));
-            star.AddObjectType(
-                AstronomicalObjectType.Create(
-                    candidate.ObjectType,
-                    candidate.ObjectType,
-                    "Imported by the scheduled astronomical research job."));
+            if (pageCreatedCount > 0)
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await _objectRepository.AddAsync(astronomicalObject, cancellationToken);
-            await _starRepository.AddAsync(star, cancellationToken);
+            if (page.HasMore && string.IsNullOrWhiteSpace(page.NextCursor))
+                throw new InvalidOperationException(
+                    "SIMBAD reported more results without a usable cursor.");
 
-            _outboxWriter.Add(
-                new StarCreatedIntegrationEvent(
-                    Guid.NewGuid(),
-                    1,
-                    DateTime.UtcNow,
-                    star.Id,
-                    star.Id,
-                    candidate.Name,
-                    null,
-                    null),
-                KafkaTopics.CatalogStarCreated);
-
-            createdCount++;
+            cursor = page.HasMore ? page.NextCursor : null;
+            if (page.HasMore)
+            {
+                await _cacheStore.SetAsync(
+                    CheckpointCacheKey,
+                    new ResearchCheckpoint(cursor),
+                    TimeSpan.FromDays(365),
+                    cancellationToken);
+            }
+            else
+            {
+                await _cacheStore.RemoveAsync(
+                    CheckpointCacheKey,
+                    cancellationToken);
+                sweepCompleted = true;
+                break;
+            }
         }
 
-        if (createdCount > 0)
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var result = new AstronomicalResearchRunResult(
+            startedAtUtc,
+            DateTime.UtcNow,
+            candidateCount,
+            existingCount,
+            createdCount,
+            pagesProcessed,
+            sweepCompleted,
+            cursor);
 
         await _cacheStore.SetAsync(
-            "admin:jobs:astronomical-research:last-run",
-            new AstronomicalResearchRunResult(
-                startedAtUtc,
-                DateTime.UtcNow,
-                candidates.Count,
-                existingCount,
-                createdCount),
+            LastRunCacheKey,
+            result,
             TimeSpan.FromDays(7),
             cancellationToken);
 
         _logger.LogInformation(
-            "Astronomical research job completed. Candidates: {CandidateCount}, existing: {ExistingCount}, created: {CreatedCount}.",
-            candidates.Count,
+            "Astronomical research batch completed. Pages: {PagesProcessed}, candidates: {CandidateCount}, existing: {ExistingCount}, created: {CreatedCount}, sweep completed: {SweepCompleted}, next cursor: {NextCursor}.",
+            pagesProcessed,
+            candidateCount,
             existingCount,
-            createdCount);
+            createdCount,
+            sweepCompleted,
+            cursor);
     }
+
+    private sealed record ResearchCheckpoint(string? AfterMainId);
 }

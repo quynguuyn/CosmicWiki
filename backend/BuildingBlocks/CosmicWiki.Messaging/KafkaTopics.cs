@@ -5,6 +5,9 @@ public static class KafkaTopics
     public const string CatalogStarCreated =
         "cosmicwiki.catalog.star-created";
 
+    public const string CatalogAstronomicalObjectCreated =
+        "cosmicwiki.catalog.object-created";
+
     public const string ProductCreated =
         "cosmicwiki.product.created";
 

@@ -77,6 +77,39 @@ public sealed class CategoryRepository : ICategoryRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<Category>> GetPageAsync(
+        int skip,
+        int take,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Filter(search);
+        return await query
+            .OrderBy(x => x.Name)
+            .ThenBy(x => x.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(
+        string? search,
+        CancellationToken cancellationToken = default) =>
+        Filter(search).CountAsync(cancellationToken);
+
+    private IQueryable<Category> Filter(string? search)
+    {
+        var query = _dbContext.Categories.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim().ToLower();
+            query = query.Where(category =>
+                category.Name.ToLower().Contains(normalizedSearch) ||
+                category.Slug.ToLower().Contains(normalizedSearch));
+        }
+        return query;
+    }
+
     public async Task AddAsync(
         Category category,
         CancellationToken cancellationToken = default)

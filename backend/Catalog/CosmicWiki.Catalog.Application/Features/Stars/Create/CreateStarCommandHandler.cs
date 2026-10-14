@@ -3,6 +3,7 @@ using CosmicWiki.Messaging;
 using CosmicWiki.Messaging.Abstractions;
 using CosmicWiki.Messaging.Contracts.Catalog;
 using CosmicWiki.Catalog.Domain.Entities;
+using CosmicWiki.Catalog.Domain.Enums;
 using CosmicWiki.Catalog.Domain.ValueObjects;
 using CosmicWiki.Caching;
 using MediatR;
@@ -61,7 +62,13 @@ public sealed class CreateStarCommandHandler
             }
         }
 
-        var astronomicalObject = AstronomicalObject.Create();
+        var primaryIdentifier = request.CatalogIdentifiers.FirstOrDefault();
+        var astronomicalObject = AstronomicalObject.Create(
+            request.Name,
+            AstronomicalObjectKind.Star,
+            null,
+            primaryIdentifier?.Catalog,
+            primaryIdentifier?.Value);
 
         var star = Star.Create(
             astronomicalObject.Id,

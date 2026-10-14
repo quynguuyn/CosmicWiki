@@ -14,7 +14,6 @@ namespace CosmicWiki.Discovery.Infrastructure.Messaging;
 
 public sealed class StarSearchDocumentConsumer : BackgroundService
 {
-    private const string SourceType = "star";
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly KafkaConsumerFactory _consumerFactory;
     private readonly IEventBus _eventBus;
@@ -37,8 +36,11 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
         using var consumer = _consumerFactory.Create(
             "cosmicwiki.discovery.star-indexer");
 
-        consumer.Subscribe(KafkaTopics.CatalogStarCreated);
-        _logger.LogInformation("Star search-document consumer started.");
+        consumer.Subscribe([
+            KafkaTopics.CatalogStarCreated,
+            KafkaTopics.CatalogAstronomicalObjectCreated
+        ]);
+        _logger.LogInformation("Astronomical-object search-document consumer started.");
 
         try
         {
@@ -66,30 +68,66 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
         finally
         {
             consumer.Close();
-            _logger.LogInformation("Star search-document consumer stopped.");
+            _logger.LogInformation("Astronomical-object search-document consumer stopped.");
         }
     }
 
     private async Task HandleAsync(ConsumeResult<string, string> result, CancellationToken cancellationToken)
     {
-        var integrationEvent = JsonSerializer.Deserialize<StarCreatedIntegrationEvent>(result.Message.Value)
-            ?? throw new InvalidOperationException("Could not deserialize StarCreatedIntegrationEvent.");
+        Guid sourceId;
+        string sourceType;
+        string name;
+        string? description;
+        string? imageUrl;
+        DateTime occurredAtUtc;
+
+        if (result.Topic == KafkaTopics.CatalogStarCreated)
+        {
+            var integrationEvent =
+                JsonSerializer.Deserialize<StarCreatedIntegrationEvent>(
+                    result.Message.Value)
+                ?? throw new InvalidOperationException(
+                    "Could not deserialize StarCreatedIntegrationEvent.");
+            sourceId = integrationEvent.StarId;
+            sourceType = "star";
+            name = integrationEvent.Name;
+            description = integrationEvent.Description;
+            imageUrl = integrationEvent.ImageUrl;
+            occurredAtUtc = integrationEvent.OccurredAtUtc;
+        }
+        else
+        {
+            var integrationEvent =
+                JsonSerializer.Deserialize<AstronomicalObjectCreatedIntegrationEvent>(
+                    result.Message.Value)
+                ?? throw new InvalidOperationException(
+                    "Could not deserialize AstronomicalObjectCreatedIntegrationEvent.");
+            sourceId = integrationEvent.ObjectId;
+            sourceType = integrationEvent.Kind.ToLowerInvariant();
+            name = integrationEvent.Name;
+            description = integrationEvent.ObjectType;
+            imageUrl = null;
+            occurredAtUtc = integrationEvent.OccurredAtUtc;
+        }
 
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Persistence.DiscoveryDbContext>();
         var document = await db.SearchDocuments.SingleOrDefaultAsync(
-            x => x.SourceType == SourceType && x.SourceId == integrationEvent.StarId, cancellationToken);
+            x => x.SourceType == sourceType && x.SourceId == sourceId, cancellationToken);
 
         if (document is null)
         {
-            db.SearchDocuments.Add(SearchDocument.Create(integrationEvent.StarId, SourceType,
-                integrationEvent.Name, integrationEvent.Description, integrationEvent.ImageUrl,
-                integrationEvent.OccurredAtUtc));
+            db.SearchDocuments.Add(SearchDocument.Create(
+                sourceId,
+                sourceType,
+                name,
+                description,
+                imageUrl,
+                occurredAtUtc));
         }
         else
         {
-            document.Update(integrationEvent.Name, integrationEvent.Description,
-                integrationEvent.ImageUrl, integrationEvent.OccurredAtUtc);
+            document.Update(name, description, imageUrl, occurredAtUtc);
         }
 
         await db.SaveChangesAsync(cancellationToken);

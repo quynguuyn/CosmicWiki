@@ -20,8 +20,10 @@ public sealed class AdminAccountsController(
     [HttpGet("accounts")]
     public async Task<IActionResult> GetAccounts(
         [FromQuery] string? role,
-        CancellationToken cancellationToken) =>
-        Ok(await sender.Send(new GetAdminAccountsQuery(role), cancellationToken));
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default) =>
+        Ok(await sender.Send(new GetAdminAccountsQuery(role, page, pageSize), cancellationToken));
 
     [HttpGet("roles")]
     public async Task<IActionResult> GetRoles(CancellationToken cancellationToken) =>

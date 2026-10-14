@@ -1,4 +1,5 @@
 using CosmicWiki.Catalog.Application.Research;
+using CosmicWiki.Catalog.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,10 +21,17 @@ public sealed class SimBadAstronomicalResearchProvider : IAstronomicalResearchPr
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<AstronomicalResearchCandidate>> FindCandidatesAsync(
+    public async Task<AstronomicalResearchPage> FindCandidatesAsync(
+        string? afterMainId,
+        int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var query = Uri.EscapeDataString(_options.Query);
+        if (pageSize < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+        pageSize = Math.Min(pageSize, 500);
+        var query = Uri.EscapeDataString(
+            BuildQuery(afterMainId, pageSize + 1));
         var endpoint = $"{_options.Endpoint}?request=doQuery&lang=adql&format=csv&query={query}";
 
         using var response = await _httpClient.GetAsync(endpoint, cancellationToken);
@@ -39,36 +47,86 @@ public sealed class SimBadAstronomicalResearchProvider : IAstronomicalResearchPr
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         if (lines.Length < 2)
-            return [];
+            return new AstronomicalResearchPage([], null, false);
 
         var candidates = new List<AstronomicalResearchCandidate>();
+        var rows = lines.Skip(1).Take(pageSize + 1).ToArray();
+        var pageRows = rows.Take(pageSize).ToArray();
 
-        foreach (var line in lines.Skip(1).Take(_options.PageSize))
+        foreach (var line in pageRows)
         {
             var columns = ParseCsvLine(line);
-            if (columns.Length < 2)
-                continue;
+            if (columns.Length < 6 ||
+                string.IsNullOrWhiteSpace(columns[0]) ||
+                string.IsNullOrWhiteSpace(columns[1]) ||
+                string.IsNullOrWhiteSpace(columns[2]))
+                throw new InvalidOperationException(
+                    "SIMBAD returned a malformed row in the astronomical research page.");
 
             var name = columns[0].Trim().Trim('"');
-            var objectType = columns[1].Trim().Trim('"');
-
+            var kindCode = columns[1].Trim().Trim('"');
+            var objectType = columns[2].Trim().Trim('"');
             if (string.IsNullOrWhiteSpace(name) ||
                 string.IsNullOrWhiteSpace(objectType))
-                continue;
+                throw new InvalidOperationException(
+                    "SIMBAD returned an empty identifier or object type in the astronomical research page.");
+
+            var rightAscension = ParseOptionalDouble(columns[3]);
+            var declination = ParseOptionalDouble(columns[4]);
+            var parallax = ParseOptionalDouble(columns[5]);
+            if ((rightAscension is null) != (declination is null))
+                throw new InvalidOperationException(
+                    $"SIMBAD returned incomplete coordinates for '{name}'.");
 
             candidates.Add(
                 new AstronomicalResearchCandidate(
                     name,
+                    kindCode switch
+                    {
+                        "*" => AstronomicalObjectKind.Star,
+                        "G" => AstronomicalObjectKind.Galaxy,
+                        "Pl" => AstronomicalObjectKind.Planet,
+                        _ => AstronomicalObjectKind.Other
+                    },
                     objectType,
                     "SIMBAD",
-                    name));
+                    name,
+                    rightAscension,
+                    declination,
+                    parallax is >= 0 ? parallax : null));
         }
 
         _logger.LogInformation(
-            "SIMBAD research returned {CandidateCount} astronomical candidates.",
-            candidates.Count);
+            "SIMBAD research returned {CandidateCount} candidates; more results: {HasMore}.",
+            candidates.Count,
+            rows.Length > pageSize);
 
-        return candidates;
+        return new AstronomicalResearchPage(
+            candidates,
+            candidates.LastOrDefault()?.CatalogValue,
+            rows.Length > pageSize);
+    }
+
+    private static string BuildQuery(string? afterMainId, int take)
+    {
+        var cursorFilter = string.IsNullOrWhiteSpace(afterMainId)
+            ? string.Empty
+            : $"AND main_id > '{afterMainId.Replace("'", "''", StringComparison.Ordinal)}' ";
+
+        return $"SELECT TOP {take} main_id, otype, otype_txt, ra, dec, plx_value FROM basic " +
+               $"WHERE otype IN ('*', 'G', 'Pl') {cursorFilter}" +
+               "ORDER BY main_id ASC";
+    }
+
+    private static double? ParseOptionalDouble(string value)
+    {
+        value = value.Trim().Trim('"');
+        return string.IsNullOrWhiteSpace(value) ||
+               value.Equals("null", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : double.Parse(
+                value,
+                System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static string[] ParseCsvLine(string line)
@@ -77,10 +135,18 @@ public sealed class SimBadAstronomicalResearchProvider : IAstronomicalResearchPr
         var value = new System.Text.StringBuilder();
         var quoted = false;
 
-        foreach (var character in line)
+        for (var index = 0; index < line.Length; index++)
         {
+            var character = line[index];
             if (character == '"')
             {
+                if (quoted && index + 1 < line.Length && line[index + 1] == '"')
+                {
+                    value.Append('"');
+                    index++;
+                    continue;
+                }
+
                 quoted = !quoted;
                 continue;
             }
@@ -94,6 +160,9 @@ public sealed class SimBadAstronomicalResearchProvider : IAstronomicalResearchPr
 
             value.Append(character);
         }
+
+        if (quoted)
+            throw new FormatException("SIMBAD returned a malformed CSV row.");
 
         values.Add(value.ToString());
         return values.ToArray();
