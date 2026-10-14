@@ -120,18 +120,25 @@ public sealed class AdminJobsController(
         from = Math.Max(0, from);
         var monitoring = JobStorage.Current.GetMonitoringApi();
 
-        object jobs = state.ToLowerInvariant() switch
+        var normalizedState = state.ToLowerInvariant();
+        var jobs = normalizedState switch
         {
-            "enqueued" => monitoring.EnqueuedJobs("default", from, count),
-            "scheduled" => monitoring.ScheduledJobs(from, count),
-            "processing" => monitoring.ProcessingJobs(from, count),
-            "succeeded" => monitoring.SucceededJobs(from, count),
-            "failed" => monitoring.FailedJobs(from, count),
-            "deleted" => monitoring.DeletedJobs(from, count),
+            "enqueued" => monitoring.EnqueuedJobs("default", from, count)
+                .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
+            "scheduled" => monitoring.ScheduledJobs(from, count)
+                .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
+            "processing" => monitoring.ProcessingJobs(from, count)
+                .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
+            "succeeded" => monitoring.SucceededJobs(from, count)
+                .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
+            "failed" => monitoring.FailedJobs(from, count)
+                .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
+            "deleted" => monitoring.DeletedJobs(from, count)
+                .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
             _ => throw new ArgumentException($"Unknown Hangfire state '{state}'.")
         };
 
-        return Ok(new { state = state.ToLowerInvariant(), jobs });
+        return Ok(new { state = normalizedState, jobs });
     }
 
     [HttpGet("hangfire/recurring")]
@@ -176,4 +183,13 @@ public sealed class AdminJobsController(
             ? NoContent()
             : NotFound();
     }
+
+    private static HangfireJobSummary ToHangfireJobSummary(string id, string methodName) =>
+        new(id, new(new(methodName)));
+
+    private sealed record HangfireJobSummary(string Id, HangfireJobDetails Job);
+
+    private sealed record HangfireJobDetails(HangfireJobMethod Method);
+
+    private sealed record HangfireJobMethod(string Name);
 }
