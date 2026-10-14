@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IUserPermissionRepository, UserPermissionRepository>();
         
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AuthDbContext>());
 

@@ -23,11 +23,13 @@ export class ApiService {
 
     post<TRequest, TResponse>(
         endpoint: string,
-        body: TRequest
+        body: TRequest,
+        withCredentials = false
     ) {
         return this.http.post<TResponse>(
             `${this.baseUrl}${endpoint}`,
-            body
+            body,
+            { withCredentials }
         );
     }
 

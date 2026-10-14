@@ -12,6 +12,15 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
+{
+    allowedOrigins = ["http://localhost:4200", "https://localhost:4200"];
+}
+
 if (!builder.Environment.IsDevelopment())
 {
     var privateKeyPem =
@@ -30,6 +39,21 @@ builder.Services
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "Frontend",
+        policy =>
+        {
+            if (allowedOrigins.Length > 0)
+            {
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+        });
+});
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -166,6 +190,8 @@ else
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseCors("Frontend");
 
 app.UseRateLimiter();
 
