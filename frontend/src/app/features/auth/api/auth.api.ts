@@ -18,7 +18,24 @@ export class AuthApi extends FeatureApi {
     login(request: LoginRequest) {
         return this.post<LoginRequest, LoginResponse>(
             '/login',
-            request
+            request,
+            true
+        );
+    }
+
+    refresh() {
+        return this.post<Record<string, never>, LoginResponse>(
+            '/refresh',
+            {},
+            true
+        );
+    }
+
+    logout() {
+        return this.post<Record<string, never>, void>(
+            '/logout',
+            {},
+            true
         );
     }
 }

@@ -8,20 +8,11 @@ import { LoginResponse } from '../models/login-response.model';
 export class AuthSessionService {
 
     private readonly accessTokenKey = 'cosmicwiki_access_token';
-    private readonly expiresAtKey = 'cosmicwiki_access_token_expires_at';
 
     saveSession(response: LoginResponse): void {
-        const expiresAt =
-            Date.now() + response.expiresIn * 1000;
-
         localStorage.setItem(
             this.accessTokenKey,
             response.accessToken
-        );
-
-        localStorage.setItem(
-            this.expiresAtKey,
-            expiresAt.toString()
         );
     }
 
@@ -47,25 +38,9 @@ export class AuthSessionService {
 
     clearSession(): void {
         localStorage.removeItem(this.accessTokenKey);
-        localStorage.removeItem(this.expiresAtKey);
     }
 
     isAuthenticated(): boolean {
-        const token = this.getAccessToken();
-
-        if (!token) {
-            return false;
-        }
-
-        const expiresAt = Number(
-            localStorage.getItem(this.expiresAtKey)
-        );
-
-        if (!expiresAt || Date.now() >= expiresAt) {
-            this.clearSession();
-            return false;
-        }
-
-        return true;
+        return this.getAccessToken() !== null;
     }
 }
