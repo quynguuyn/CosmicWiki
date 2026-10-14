@@ -6,6 +6,8 @@ using CosmicWiki.Caching;
 using CosmicWiki.Catalog.Api.Authorization;
 using CosmicWiki.Catalog.Application;
 using CosmicWiki.Messaging.Kafka;
+using Hangfire;
+using Hangfire.Redis.StackExchange;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -15,6 +17,16 @@ builder.Services.AddCatalogApplication();
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
 builder.Services.AddCosmicWikiCaching(builder.Configuration);
 builder.Services.AddKafkaMessaging(builder.Configuration);
+builder.Services.AddHangfire(
+    configuration =>
+    {
+        configuration.UseSimpleAssemblyNameTypeSerializer();
+        configuration.UseRecommendedSerializerSettings();
+        configuration.UseRedisStorage(
+            builder.Configuration["Hangfire:RedisConnection"]
+            ?? "redis:6379");
+    });
+builder.Services.AddHangfireServer();
 
 builder.Services.AddControllers();
 
@@ -86,6 +98,17 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
     await dbContext.Database.MigrateAsync();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager =
+        scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+
+    recurringJobManager.AddOrUpdate<CosmicWiki.Catalog.Application.Research.IAstronomicalResearchJob>(
+        "astronomical-research",
+        job => job.RunAsync(CancellationToken.None),
+        Cron.Daily(2));
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();

@@ -1,0 +1,73 @@
+.user-page {
+  min-height: calc(100vh - 5rem);
+  display: grid;
+  place-items: center;
+  padding: 7rem var(--gutter-desktop) 3rem;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(114, 160, 193, .2), transparent 42%),
+    var(--surface);
+}
+
+.user-card {
+  width: min(100%, 34rem);
+  padding: 3rem 2.5rem;
+  text-align: center;
+  background: rgba(30, 50, 70, .82);
+  border: 1px solid rgba(184, 212, 232, .24);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .24);
+}
+
+.user-icon {
+  color: var(--primary);
+  font-size: 4.5rem;
+}
+
+.eyebrow {
+  margin: 1rem 0 .5rem;
+  color: var(--tertiary);
+  font-size: .72rem;
+  letter-spacing: .14em;
+}
+
+h1 {
+  margin: 0;
+  color: var(--on-surface);
+}
+
+.user-email {
+  color: var(--on-surface-variant);
+}
+
+.user-actions {
+  display: flex;
+  justify-content: center;
+  gap: .75rem;
+  margin-top: 2rem;
+}
+
+.user-actions a,
+.user-actions button {
+  padding: .7rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn-secondary {
+  background: rgba(184, 212, 232, .12);
+  border-color: rgba(184, 212, 232, .3) !important;
+  color: var(--on-surface);
+}
+
+@media (max-width: 600px) {
+  .user-page { padding-inline: var(--gutter-mobile); }
+  .user-card { padding: 2.5rem 1.5rem; }
+  .user-actions { flex-direction: column; }
+}

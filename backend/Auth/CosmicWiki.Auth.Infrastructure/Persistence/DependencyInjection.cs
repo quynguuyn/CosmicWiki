@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, JwtTokenService>();
         
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<IAdminAccountRepository, AdminAccountRepository>();
 
         return services;
     }

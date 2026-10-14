@@ -1,0 +1,39 @@
+.status-page {
+  min-height: calc(100vh - 5rem);
+  display: grid;
+  place-items: center;
+  padding: 7rem var(--gutter-mobile) 3rem;
+  background: radial-gradient(circle at 50% 12%, rgba(114, 160, 193, .2), transparent 45%);
+}
+
+.status-card {
+  width: min(100%, 34rem);
+  padding: 3rem 2rem;
+  text-align: center;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+}
+
+.status-icon {
+  color: var(--tertiary);
+  font-size: 4rem;
+}
+
+.eyebrow {
+  margin: 1rem 0 .5rem;
+  color: var(--tertiary);
+  font-size: var(--text-label-sm);
+  letter-spacing: .14em;
+}
+
+h1 { margin: 0; font-size: var(--text-headline-md); }
+.status-card p:not(.eyebrow) { color: var(--on-surface-variant); margin: .75rem 0 1.75rem; }
+.status-action {
+  display: inline-block;
+  padding: .7rem 1.1rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--on-primary);
+  text-decoration: none;
+  font-weight: 700;
+}

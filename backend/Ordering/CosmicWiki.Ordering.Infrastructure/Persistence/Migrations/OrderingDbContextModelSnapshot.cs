@@ -29,6 +29,10 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("RAW(16)");
 
+                    b.Property<string>("ClientSecret")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TIMESTAMP(7)");
 
@@ -36,6 +40,10 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("NVARCHAR2(3)");
+
+                    b.Property<string>("CustomerEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("NVARCHAR2(320)");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("RAW(16)");

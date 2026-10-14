@@ -26,6 +26,10 @@ export class AuthService {
         this.session.clearSession();
     }
 
+    get authenticated() {
+        return this.session.authenticated;
+    }
+
     isAuthenticated(): boolean {
         return this.session.isAuthenticated();
     }
@@ -36,5 +40,13 @@ export class AuthService {
 
     getCustomerId(): string | null {
         return this.session.getCustomerId();
+    }
+
+    getEmail(): string | null {
+        return this.session.getEmail();
+    }
+
+    hasPermission(permission: string): boolean {
+        return this.session.hasPermission(permission);
     }
 }

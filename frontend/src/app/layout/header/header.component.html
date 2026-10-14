@@ -21,9 +21,12 @@
 
     <!-- Right Actions -->
     <div class="header-actions">
-      <button class="icon-btn" title="Tìm kiếm biên mục">
+      <form class="header-search" (ngSubmit)="search()">
+        <input [(ngModel)]="searchTerm" name="searchTerm" placeholder="Tìm kiếm" aria-label="Tìm kiếm sản phẩm">
+        <button class="icon-btn" type="submit" title="Tìm kiếm biên mục">
         <span class="material-symbols-outlined">search</span>
-      </button>
+        </button>
+      </form>
 
       <div class="cart-wrapper">
         <a class="icon-btn" routerLink="/cart" title="Giỏ lưu niệm không gian">
@@ -31,6 +34,41 @@
         </a>
         @if (cartCount() > 0) {
         <span class="cart-badge">{{ cartCount() }}</span>
+        }
+      </div>
+
+      <div class="user-menu-wrapper">
+        <button class="icon-btn" type="button" title="Tài khoản" (click)="toggleUserMenu()">
+          <span class="material-symbols-outlined">person</span>
+        </button>
+        @if (userMenuOpen()) {
+        <div class="user-menu cosmic-glass">
+          @if (!isAuthenticated()) {
+          <a routerLink="/login" (click)="userMenuOpen.set(false)">
+            <span class="material-symbols-outlined">login</span>
+            Đăng nhập
+          </a>
+          } @else {
+          <a routerLink="/user" (click)="userMenuOpen.set(false)">
+            <span class="material-symbols-outlined">account_circle</span>
+            Hồ sơ
+          </a>
+          <a routerLink="/orders" (click)="userMenuOpen.set(false)">
+            <span class="material-symbols-outlined">inventory_2</span>
+            Đơn hàng
+          </a>
+          @if (auth.hasPermission('shipping.write')) {
+          <a routerLink="/admin" (click)="userMenuOpen.set(false)">
+            <span class="material-symbols-outlined">dashboard</span>
+            Quản trị
+          </a>
+          }
+          <button type="button" (click)="logout()">
+            <span class="material-symbols-outlined">logout</span>
+            Đăng xuất
+          </button>
+          }
+        </div>
         }
       </div>
 

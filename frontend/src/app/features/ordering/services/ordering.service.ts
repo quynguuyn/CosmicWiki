@@ -13,4 +13,8 @@ export class OrderingService {
   getOrder(orderId: string) {
     return this.api.getOrder(orderId);
   }
+
+  getOrders() {
+    return this.api.getOrders();
+  }
 }

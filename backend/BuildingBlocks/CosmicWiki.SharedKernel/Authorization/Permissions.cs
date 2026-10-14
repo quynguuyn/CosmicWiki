@@ -21,4 +21,5 @@ public static class Permissions
     public const string VisitWrite = "visit.write";
 
     public const string OrderingWrite = "ordering.write";
+    public const string ShippingWrite = "shipping.write";
 }

@@ -1,6 +1,9 @@
 ﻿using CosmicWiki.Auth.Domain.Entities;
+using CosmicWiki.Auth.Application.Abstractions.Persistence;
+using CosmicWiki.Auth.Domain.ValueObjects;
 using CosmicWiki.SharedKernel.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace CosmicWiki.Auth.Infrastructure.Persistence.Seed;
 
@@ -8,6 +11,8 @@ public static class AuthDataSeeder
 {
     public static async Task SeedAsync(
         AuthDbContext dbContext,
+        IPasswordHasher passwordHasher,
+        IConfiguration configuration,
         CancellationToken cancellationToken = default)
     {
         await SeedPermissionsAsync(
@@ -28,12 +33,61 @@ public static class AuthDataSeeder
         await dbContext.SaveChangesAsync(
             cancellationToken);
 
+        await SeedConfiguredUserAsync(
+            dbContext,
+            passwordHasher,
+            configuration,
+            cancellationToken);
+
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+
         await SeedUserRolesAsync(
             dbContext,
             cancellationToken);
 
         await dbContext.SaveChangesAsync(
             cancellationToken);
+    }
+
+    private static async Task SeedConfiguredUserAsync(
+        AuthDbContext dbContext,
+        IPasswordHasher passwordHasher,
+        IConfiguration configuration,
+        CancellationToken cancellationToken)
+    {
+        var username = configuration["Auth:SeedUser:Username"];
+        var email = configuration["Auth:SeedUser:Email"];
+        var password = configuration["Auth:SeedUser:Password"];
+
+        if (string.IsNullOrWhiteSpace(username) ||
+            string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(password))
+            return;
+
+        var user = await dbContext.Users
+            .SingleOrDefaultAsync(x => x.Username == Username.Create(username), cancellationToken);
+
+        if (user is null)
+        {
+            user = User.Create(
+                Username.Create(username),
+                Email.Create(email),
+                passwordHasher.Hash(password));
+            dbContext.Users.Add(user);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var roles = await dbContext.Roles.ToListAsync(cancellationToken);
+        foreach (var role in roles)
+        {
+            if (await dbContext.UserRoles.AnyAsync(
+                    x => x.UserId == user.Id && x.RoleId == role.Id,
+                    cancellationToken))
+                continue;
+
+            dbContext.UserRoles.Add(UserRole.Create(user.Id, role.Id));
+        }
     }
     
     private static async Task SeedUserRolesAsync(
@@ -91,7 +145,8 @@ public static class AuthDataSeeder
             (Permissions.VisitRead, "Read Visit"),
             (Permissions.VisitWrite, "Write Visit"),
 
-            (Permissions.OrderingWrite, "Create Orders")
+            (Permissions.OrderingWrite, "Create Orders"),
+            (Permissions.ShippingWrite, "Update shipping statuses")
         };
 
         foreach (var (code, name) in permissions)
