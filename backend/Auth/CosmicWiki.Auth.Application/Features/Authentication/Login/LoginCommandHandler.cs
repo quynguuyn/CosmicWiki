@@ -12,17 +12,20 @@ public sealed class LoginCommandHandler
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
     private readonly IUserPermissionRepository _userPermissionRepository;
+    private readonly IRefreshTokenService _refreshTokenService;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         ITokenService tokenService,
-        IUserPermissionRepository userPermissionRepository)
+        IUserPermissionRepository userPermissionRepository,
+        IRefreshTokenService refreshTokenService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _userPermissionRepository = userPermissionRepository;
+        _refreshTokenService = refreshTokenService;
     }
 
     public async Task<LoginResponse> Handle(
@@ -54,7 +57,10 @@ public sealed class LoginCommandHandler
         var permissions = await _userPermissionRepository.GetPermissionCodesAsync(user.Id, cancellationToken);
 
         var accessToken = _tokenService.GenerateAccessToken(user, permissions);
+        var refreshToken = await _refreshTokenService.CreateAsync(
+            user.Id,
+            cancellationToken);
 
-        return new LoginResponse(accessToken, 3600);
+        return new LoginResponse(accessToken, 3600, refreshToken);
     }
 }

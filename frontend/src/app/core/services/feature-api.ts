@@ -20,11 +20,13 @@ export abstract class FeatureApi {
 
     protected post<TRequest, TResponse>(
         endpoint: string,
-        body: TRequest
+        body: TRequest,
+        withCredentials = false
     ) {
         return this.api.post<TRequest, TResponse>(
             `${this.basePath}${endpoint}`,
-            body
+            body,
+            withCredentials
         );
     }
 
