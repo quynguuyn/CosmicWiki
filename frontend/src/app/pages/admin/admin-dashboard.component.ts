@@ -45,7 +45,7 @@ import { API_CONFIG } from '../../core/config/api.config';
           <div class="hangfire-job__details">
             <span>Nguồn: {{ researchJob.source }}</span>
             <span>Lịch: {{ researchJob.schedule }}</span>
-            <span>Mỗi lần: {{ researchJob.pageSize }} bản ghi</span>
+            <span>Tối đa mỗi lần: {{ researchJob.maxRecordsPerRun }} bản ghi</span>
           </div>
           <div class="hangfire-job__actions">
             <span class="muted">{{ researchJobMessage }}</span>
@@ -61,28 +61,43 @@ import { API_CONFIG } from '../../core/config/api.config';
           <button type="button" class="run-job-button" (click)="loadHangfireOverview()">Làm mới</button>
         </div>
         <div class="hangfire-tabs">
-          <button type="button" [class.active]="hangfireTab === 'jobs'" (click)="hangfireTab = 'jobs'">Jobs</button>
-          <button type="button" [class.active]="hangfireTab === 'retries'" (click)="hangfireTab = 'retries'">Retries</button>
-          <button type="button" [class.active]="hangfireTab === 'recurring'" (click)="hangfireTab = 'recurring'; loadRecurringJobs()">Recurring</button>
-          <button type="button" [class.active]="hangfireTab === 'servers'" (click)="hangfireTab = 'servers'">Servers</button>
+          <button type="button" [class.active]="hangfireTab === 'jobs'" (click)="setHangfireTab('jobs')">Jobs</button>
+          <button type="button" [class.active]="hangfireTab === 'retries'" (click)="setHangfireTab('retries')">Retries</button>
+          <button type="button" [class.active]="hangfireTab === 'recurring'" (click)="setHangfireTab('recurring')">Recurring</button>
+          <button type="button" [class.active]="hangfireTab === 'servers'" (click)="setHangfireTab('servers')">Servers</button>
         </div>
         <div class="hangfire-stats" *ngIf="hangfireTab === 'jobs' || hangfireTab === 'retries'">
           <div *ngFor="let item of hangfireStats">{{ item.label }} <strong>{{ item.value }}</strong></div>
         </div>
         <div class="hangfire-job-list" *ngIf="hangfireTab === 'jobs' || hangfireTab === 'retries'">
           <div class="hangfire-list-heading"><strong>{{ hangfireTab === 'retries' ? 'Failed jobs / retries' : 'Recent succeeded jobs' }}</strong><button type="button" (click)="loadHangfireJobs(hangfireTab === 'retries' ? 'failed' : 'succeeded')">Làm mới</button></div>
+          <p class="muted" *ngIf="hangfireJobsError">{{ hangfireJobsError }}</p>
+          <p class="muted" *ngIf="hangfireJobsLoading">Đang tải Hangfire jobs...</p>
           <div class="hangfire-list-row" *ngFor="let job of hangfireJobs">
             <code>{{ job.id }}</code><span>{{ job.job?.method?.name || 'Background job' }}</span>
             <button type="button" *ngIf="hangfireTab === 'retries'" (click)="requeueHangfireJob(job.id)">Requeue</button>
             <button type="button" (click)="deleteHangfireJob(job.id)">Xóa</button>
           </div>
-          <p class="muted" *ngIf="hangfireJobs.length === 0">Không có job trong trạng thái này.</p>
+          <p class="muted" *ngIf="!hangfireJobsLoading && !hangfireJobsError && hangfireJobs.length === 0">Không có job trong trạng thái này.</p>
+          <nav class="hangfire-pagination" aria-label="Phân trang Hangfire jobs" *ngIf="!hangfireJobsLoading && totalHangfirePages > 1">
+            <button type="button" [disabled]="hangfirePage <= 1" (click)="goToHangfirePage(hangfirePage - 1)">Trước</button>
+            <span>Trang {{ hangfirePage }} / {{ totalHangfirePages }} · {{ hangfireTotalCount }} jobs</span>
+            <button type="button" [disabled]="hangfirePage >= totalHangfirePages" (click)="goToHangfirePage(hangfirePage + 1)">Sau</button>
+          </nav>
         </div>
         <div class="hangfire-recurring" *ngIf="hangfireTab === 'recurring'">
+          <p class="muted" *ngIf="recurringJobsLoading">Đang tải recurring jobs...</p>
+          <p class="muted" *ngIf="recurringJobsError">{{ recurringJobsError }}</p>
           <div class="hangfire-list-row" *ngFor="let job of recurringJobs">
             <strong>{{ job.id }}</strong><code>{{ job.cron }}</code><span>{{ job.nextExecution | date:'short' }}</span>
             <button type="button" (click)="triggerRecurringJob(job.id)">Chạy ngay</button>
           </div>
+          <p class="muted" *ngIf="!recurringJobsLoading && !recurringJobsError && recurringJobs.length === 0">Không có recurring job.</p>
+          <nav class="hangfire-pagination" aria-label="Phân trang recurring jobs" *ngIf="!recurringJobsLoading && recurringTotalPages > 1">
+            <button type="button" [disabled]="recurringPage <= 1" (click)="goToRecurringPage(recurringPage - 1)">Trước</button>
+            <span>Trang {{ recurringPage }} / {{ recurringTotalPages }} · {{ recurringTotalCount }} jobs</span>
+            <button type="button" [disabled]="recurringPage >= recurringTotalPages" (click)="goToRecurringPage(recurringPage + 1)">Sau</button>
+          </nav>
         </div>
         <div class="hangfire-servers" *ngIf="hangfireTab === 'servers'">
           <div class="hangfire-server" *ngFor="let server of hangfireServers">
@@ -126,6 +141,7 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
     enabled: false,
     schedule: 'Đang tải...',
     pageSize: 0,
+    maxRecordsPerRun: 0,
     source: 'SIMBAD'
   };
   researchJobRunning = false;
@@ -134,7 +150,19 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
   hangfireTab: 'jobs' | 'retries' | 'recurring' | 'servers' = 'jobs';
   hangfireServers: Array<{ name: string; workers: number; queues: string[]; heartbeatUtc: string }> = [];
   hangfireJobs: Array<any> = [];
+  hangfirePage = 1;
+  readonly hangfirePageSize = 10;
+  hangfireTotalCount = 0;
+  totalHangfirePages = 0;
+  hangfireJobsLoading = false;
+  hangfireJobsError = '';
   recurringJobs: Array<any> = [];
+  recurringPage = 1;
+  readonly recurringPageSize = 10;
+  recurringTotalCount = 0;
+  recurringTotalPages = 0;
+  recurringJobsLoading = false;
+  recurringJobsError = '';
   hangfireStats = [
     { label: 'Enqueued', key: 'enqueued', value: 0 },
     { label: 'Scheduled', key: 'scheduled', value: 0 },
@@ -177,21 +205,80 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
           ...item,
           value: overview.jobs[item.key] ?? 0
         }));
-        this.loadHangfireJobs('succeeded');
+        this.loadHangfireJobs(this.hangfireTab === 'retries' ? 'failed' : 'succeeded');
       }
     });
   }
 
+  setHangfireTab(tab: 'jobs' | 'retries' | 'recurring' | 'servers'): void {
+    this.hangfireTab = tab;
+    if (tab === 'jobs' || tab === 'retries') {
+      this.hangfirePage = 1;
+      this.loadHangfireJobs(tab === 'retries' ? 'failed' : 'succeeded');
+    } else if (tab === 'recurring') {
+      this.recurringPage = 1;
+      this.loadRecurringJobs();
+    }
+  }
+
+  goToHangfirePage(page: number): void {
+    if (page < 1 || page > this.totalHangfirePages || page === this.hangfirePage) return;
+    this.hangfirePage = page;
+    this.loadHangfireJobs(this.hangfireTab === 'retries' ? 'failed' : 'succeeded');
+  }
+
   loadHangfireJobs(state: string): void {
-    this.http.get<{ jobs: Array<any> }>(`${this.base}/api/admin/jobs/hangfire/jobs/${state}`).subscribe({
-      next: result => this.hangfireJobs = result.jobs
+    this.hangfireJobsLoading = true;
+    this.hangfireJobsError = '';
+    const params = { page: String(this.hangfirePage), pageSize: String(this.hangfirePageSize) };
+    this.http.get<{
+      jobs: Array<any>;
+      page: number;
+      totalCount: number;
+      totalPages: number;
+    }>(`${this.base}/api/admin/jobs/hangfire/jobs/${state}`, { params }).subscribe({
+      next: result => {
+        this.hangfireJobs = result.jobs;
+        this.hangfirePage = result.page;
+        this.hangfireTotalCount = result.totalCount;
+        this.totalHangfirePages = result.totalPages;
+        this.hangfireJobsLoading = false;
+      },
+      error: () => {
+        this.hangfireJobsError = 'Không thể tải danh sách Hangfire jobs.';
+        this.hangfireJobsLoading = false;
+      }
     });
   }
 
   loadRecurringJobs(): void {
-    this.http.get<Array<any>>(`${this.base}/api/admin/jobs/hangfire/recurring`).subscribe({
-      next: jobs => this.recurringJobs = jobs
+    this.recurringJobsLoading = true;
+    this.recurringJobsError = '';
+    const params = { page: String(this.recurringPage), pageSize: String(this.recurringPageSize) };
+    this.http.get<{
+      jobs: Array<any>;
+      page: number;
+      totalCount: number;
+      totalPages: number;
+    }>(`${this.base}/api/admin/jobs/hangfire/recurring`, { params }).subscribe({
+      next: result => {
+        this.recurringJobs = result.jobs;
+        this.recurringPage = result.page;
+        this.recurringTotalCount = result.totalCount;
+        this.recurringTotalPages = result.totalPages;
+        this.recurringJobsLoading = false;
+      },
+      error: () => {
+        this.recurringJobsError = 'Không thể tải recurring jobs.';
+        this.recurringJobsLoading = false;
+      }
     });
+  }
+
+  goToRecurringPage(page: number): void {
+    if (page < 1 || page > this.recurringTotalPages || page === this.recurringPage) return;
+    this.recurringPage = page;
+    this.loadRecurringJobs();
   }
 
   triggerRecurringJob(jobId: string): void {
@@ -222,6 +309,8 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
       enabled: boolean;
       schedule: string;
       pageSize: number;
+      maxPagesPerRun: number;
+      maxRecordsPerRun: number;
       source: string;
     }>(`${this.base}/api/admin/jobs/astronomical-research`).subscribe({
       next: job => {
@@ -267,6 +356,9 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
           candidateCount: number;
           existingCount: number;
           createdCount: number;
+          pagesProcessed: number;
+          sweepCompleted: boolean;
+          nextCursor?: string;
         };
       }>(`${this.base}/api/admin/jobs/astronomical-research/runs/${jobId}`).subscribe({
         next: result => {
@@ -276,19 +368,22 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
             const created = result.lastRun?.createdCount ?? 0;
             const candidates = result.lastRun?.candidateCount ?? 0;
             const existing = result.lastRun?.existingCount ?? 0;
-            this.researchJobMessage = `Hoàn tất: ${created} mới / ${existing} đã có trên ${candidates} bản ghi.`;
+            const pages = result.lastRun?.pagesProcessed ?? 0;
+            this.researchJobMessage = result.lastRun?.sweepCompleted
+              ? `Đã quét hết nguồn: ${created} mới / ${existing} đã có trên ${candidates} bản ghi (${pages} trang).`
+              : `Đã xử lý batch: ${created} mới / ${existing} đã có trên ${candidates} bản ghi (${pages} trang). Sẽ tiếp tục từ ${result.lastRun?.nextCursor ?? 'cursor đã lưu'}.`;
           } else if (result.state === 'Failed') {
             this.stopResearchPolling();
             this.researchJobRunning = false;
             this.researchJobMessage = 'Job thất bại. Kiểm tra log Catalog để biết chi tiết.';
-          } else if (attempts >= 30) {
+          } else if (attempts >= 300) {
             this.stopResearchPolling();
             this.researchJobRunning = false;
             this.researchJobMessage = `Job hiện ở trạng thái ${result.state}.`;
           }
         },
         error: () => {
-          if (attempts >= 30) {
+          if (attempts >= 300) {
             this.stopResearchPolling();
             this.researchJobRunning = false;
             this.researchJobMessage = 'Không thể kiểm tra trạng thái job.';

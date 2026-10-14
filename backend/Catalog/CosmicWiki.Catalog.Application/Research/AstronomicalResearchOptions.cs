@@ -1,3 +1,5 @@
+using CosmicWiki.Catalog.Domain.Enums;
+
 namespace CosmicWiki.Catalog.Application.Research;
 
 public sealed class AstronomicalResearchOptions
@@ -7,23 +9,32 @@ public sealed class AstronomicalResearchOptions
     public string Endpoint { get; set; } =
         "https://simbad.u-strasbg.fr/simbad/sim-tap/sync";
 
-    public string Query { get; set; } =
-        "SELECT TOP 100 main_id, otype_txt FROM basic " +
-        "WHERE otype IN ('*', 'X', 'G') " +
-        "ORDER BY main_id DESC";
+    public int PageSize { get; set; } = 500;
 
-    public int PageSize { get; set; } = 100;
+    public int MaxPagesPerRun { get; set; } = 20;
 }
 
 public sealed record AstronomicalResearchCandidate(
     string Name,
+    AstronomicalObjectKind Kind,
     string ObjectType,
     string Catalog,
-    string CatalogValue);
+    string CatalogValue,
+    double? RightAscensionDegrees,
+    double? DeclinationDegrees,
+    double? ParallaxMas);
+
+public sealed record AstronomicalResearchPage(
+    IReadOnlyList<AstronomicalResearchCandidate> Candidates,
+    string? NextCursor,
+    bool HasMore);
 
 public sealed record AstronomicalResearchRunResult(
     DateTime StartedAtUtc,
     DateTime CompletedAtUtc,
     int CandidateCount,
     int ExistingCount,
-    int CreatedCount);
+    int CreatedCount,
+    int PagesProcessed = 0,
+    bool SweepCompleted = false,
+    string? NextCursor = null);

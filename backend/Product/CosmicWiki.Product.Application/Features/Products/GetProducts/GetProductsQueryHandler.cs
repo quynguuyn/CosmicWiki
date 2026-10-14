@@ -49,6 +49,7 @@ public sealed class GetProductsQueryHandler
         var cacheKey = await _productCache.GetListKeyAsync(
             request.Page,
             request.PageSize,
+            request.Search,
             cancellationToken);
         var cached = await _cache.GetAsync<PagedResult<ProductResponse>>(
             cacheKey,
@@ -58,12 +59,14 @@ public sealed class GetProductsQueryHandler
 
         var totalCount =
             await _productRepository.CountAsync(
+                request.Search,
                 cancellationToken);
 
         var products =
             await _productRepository.GetPageAsync(
                 (request.Page - 1) * request.PageSize,
                 request.PageSize,
+                request.Search,
                 cancellationToken);
 
         var items = products

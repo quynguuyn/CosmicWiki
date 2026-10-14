@@ -22,6 +22,16 @@ public interface ICategoryRepository
 
     Task<IReadOnlyCollection<Category>> GetAllAsync(
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<Category>> GetPageAsync(
+        int skip,
+        int take,
+        string? search,
+        CancellationToken cancellationToken = default);
+
+    Task<int> CountAsync(
+        string? search,
+        CancellationToken cancellationToken = default);
     
     Task<Category?> GetByIdForUpdateAsync(
         Guid id,

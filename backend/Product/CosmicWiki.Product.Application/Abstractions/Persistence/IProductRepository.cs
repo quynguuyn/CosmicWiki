@@ -18,9 +18,11 @@ public interface IProductRepository
     Task<IReadOnlyCollection<ProductEntity>> GetPageAsync(
         int skip,
         int take,
+        string? search,
         CancellationToken cancellationToken = default);
 
     Task<int> CountAsync(
+        string? search,
         CancellationToken cancellationToken = default);
 
     Task<bool> ExistsBySkuAsync(

@@ -50,6 +50,41 @@ public sealed class StarRepository : IStarRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<string>> GetExistingCatalogIdentifierValuesAsync(
+        string catalog,
+        IReadOnlyCollection<string> values,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(catalog))
+            throw new ArgumentException(
+                "Catalog cannot be empty.",
+                nameof(catalog));
+
+        ArgumentNullException.ThrowIfNull(values);
+        if (values.Count == 0)
+            return [];
+
+        var starValues = await _dbContext.Stars
+            .AsNoTracking()
+            .SelectMany(star => star.CatalogIdentifiers)
+            .Where(identifier =>
+                identifier.Catalog == catalog &&
+                values.Contains(identifier.Value))
+            .Select(identifier => identifier.Value)
+            .ToListAsync(cancellationToken);
+        var objectValues = await _dbContext.AstronomicalObjects
+            .AsNoTracking()
+            .Where(item =>
+                item.Catalog == catalog &&
+                values.Contains(item.CatalogValue!))
+            .Select(item => item.CatalogValue!)
+            .ToListAsync(cancellationToken);
+
+        return starValues.Concat(objectValues)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
     public async Task AddAsync(
         Star star,
         CancellationToken cancellationToken = default)

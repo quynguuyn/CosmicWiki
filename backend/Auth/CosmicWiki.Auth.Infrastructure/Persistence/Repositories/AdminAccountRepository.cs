@@ -7,16 +7,38 @@ namespace CosmicWiki.Auth.Infrastructure.Persistence.Repositories;
 public sealed class AdminAccountRepository(AuthDbContext db)
     : IAdminAccountRepository
 {
-    public async Task<IReadOnlyCollection<AdminAccountProjection>> GetAccountsAsync(
+    public async Task<(IReadOnlyCollection<AdminAccountProjection> Items, int TotalCount)> GetAccountsAsync(
         string? role,
+        int skip,
+        int take,
         CancellationToken cancellationToken)
     {
-        var users = await db.Users
-            .Where(user => user.Roles.Any(userRole =>
-                db.Roles.Any(assignedRole =>
-                    assignedRole.Id == userRole.RoleId &&
-                    assignedRole.Name != "User" &&
-                    (string.IsNullOrWhiteSpace(role) || assignedRole.Name == role))))
+        var query = string.IsNullOrWhiteSpace(role)
+            ? db.Users.FromSqlInterpolated($@"
+                SELECT u.*
+                FROM USERS u
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM USER_ROLES ur
+                    JOIN ROLES r ON r.ID = ur.ROLE_ID
+                    WHERE ur.USER_ID = u.ID
+                      AND r.NAME <> {"User"})")
+            : db.Users.FromSqlInterpolated($@"
+                SELECT u.*
+                FROM USERS u
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM USER_ROLES ur
+                    JOIN ROLES r ON r.ID = ur.ROLE_ID
+                    WHERE ur.USER_ID = u.ID
+                      AND r.NAME <> {"User"}
+                      AND r.NAME = {role})");
+        var totalCount = await query.CountAsync(cancellationToken);
+        var users = await query
+            .OrderBy(user => user.Username)
+            .ThenBy(user => user.Id)
+            .Skip(skip)
+            .Take(take)
             .Select(user => new
             {
                 user.Id,
@@ -32,9 +54,10 @@ public sealed class AdminAccountRepository(AuthDbContext db)
             })
             .ToListAsync(cancellationToken);
 
-        return users.OrderBy(user => user.Username).Select(user => new AdminAccountProjection(
+        var items = users.Select(user => new AdminAccountProjection(
             user.Id, user.Username, user.Email, user.Status, user.CreatedAt,
             user.Roles.ToArray())).ToArray();
+        return (items, totalCount);
     }
 
     public async Task<IReadOnlyCollection<RoleProjection>> GetRolesAsync(

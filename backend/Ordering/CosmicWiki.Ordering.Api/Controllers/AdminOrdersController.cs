@@ -23,6 +23,43 @@ public sealed class AdminOrdersController(
         return Ok(today.Select(ToResponse));
     }
 
+    [HttpGet("today/page")]
+    public async Task<IActionResult> GetTodayPage(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1)
+            return BadRequest("Page must be greater than zero.");
+        if (status is not null && !Enum.TryParse<OrderStatus>(status, true, out _))
+            return BadRequest("A valid order status is required.");
+
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        OrderStatus? parsedStatus = status is null
+            ? null
+            : Enum.Parse<OrderStatus>(status, true);
+        var startOfDayUtc = DateTime.UtcNow.Date;
+        var (ordersPage, totalCount) = await orders.GetCreatedSincePageAsync(
+            startOfDayUtc,
+            parsedStatus,
+            (page - 1) * pageSize,
+            pageSize,
+            cancellationToken);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        return Ok(new
+        {
+            items = ordersPage.Select(ToResponse),
+            page,
+            pageSize,
+            totalCount,
+            totalPages,
+            hasPreviousPage = page > 1,
+            hasNextPage = page < totalPages
+        });
+    }
+
     [HttpPatch("{orderId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(
         Guid orderId,

@@ -1,5 +1,4 @@
 ﻿using CosmicWiki.Catalog.Application.Features.Stars.GetAll;
-using CosmicWiki.Catalog.Application.Features.Stars.GetAll;
 using CosmicWiki.Catalog.Domain.Entities;
 
 namespace CosmicWiki.Catalog.Application.Abstractions.Persistence;
@@ -13,6 +12,11 @@ public interface IStarRepository
     Task<Star?> GetByCatalogIdentifierAsync(
         string catalog,
         string value,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<string>> GetExistingCatalogIdentifierValuesAsync(
+        string catalog,
+        IReadOnlyCollection<string> values,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(
