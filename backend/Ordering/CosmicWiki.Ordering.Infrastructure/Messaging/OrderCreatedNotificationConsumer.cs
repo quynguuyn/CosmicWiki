@@ -2,6 +2,7 @@ using System.Text.Json;
 using Confluent.Kafka;
 using CosmicWiki.Messaging.Kafka;
 using CosmicWiki.Ordering.Application.Events;
+using CosmicWiki.Ordering.Infrastructure.Notifications;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,7 @@ namespace CosmicWiki.Ordering.Infrastructure.Messaging;
 
 public sealed class OrderCreatedNotificationConsumer(
     KafkaConsumerFactory consumerFactory,
+    IOrderEmailSender emailSender,
     ILogger<OrderCreatedNotificationConsumer> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,11 +48,9 @@ public sealed class OrderCreatedNotificationConsumer(
 
                     if (integrationEvent is not null)
                     {
-                        // Simulate sending an email or push notification to the customer
-                        logger.LogInformation(
-                            "Order {OrderId} created successfully. Sending notification to Customer {CustomerId}.",
-                            integrationEvent.AggregateId,
-                            integrationEvent.CustomerId);
+                        await emailSender.SendOrderCreatedAsync(
+                            integrationEvent,
+                            stoppingToken);
                     }
 
                     consumer.Commit(result);

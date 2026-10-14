@@ -8,5 +8,6 @@ public sealed record OrderCreatedIntegrationEvent(
     DateTime OccurredAtUtc,
     Guid AggregateId,
     Guid CustomerId,
+    string? CustomerEmail,
     decimal TotalAmount,
     string Currency) : IIntegrationEvent;

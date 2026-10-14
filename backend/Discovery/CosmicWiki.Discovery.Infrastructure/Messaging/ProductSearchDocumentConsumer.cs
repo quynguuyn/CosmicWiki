@@ -40,6 +40,7 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
         await Task.Yield();
 
         using var consumer = _consumerFactory.Create(ConsumerGroupId);
+
         consumer.Subscribe([
             KafkaTopics.ProductCreated,
             KafkaTopics.ProductUpdated,
@@ -52,7 +53,8 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var result = consumer.Consume(stoppingToken);
+                // Retry consume until topics exist
+                var result = await ConsumeWithRetryAsync(consumer, stoppingToken);
                 try
                 {
                     await RetryAsync(() => HandleAsync(result, stoppingToken), stoppingToken);
@@ -150,7 +152,7 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
             ?? throw new InvalidOperationException($"Could not deserialize {typeof(T).Name}.");
     }
 
-    private static async Task RetryAsync(Func<Task> action, CancellationToken cancellationToken)
+private static async Task RetryAsync(Func<Task> action, CancellationToken cancellationToken)
     {
         for (var attempt = 1; ; attempt++)
         {
@@ -160,6 +162,28 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
                 await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)), cancellationToken);
             }
         }
+    }
+
+    private static async Task<ConsumeResult<string, string>> ConsumeWithRetryAsync(IConsumer<string, string> consumer, CancellationToken stoppingToken)
+    {
+        const int maxRetries = 30;
+        const int retryDelaySeconds = 2;
+
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                return consumer.Consume(stoppingToken);
+            }
+            catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
+            {
+                if (attempt == maxRetries)
+                    throw;
+
+                await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), stoppingToken);
+            }
+        }
+        throw new InvalidOperationException("Failed to consume after max retries");
     }
 
     private sealed record ProductSearchData(

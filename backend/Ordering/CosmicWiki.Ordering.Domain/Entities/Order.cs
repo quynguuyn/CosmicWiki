@@ -8,9 +8,10 @@ public sealed class Order : AggregateRoot<Guid>
     private readonly List<OrderLine> _lines = [];
     private Order() : base(Guid.Empty) { }
 
-    private Order(Guid id, Guid customerId, string currency, string idempotencyKey, string requestFingerprint) : base(id)
+    private Order(Guid id, Guid customerId, string customerEmail, string currency, string idempotencyKey, string requestFingerprint) : base(id)
     {
         CustomerId = customerId;
+        CustomerEmail = customerEmail;
         Currency = currency;
         IdempotencyKey = idempotencyKey;
         RequestFingerprint = requestFingerprint;
@@ -19,24 +20,28 @@ public sealed class Order : AggregateRoot<Guid>
     }
 
     public Guid CustomerId { get; private set; }
+    public string? CustomerEmail { get; private set; }
     public string Currency { get; private set; } = null!;
     public string IdempotencyKey { get; private set; } = null!;
     public string RequestFingerprint { get; private set; } = null!;
     public OrderStatus Status { get; private set; }
     public decimal TotalAmount { get; private set; }
     public string? PaymentIntentId { get; private set; }
+    public string? ClientSecret { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? PaidAtUtc { get; private set; }
     public IReadOnlyCollection<OrderLine> Lines => _lines.AsReadOnly();
 
     public static Order Create(
         Guid customerId,
+        string customerEmail,
         string currency,
         string idempotencyKey,
         string requestFingerprint,
         IEnumerable<OrderLine> lines)
     {
         if (customerId == Guid.Empty) throw new ArgumentException("Customer ID is required.", nameof(customerId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(customerEmail);
         ArgumentException.ThrowIfNullOrWhiteSpace(currency);
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestFingerprint);
@@ -46,7 +51,7 @@ public sealed class Order : AggregateRoot<Guid>
             throw new ArgumentException("Currency contains invalid characters.", nameof(currency));
         if (idempotencyKey.Length > 200 || idempotencyKey.Any(char.IsControl) || idempotencyKey != idempotencyKey.Trim())
             throw new ArgumentException("Idempotency key must be 1-200 characters without surrounding whitespace or control characters.", nameof(idempotencyKey));
-        var order = new Order(Guid.NewGuid(), customerId, currency.Trim().ToUpperInvariant(),
+        var order = new Order(Guid.NewGuid(), customerId, customerEmail.Trim(), currency.Trim().ToUpperInvariant(),
             idempotencyKey.Trim(), requestFingerprint.Trim());
         order._lines.AddRange(lines ?? throw new ArgumentNullException(nameof(lines)));
         if (order._lines.Count is < 1 or > 100) throw new ArgumentException("Order must contain between 1 and 100 lines.", nameof(lines));
@@ -56,10 +61,11 @@ public sealed class Order : AggregateRoot<Guid>
         return order;
     }
 
-    public void AttachPaymentIntent(string paymentIntentId)
+    public void AttachPaymentIntent(string paymentIntentId, string? clientSecret)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(paymentIntentId);
         PaymentIntentId = paymentIntentId.Trim();
+        ClientSecret = clientSecret?.Trim();
     }
 
     public void MarkPaid()
@@ -71,7 +77,32 @@ public sealed class Order : AggregateRoot<Guid>
 
     public void MarkPaymentFailed()
     {
-        if (Status is not OrderStatus.Paid and not OrderStatus.Cancelled)
+        if (Status is not OrderStatus.Paid and not OrderStatus.Shipping and not OrderStatus.Cancelled)
             Status = OrderStatus.PaymentFailed;
+    }
+
+    public bool TransitionTo(OrderStatus nextStatus)
+    {
+        if (Status == nextStatus)
+            return false;
+
+        var valid = (Status, nextStatus) switch
+        {
+            (OrderStatus.Paid, OrderStatus.Shipping) => true,
+            (OrderStatus.Shipping, OrderStatus.Delivered) => true,
+            (OrderStatus.Delivered, OrderStatus.Returned) => true,
+            (OrderStatus.PendingPayment, OrderStatus.Cancelled) => true,
+            (OrderStatus.PaymentFailed, OrderStatus.Cancelled) => true,
+            (OrderStatus.Paid, OrderStatus.Cancelled) => true,
+            (OrderStatus.Shipping, OrderStatus.Cancelled) => true,
+            _ => false
+        };
+
+        if (!valid)
+            throw new InvalidOperationException(
+                $"Order cannot transition from '{Status}' to '{nextStatus}'.");
+
+        Status = nextStatus;
+        return true;
     }
 }

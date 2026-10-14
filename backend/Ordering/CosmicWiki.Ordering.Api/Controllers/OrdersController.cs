@@ -1,10 +1,14 @@
 using CosmicWiki.Ordering.Application.Features.CreateOrder;
 using CosmicWiki.Ordering.Application.Abstractions;
+using CosmicWiki.Ordering.Domain.Enums;
+using CosmicWiki.Ordering.Infrastructure.Notifications;
+using CosmicWiki.Ordering.Infrastructure.Processing;
 using CosmicWiki.SharedKernel.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace CosmicWiki.Ordering.Api.Controllers;
 
@@ -13,7 +17,8 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 [Authorize(Policy = Permissions.OrderingWrite)]
 public sealed class OrdersController(
     ISender sender,
-    IOrderRepository orders) : ControllerBase
+    IOrderRepository orders,
+    IOptions<OrderLifecycleOptions> lifecycleOptions) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<CreateOrderResult>> Create(
@@ -28,12 +33,19 @@ public sealed class OrdersController(
             return BadRequest("Idempotency-Key header is required.");
 
         var subject = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
         if (!Guid.TryParse(subject, out var authenticatedCustomerId) ||
-            authenticatedCustomerId != request.CustomerId)
+            authenticatedCustomerId != request.CustomerId ||
+            string.IsNullOrWhiteSpace(email))
             return Forbid();
 
         var result = await sender.Send(
-            new CreateOrderCommand(request.CustomerId, request.Currency, idempotencyKey, request.Lines),
+            new CreateOrderCommand(
+                request.CustomerId,
+                email,
+                request.Currency,
+                idempotencyKey,
+                request.Lines),
             cancellationToken);
         return Ok(result);
     }
@@ -57,10 +69,71 @@ public sealed class OrdersController(
             orderId = order.Id,
             status = order.Status.ToString(),
             order.PaymentIntentId,
+            order.ClientSecret,
             order.TotalAmount,
             order.Currency,
-            order.PaidAtUtc
+            order.PaidAtUtc,
+            paymentExpiresAtUtc = order.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
         });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    {
+        var subject = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (!Guid.TryParse(subject, out var authenticatedCustomerId))
+            return Forbid();
+
+        var customerOrders = await orders.GetByCustomerIdAsync(authenticatedCustomerId, cancellationToken);
+
+        return Ok(customerOrders.Select(o => new
+        {
+            orderId = o.Id,
+            status = o.Status.ToString(),
+            o.PaymentIntentId,
+            o.ClientSecret,
+            o.TotalAmount,
+            o.Currency,
+            o.PaidAtUtc,
+            o.CreatedAtUtc,
+            paymentExpiresAtUtc = o.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
+        }));
+    }
+
+    [HttpPatch("{orderId:guid}/status")]
+    [Authorize(Policy = Permissions.ShippingWrite)]
+    public async Task<IActionResult> UpdateStatus(
+        Guid orderId,
+        [FromBody] UpdateOrderStatusRequest? request,
+        [FromServices] IOrderEmailSender emailSender,
+        CancellationToken cancellationToken)
+    {
+        if (request is null || !Enum.TryParse<OrderStatus>(request.Status, true, out var nextStatus))
+            return BadRequest("A valid order status is required.");
+
+        var order = await orders.GetAsync(orderId, cancellationToken);
+        if (order is null)
+            return NotFound();
+
+        try
+        {
+            if (!order.TransitionTo(nextStatus))
+                return Ok(new { orderId = order.Id, status = order.Status.ToString() });
+
+            await orders.SaveChangesAsync(cancellationToken);
+            await emailSender.SendOrderStatusChangedAsync(
+                order.Id,
+                order.CustomerEmail,
+                order.TotalAmount,
+                order.Currency,
+                order.Status.ToString(),
+                cancellationToken);
+            return Ok(new { orderId = order.Id, status = order.Status.ToString() });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 }
 
@@ -68,3 +141,5 @@ public sealed record CreateOrderRequest(
     Guid CustomerId,
     string Currency,
     IReadOnlyCollection<CreateOrderLineRequest> Lines);
+
+public sealed record UpdateOrderStatusRequest(string Status);

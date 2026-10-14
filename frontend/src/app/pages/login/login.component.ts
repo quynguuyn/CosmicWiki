@@ -48,7 +48,9 @@ export class LoginComponent {
 
                 this.isLoading = false;
 
-                this.router.navigate(['/']);
+                this.router.navigate([
+                    this.authService.hasPermission('shipping.write') ? '/admin' : '/'
+                ]);
             },
 
             error: error => {

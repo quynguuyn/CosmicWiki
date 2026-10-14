@@ -1,18 +1,21 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { signal, inject } from '@angular/core';
 import { HeaderComponent } from './layout/header/header.component';
 import { FooterComponent } from './layout/footer/footer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, FooterComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent],
   template: `
-    <app-header></app-header>
+    <app-header *ngIf="!adminShell()"></app-header>
     <main class="pt-20">
       <router-outlet></router-outlet>
     </main>
-    <app-footer></app-footer>
+    <app-footer *ngIf="!adminShell()"></app-footer>
   `,
   styles: [`
     main {
@@ -21,5 +24,13 @@ import { FooterComponent } from './layout/footer/footer.component';
   `]
 })
 export class AppComponent {
+  private readonly router = inject(Router);
+  readonly adminShell = signal(false);
   title = 'CosmicWiki';
+
+  constructor() {
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
+      this.adminShell.set((event as NavigationEnd).urlAfterRedirects.startsWith('/admin'));
+    });
+  }
 }

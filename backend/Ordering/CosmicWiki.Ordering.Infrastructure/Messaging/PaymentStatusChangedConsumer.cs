@@ -6,6 +6,7 @@ using CosmicWiki.Messaging.Contracts.Payment;
 using CosmicWiki.Messaging.Kafka;
 using CosmicWiki.Payments.Application.Abstractions;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
+using CosmicWiki.Ordering.Infrastructure.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -97,6 +98,19 @@ public sealed class PaymentStatusChangedConsumer(
                         db.InboxMessages.Add(new InboxMessage(integrationEvent.EventId));
                         await db.SaveChangesAsync(stoppingToken);
                         await transaction.CommitAsync(stoppingToken);
+                        var order = await db.Orders
+                            .AsNoTracking()
+                            .SingleAsync(x => x.Id == integrationEvent.OrderId, stoppingToken);
+                        var emailSender = scope.ServiceProvider.GetRequiredService<IOrderEmailSender>();
+                        await emailSender.SendOrderStatusChangedAsync(
+                            order.Id,
+                            order.CustomerEmail,
+                            order.TotalAmount,
+                            order.Currency,
+                            integrationEvent.Status.Equals("succeeded", StringComparison.OrdinalIgnoreCase)
+                                ? "Paid"
+                                : "PaymentFailed",
+                            stoppingToken);
                         consumer.Commit(result);
                         Processed.Add(1);
                         break;

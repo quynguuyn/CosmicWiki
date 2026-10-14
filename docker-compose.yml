@@ -38,6 +38,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
       interval: 10s
@@ -71,6 +72,9 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__AuthDatabase: User Id=COSMICWIKI_AUTH;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
+      Auth__SeedUser__Username: ${AUTH_SEED_USER_USERNAME:-}
+      Auth__SeedUser__Email: ${AUTH_SEED_USER_EMAIL:-}
+      Auth__SeedUser__Password: ${AUTH_SEED_USER_PASSWORD:-}
     depends_on:
       oracle:
         condition: service_healthy
@@ -85,13 +89,19 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__CatalogDatabase: User Id=COSMICWIKI_CATALOG;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
+      ConnectionStrings__CatalogDatabase: User Id=COSMICWIKI_CATALOG;Password=CosmicWiki;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=FREEPDB1)))
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
+      Hangfire__RedisConnection: redis:6379
+      Caching__Redis__ConnectionString: redis:6379
+      AstronomicalResearch__Enabled: "true"
+      AstronomicalResearch__PageSize: "100"
     depends_on:
       oracle:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   product:
@@ -149,7 +159,10 @@ services:
       ASPNETCORE_URLS: http://+:8080
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
+      ConnectionStrings__DiscoveryDatabase: User Id=COSMICWIKI_DISCOVERY;Password=${ORACLE_APP_PASSWORD:-CosmicWiki};Data Source=//oracle:1521/FREEPDB1
     depends_on:
+      oracle:
+        condition: service_healthy
       kafka:
         condition: service_healthy
 
@@ -174,6 +187,16 @@ services:
       ConnectionStrings__ProductDatabase: User Id=COSMICWIKI_PRODUCT;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1;Validate Connection=true
       Caching__Enabled: "true"
       Caching__Redis__ConnectionString: redis:6379
+      OrderEmail__Enabled: ${ORDER_EMAIL_ENABLED:-false}
+      OrderEmail__SmtpHost: ${ORDER_EMAIL_SMTP_HOST:-}
+      OrderEmail__SmtpPort: ${ORDER_EMAIL_SMTP_PORT:-587}
+      OrderEmail__UseSsl: ${ORDER_EMAIL_USE_SSL:-true}
+      OrderEmail__Username: ${ORDER_EMAIL_SMTP_USERNAME:-}
+      OrderEmail__Password: ${ORDER_EMAIL_SMTP_PASSWORD:-}
+      OrderEmail__FromAddress: ${ORDER_EMAIL_FROM_ADDRESS:-}
+      OrderEmail__FromName: ${ORDER_EMAIL_FROM_NAME:-CosmicWiki}
+      OrderLifecycle__PendingPaymentTimeoutMinutes: ${ORDER_PENDING_PAYMENT_TIMEOUT_MINUTES:-15}
+      OrderLifecycle__AutoConfirmAtUtcHour: ${ORDER_AUTO_CONFIRM_AT_UTC_HOUR:-17}
     depends_on:
       oracle:
         condition: service_healthy
@@ -259,15 +282,24 @@ services:
     ports:
       - "${GATEWAY_PORT:-5000}:8080"
     depends_on:
-      - auth
-      - catalog
-      - product
-      - stories
-      - discovery
-      - ordering
-      - payments
-      - visit
-      - newsletter
+      auth:
+        condition: service_started
+      catalog:
+        condition: service_started
+      product:
+        condition: service_started
+      stories:
+        condition: service_started
+      discovery:
+        condition: service_started
+      ordering:
+        condition: service_started
+      payments:
+        condition: service_started
+      visit:
+        condition: service_started
+      newsletter:
+        condition: service_started
 
   frontend:
     build:
@@ -278,7 +310,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-4200}:80"
     depends_on:
-      - gateway
+      gateway:
+        condition: service_started
 
 volumes:
   oradata:

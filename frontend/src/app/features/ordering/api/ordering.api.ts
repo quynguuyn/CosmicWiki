@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../../core/config/api.config';
-import { CreateOrderRequest, CreateOrderResult, OrderStatus } from '../models/order.model';
+import { AdminOrder, CreateOrderRequest, CreateOrderResult, OrderStatus } from '../models/order.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrderingApi {
@@ -19,5 +19,27 @@ export class OrderingApi {
 
   getOrder(orderId: string) {
     return this.http.get<OrderStatus>(`${this.baseUrl}/api/orders/${orderId}`);
+  }
+
+  getOrders() {
+    return this.http.get<OrderStatus[]>(`${this.baseUrl}/api/orders`);
+  }
+
+  updateStatus(orderId: string, status: string) {
+    return this.http.patch<{ orderId: string; status: string }>(
+      `${this.baseUrl}/api/orders/${orderId}/status`,
+      { status }
+    );
+  }
+
+  getAdminOrdersToday() {
+    return this.http.get<AdminOrder[]>(`${this.baseUrl}/api/admin/orders/today`);
+  }
+
+  updateAdminStatus(orderId: string, status: string) {
+    return this.http.patch<AdminOrder>(
+      `${this.baseUrl}/api/admin/orders/${orderId}/status`,
+      { status }
+    );
   }
 }

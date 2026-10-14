@@ -146,7 +146,9 @@ using (var scope = app.Services.CreateScope())
     await dbContext.Database.MigrateAsync();
 
     await AuthDataSeeder.SeedAsync(
-        dbContext);
+        dbContext,
+        scope.ServiceProvider.GetRequiredService<CosmicWiki.Auth.Application.Abstractions.Persistence.IPasswordHasher>(),
+        builder.Configuration);
 }
 
 app.UseExceptionHandler();

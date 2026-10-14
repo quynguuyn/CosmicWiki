@@ -16,8 +16,40 @@
 .summary { position: sticky; top: 6rem; }
 .summary-row { display: flex; justify-content: space-between; padding: var(--space-md) 0; border-bottom: 1px solid var(--outline-variant); }
 .summary-row.total { font-size: 1.15rem; border-bottom: 0; }
-.full { display: block; text-align: center; width: 100%; margin-top: var(--space-md); text-decoration: none; }
+.summary-actions { display: grid; gap: var(--space-sm); margin-top: var(--space-lg); }
+.full { display: flex; justify-content: center; align-items: center; gap: var(--space-xs); width: 100%; text-decoration: none; }
 .disabled { opacity: .45; pointer-events: none; }
+.summary-actions .btn-primary,
+.summary-actions .btn-secondary {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.summary-actions .btn-primary {
+  border: 1px solid rgba(114, 160, 193, .5);
+  background: rgba(114, 160, 193, .2);
+  color: #f3e9d2;
+}
+.summary-actions .btn-primary:hover {
+  background: #72a0c1;
+  color: #040913;
+  box-shadow: 0 0 15px rgba(114, 160, 193, .3);
+}
+.summary-actions .btn-secondary {
+  border: 1px solid rgba(114, 160, 193, .3);
+  background: transparent;
+  color: #b8d4e8;
+}
+.summary-actions .btn-secondary:hover {
+  border-color: #72a0c1;
+  background: rgba(114, 160, 193, .1);
+  color: #f3e9d2;
+}
+.summary-actions .material-symbols-outlined { font-size: 16px; }
 .empty-state { text-align: center; padding: var(--space-2xl); color: var(--on-surface-variant); }
 .empty-state .material-symbols-outlined { font-size: 3rem; color: var(--primary); }
 @media (max-width: 760px) { .commerce-page { padding: var(--space-xl) var(--gutter-mobile); } .commerce-grid { grid-template-columns: 1fr; } .summary { position: static; } .cart-line { grid-template-columns: 4rem 1fr auto; } .cart-line img { width: 4rem; height: 4rem; } .quantity { grid-column: 2; } .remove { grid-column: 3; grid-row: 1; } }

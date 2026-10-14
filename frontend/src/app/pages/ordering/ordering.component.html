@@ -11,10 +11,16 @@
       <strong>{{ line.product.salePrice * line.quantity | number:'1.0-0' }} ₫</strong>
     </div>
     <div class="checkout-total"><span>Tổng cộng</span><strong>{{ cart.total | number:'1.0-0' }} ₫</strong></div>
-    <label class="field">Email nhận thông báo trạng thái
-      <input type="email" [(ngModel)]="customerEmail" placeholder="observatory@cosmicwiki.space">
-    </label>
     <p class="error" *ngIf="error">{{ error }}</p>
-    <div class="actions"><a routerLink="/cart" class="btn-secondary">Quay lại giỏ</a><button class="btn-primary" (click)="submit()" [disabled]="isSubmitting">{{ isSubmitting ? 'Đang tạo đơn...' : 'Tạo đơn hàng' }}</button></div>
+    <div class="actions">
+      <a routerLink="/cart" class="btn-secondary">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Quay lại giỏ hàng
+      </a>
+      <button class="btn-primary" (click)="submit()" [disabled]="isSubmitting">
+        <span class="material-symbols-outlined">{{ isSubmitting ? 'progress_activity' : 'receipt_long' }}</span>
+        {{ isSubmitting ? 'Đang tạo đơn...' : 'Tạo đơn hàng' }}
+      </button>
+    </div>
   </section>
 </main>

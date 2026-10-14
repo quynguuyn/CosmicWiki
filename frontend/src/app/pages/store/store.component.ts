@@ -1,7 +1,7 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CartService } from '../../core/services/cart.service';
 import { Product, ProductCategory } from '../../features/product/models/product.model';
@@ -49,6 +49,7 @@ export class StoreComponent {
   private readonly productService = inject(ProductService);
   private readonly cartService = inject(CartService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   products: StoreProduct[] = [];
   contentError = '';
@@ -59,6 +60,7 @@ export class StoreComponent {
 
   activeCategory = 'all';
   sortMode = 'newest';
+  searchTerm = '';
 
   selectedProduct: StoreProduct | null = null;
 
@@ -73,6 +75,7 @@ export class StoreComponent {
   customerAddress = '';
 
   constructor() {
+    this.route.queryParamMap.subscribe(params => this.searchTerm = params.get('search')?.trim() ?? '');
     this.products = [];
     forkJoin({
       products: this.productService.getProducts(),
@@ -119,6 +122,11 @@ export class StoreComponent {
       result = result.filter(
         product => product.category === this.activeCategory
       );
+    }
+    if (this.searchTerm) {
+      const query = this.searchTerm.toLowerCase();
+      result = result.filter(product =>
+        `${product.title} ${product.code} ${product.categoryLabel} ${product.desc}`.toLowerCase().includes(query));
     }
 
     switch (this.sortMode) {

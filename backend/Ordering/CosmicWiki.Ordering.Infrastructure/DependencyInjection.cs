@@ -3,10 +3,12 @@ using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Infrastructure.Catalog;
 using CosmicWiki.Ordering.Infrastructure.Inventory;
 using CosmicWiki.Ordering.Infrastructure.Messaging;
+using CosmicWiki.Ordering.Infrastructure.Notifications;
 using CosmicWiki.Ordering.Infrastructure.Payment;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
 using CosmicWiki.Ordering.Infrastructure.Persistence.Outbox;
 using CosmicWiki.Ordering.Infrastructure.Persistence.Repositories;
+using CosmicWiki.Ordering.Infrastructure.Processing;
 using CosmicWiki.Payments.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -65,6 +67,12 @@ public static class DependencyInjection
         services.AddHostedService<OrderingOutboxPublisher>();
         services.AddHostedService<PaymentStatusChangedConsumer>();
         services.AddHostedService<OrderCreatedNotificationConsumer>();
+        services.Configure<OrderLifecycleOptions>(
+            configuration.GetSection(OrderLifecycleOptions.SectionName));
+        services.AddHostedService<OrderLifecycleProcessor>();
+        services.Configure<OrderEmailOptions>(
+            configuration.GetSection(OrderEmailOptions.SectionName));
+        services.AddSingleton<IOrderEmailSender, SmtpOrderEmailSender>();
         return services;
     }
 }

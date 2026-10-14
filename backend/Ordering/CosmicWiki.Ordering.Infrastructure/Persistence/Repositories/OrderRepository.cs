@@ -28,13 +28,25 @@ public sealed class OrderRepository(
     public Task<Order?> GetAsync(Guid id, CancellationToken cancellationToken) =>
         dbContext.Orders.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyCollection<Order>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken) =>
+        await dbContext.Orders
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyCollection<Order>> GetCreatedSinceAsync(DateTime sinceUtc, CancellationToken cancellationToken) =>
+        await dbContext.Orders
+            .Where(x => x.CreatedAtUtc >= sinceUtc)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
     public void Add(Order order) => dbContext.Orders.Add(order);
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
 
     public async Task<bool> MarkPaidAsync(Guid orderId, CancellationToken cancellationToken)
     {
         var order = await GetAsync(orderId, cancellationToken) ?? throw new KeyNotFoundException($"Order '{orderId}' was not found.");
-        if (order.Status == Domain.Enums.OrderStatus.Paid)
+        if (order.Status is Domain.Enums.OrderStatus.Paid or Domain.Enums.OrderStatus.Shipping)
             return true;
         if (!await inventory.ConfirmAsync(orderId, cancellationToken))
             return false;

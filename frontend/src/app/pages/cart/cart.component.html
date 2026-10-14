@@ -34,8 +34,16 @@
       <div class="section-eyebrow font-label-sm">TÓM TẮT ĐƠN HÀNG</div>
       <div class="summary-row"><span>Số hiện vật</span><strong>{{ cart.count }}</strong></div>
       <div class="summary-row total"><span>Tạm tính</span><strong>{{ formatCurrency(cart.total) }}</strong></div>
-      <a routerLink="/ordering" class="btn-primary full" [class.disabled]="cart.lines().length === 0">Tiếp tục lập đơn</a>
-      <a routerLink="/store" class="btn-secondary full">Tiếp tục sưu tầm</a>
+      <div class="summary-actions">
+        <a routerLink="/ordering" class="btn-primary full" [class.disabled]="cart.lines().length === 0">
+          <span class="material-symbols-outlined">arrow_forward</span>
+          Tiếp tục lập đơn
+        </a>
+        <a routerLink="/store" class="btn-secondary full">
+          <span class="material-symbols-outlined">explore</span>
+          Tiếp tục mua sắm
+        </a>
+      </div>
     </aside>
   </section>
 </main>

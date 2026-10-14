@@ -68,6 +68,10 @@ public sealed class JwtTokenService : ITokenService
                 user.Username.Value),
 
             new(
+                JwtRegisteredClaimNames.Email,
+                user.Email.Value),
+
+            new(
                 JwtRegisteredClaimNames.Jti,
                 Guid.NewGuid().ToString()),
 

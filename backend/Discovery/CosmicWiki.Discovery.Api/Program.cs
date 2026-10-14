@@ -5,6 +5,7 @@ using CosmicWiki.Discovery.Application;
 using CosmicWiki.Discovery.Infrastructure.Persistence;
 using CosmicWiki.Messaging.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -79,6 +80,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext =
+        scope.ServiceProvider.GetRequiredService<DiscoveryDbContext>();
+
+    await dbContext.Database.MigrateAsync();
+}
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
