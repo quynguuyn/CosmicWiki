@@ -23,13 +23,13 @@ import { OrderingApi } from '../../features/ordering/api/ordering.api';
       <nav class="admin-filters" aria-label="Lọc đơn quản trị">
         <button *ngFor="let filter of filters" type="button"
                 [class.active]="activeFilter === filter.value"
-                (click)="activeFilter = filter.value">{{ filter.label }}</button>
+                (click)="setFilter(filter.value)">{{ filter.label }}</button>
       </nav>
 
       <p class="feedback" *ngIf="error">{{ error }}</p>
       <p class="loading" *ngIf="loading">Đang tải đơn hàng...</p>
       <section class="admin-order-list" *ngIf="!loading">
-        <article class="admin-order-card cosmic-glass" *ngFor="let order of filteredOrders">
+        <article class="admin-order-card cosmic-glass" *ngFor="let order of orders">
           <div class="order-main">
             <div>
               <span class="order-id">{{ order.orderId | slice:0:8 }}...</span>
@@ -47,7 +47,12 @@ import { OrderingApi } from '../../features/ordering/api/ordering.api';
             <button *ngIf="order.status === 'Delivered'" type="button" (click)="update(order, 'Returned')">Đã trả</button>
           </div>
         </article>
-        <p class="empty" *ngIf="filteredOrders.length === 0">Không có đơn phù hợp.</p>
+        <p class="empty" *ngIf="orders.length === 0">Không có đơn phù hợp.</p>
+        <nav class="admin-pagination" aria-label="Phân trang đơn hàng" *ngIf="totalPages > 1">
+          <button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">Trước</button>
+          <span>Trang {{ page }} / {{ totalPages }} · {{ totalCount }} đơn</span>
+          <button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Sau</button>
+        </nav>
       </section>
     </main>
   `,
@@ -56,6 +61,10 @@ import { OrderingApi } from '../../features/ordering/api/ordering.api';
 export class AdminOrdersComponent implements OnInit {
   private readonly api = inject(OrderingApi);
   orders: AdminOrder[] = [];
+  page = 1;
+  readonly pageSize = 10;
+  totalCount = 0;
+  totalPages = 0;
   activeFilter = 'all';
   loading = true;
   error = '';
@@ -68,28 +77,49 @@ export class AdminOrdersComponent implements OnInit {
     { value: 'Cancelled', label: 'Đã hủy' }
   ];
 
-  get filteredOrders() {
-    return this.activeFilter === 'all'
-      ? this.orders
-      : this.orders.filter(order => order.status === this.activeFilter);
-  }
-
   ngOnInit() { this.load(); }
 
   load() {
     this.loading = true;
-    this.api.getAdminOrdersToday().subscribe({
-      next: orders => { this.orders = orders; this.loading = false; },
+    this.error = '';
+    this.api.getAdminOrdersToday(
+      this.page,
+      this.pageSize,
+      this.activeFilter === 'all' ? undefined : this.activeFilter
+    ).subscribe({
+      next: result => {
+        this.orders = result.items;
+        this.page = result.page;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
+        this.loading = false;
+      },
       error: () => { this.error = 'Không thể tải danh sách đơn hàng.'; this.loading = false; }
     });
+  }
+
+  setFilter(filter: string) {
+    this.activeFilter = filter;
+    this.page = 1;
+    this.load();
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages || page === this.page) return;
+    this.page = page;
+    this.load();
   }
 
   update(order: AdminOrder, status: string) {
     this.api.updateAdminStatus(order.orderId, status).subscribe({
       next: updated => {
         const index = this.orders.findIndex(item => item.orderId === updated.orderId);
-        if (index >= 0) this.orders[index] = updated;
-        this.orders = [...this.orders];
+        if (index >= 0 && (this.activeFilter === 'all' || updated.status === this.activeFilter)) {
+          this.orders[index] = updated;
+          this.orders = [...this.orders];
+        } else {
+          this.load();
+        }
       },
       error: () => this.error = 'Không thể cập nhật trạng thái đơn hàng.'
     });

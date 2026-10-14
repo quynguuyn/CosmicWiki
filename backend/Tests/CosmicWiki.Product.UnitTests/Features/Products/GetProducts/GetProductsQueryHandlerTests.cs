@@ -47,7 +47,7 @@ public class GetProductsQueryHandlerTests
         var expectedCacheKey = "product:list:v1:1:10";
         var cachedResult = new PagedResult<ProductResponse>(new List<ProductResponse>(), 1, 10, 0);
 
-        _productCacheMock.GetListKeyAsync(query.Page, query.PageSize, Arg.Any<CancellationToken>())
+        _productCacheMock.GetListKeyAsync(query.Page, query.PageSize, query.Search, Arg.Any<CancellationToken>())
             .Returns(expectedCacheKey);
 
         _cacheMock.GetAsync<PagedResult<ProductResponse>>(expectedCacheKey, Arg.Any<CancellationToken>())
@@ -64,7 +64,7 @@ public class GetProductsQueryHandlerTests
             .CountAsync(default);
             
         await _productRepositoryMock.DidNotReceiveWithAnyArgs()
-            .GetPageAsync(default, default, default);
+            .GetPageAsync(default, default, default, default);
         
         await _cacheMock.DidNotReceiveWithAnyArgs()
             .SetAsync<PagedResult<ProductResponse>>(default!, default!, default, default);
@@ -80,16 +80,16 @@ public class GetProductsQueryHandlerTests
         var product = ProductEntity.Create("SKU1", "Name1", "slug-1", 100, 90, 10, categoryId, "Desc", ProductStatus.Active);
         var productList = new List<ProductEntity> { product };
         
-        _productCacheMock.GetListKeyAsync(query.Page, query.PageSize, Arg.Any<CancellationToken>())
+        _productCacheMock.GetListKeyAsync(query.Page, query.PageSize, query.Search, Arg.Any<CancellationToken>())
             .Returns(expectedCacheKey);
 
         _cacheMock.GetAsync<PagedResult<ProductResponse>>(expectedCacheKey, Arg.Any<CancellationToken>())
             .Returns((PagedResult<ProductResponse>?)null);
 
-        _productRepositoryMock.CountAsync(Arg.Any<CancellationToken>())
+        _productRepositoryMock.CountAsync(query.Search, Arg.Any<CancellationToken>())
             .Returns(1);
 
-        _productRepositoryMock.GetPageAsync(0, 10, Arg.Any<CancellationToken>())
+        _productRepositoryMock.GetPageAsync(0, 10, query.Search, Arg.Any<CancellationToken>())
             .Returns(productList);
 
         // Act
@@ -102,10 +102,10 @@ public class GetProductsQueryHandlerTests
         Assert.Equal(1, result.TotalCount);
         
         await _productRepositoryMock.Received(1)
-            .CountAsync(Arg.Any<CancellationToken>());
+            .CountAsync(query.Search, Arg.Any<CancellationToken>());
             
         await _productRepositoryMock.Received(1)
-            .GetPageAsync(0, 10, Arg.Any<CancellationToken>());
+            .GetPageAsync(0, 10, query.Search, Arg.Any<CancellationToken>());
         
         await _cacheMock.Received(1)
             .SetAsync(

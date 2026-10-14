@@ -1,4 +1,5 @@
 using CosmicWiki.Catalog.Application.Abstractions.Persistence;
+using CosmicWiki.Catalog.Domain.Entities;
 using CosmicWiki.Catalog.Domain.ValueObjects;
 using CosmicWiki.Caching;
 using MediatR;
@@ -9,15 +10,18 @@ public sealed class PatchStarCommandHandler
     : IRequestHandler<PatchStarCommand>
 {
     private readonly IStarRepository _starRepository;
+    private readonly IAstronomicalObjectRepository _astronomicalObjectRepository;
     private readonly ICatalogUnitOfWork _unitOfWork;
     private readonly IStarCache _starCache;
 
     public PatchStarCommandHandler(
         IStarRepository starRepository,
+        IAstronomicalObjectRepository astronomicalObjectRepository,
         ICatalogUnitOfWork unitOfWork,
         IStarCache starCache)
     {
         _starRepository = starRepository;
+        _astronomicalObjectRepository = astronomicalObjectRepository;
         _unitOfWork = unitOfWork;
         _starCache = starCache;
     }
@@ -36,9 +40,21 @@ public sealed class PatchStarCommandHandler
                 $"Star '{request.Id}' was not found.");
         }
 
+        AstronomicalObject? astronomicalObject = null;
+        if (request.Name is not null || request.CatalogIdentifiers is not null)
+        {
+            astronomicalObject = await _astronomicalObjectRepository.GetByIdAsync(
+                request.Id,
+                cancellationToken);
+            if (astronomicalObject is null)
+                throw new InvalidOperationException(
+                    $"Astronomical object '{request.Id}' for star was not found.");
+        }
+
         if (request.Name is not null)
         {
             star.Rename(request.Name);
+            astronomicalObject!.Rename(request.Name);
         }
 
         if (request.CatalogIdentifiers is not null)
@@ -75,6 +91,10 @@ public sealed class PatchStarCommandHandler
                     CatalogIdentifier.Create(
                         identifier.Catalog,
                         identifier.Value)));
+            var primaryIdentifier = request.CatalogIdentifiers.FirstOrDefault();
+            astronomicalObject!.UpdatePrimaryCatalogIdentifier(
+                primaryIdentifier?.Catalog,
+                primaryIdentifier?.Value);
         }
 
         if (request.Parallaxes is not null)

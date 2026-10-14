@@ -8,6 +8,7 @@ internal sealed class ProductCache(ICacheStore store) : IProductCache
     public async Task<string> GetListKeyAsync(
         int page,
         int pageSize,
+        string? search,
         CancellationToken cancellationToken = default)
     {
         var version = await store.GetAsync<string>(
@@ -24,7 +25,10 @@ internal sealed class ProductCache(ICacheStore store) : IProductCache
                 cancellationToken);
         }
 
-        return $"product:list:{version}:{page}:{pageSize}";
+        var normalizedSearch = string.IsNullOrWhiteSpace(search)
+            ? string.Empty
+            : search.Trim().ToLowerInvariant();
+        return $"product:list:{version}:{page}:{pageSize}:{normalizedSearch}";
     }
 
     public Task InvalidateAsync(

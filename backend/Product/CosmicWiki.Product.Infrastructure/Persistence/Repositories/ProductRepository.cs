@@ -49,22 +49,42 @@ public sealed class ProductRepository : IProductRepository
     public async Task<IReadOnlyCollection<ProductEntity>> GetPageAsync(
         int skip,
         int take,
+        string? search,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products
-            .AsNoTracking()
+        var query = _dbContext.Products.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim().ToLower();
+            query = query.Where(product =>
+                product.SKU.ToLower().Contains(normalizedSearch) ||
+                product.Name.ToLower().Contains(normalizedSearch) ||
+                product.Slug.ToLower().Contains(normalizedSearch));
+        }
+
+        return await query
             .Include(x => x.Images)
             .OrderBy(x => x.Name)
+            .ThenBy(x => x.Id)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken);
     }
 
     public async Task<int> CountAsync(
+        string? search,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products
-            .CountAsync(cancellationToken);
+        var query = _dbContext.Products.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim().ToLower();
+            query = query.Where(product =>
+                product.SKU.ToLower().Contains(normalizedSearch) ||
+                product.Name.ToLower().Contains(normalizedSearch) ||
+                product.Slug.ToLower().Contains(normalizedSearch));
+        }
+        return await query.CountAsync(cancellationToken);
     }
 
     public async Task<bool> ExistsBySkuAsync(

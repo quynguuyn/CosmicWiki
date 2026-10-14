@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../../core/config/api.config';
+import { PagedResult } from '../../../core/models/paged-result.model';
 import { AdminOrder, CreateOrderRequest, CreateOrderResult, OrderStatus } from '../models/order.model';
 
 @Injectable({ providedIn: 'root' })
@@ -32,8 +33,13 @@ export class OrderingApi {
     );
   }
 
-  getAdminOrdersToday() {
-    return this.http.get<AdminOrder[]>(`${this.baseUrl}/api/admin/orders/today`);
+  getAdminOrdersToday(page: number, pageSize: number, status?: string) {
+    const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
+    if (status) params['status'] = status;
+    return this.http.get<PagedResult<AdminOrder>>(
+      `${this.baseUrl}/api/admin/orders/today/page`,
+      { params }
+    );
   }
 
   updateAdminStatus(orderId: string, status: string) {

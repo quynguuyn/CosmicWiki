@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.SharedKernel\CosmicWiki.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Pagination\CosmicWiki.Pagination.csproj" />
     <ProjectReference Include="..\CosmicWiki.Auth.Domain\CosmicWiki.Auth.Domain.csproj" />
   </ItemGroup>
 

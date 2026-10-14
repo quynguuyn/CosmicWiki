@@ -93,9 +93,11 @@ services:
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
       Hangfire__RedisConnection: redis:6379
+      Caching__Enabled: "true"
       Caching__Redis__ConnectionString: redis:6379
       AstronomicalResearch__Enabled: "true"
-      AstronomicalResearch__PageSize: "100"
+      AstronomicalResearch__PageSize: "500"
+      AstronomicalResearch__MaxPagesPerRun: "20"
     depends_on:
       oracle:
         condition: service_healthy

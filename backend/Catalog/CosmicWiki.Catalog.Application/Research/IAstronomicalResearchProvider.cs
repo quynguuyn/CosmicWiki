@@ -2,6 +2,8 @@ namespace CosmicWiki.Catalog.Application.Research;
 
 public interface IAstronomicalResearchProvider
 {
-    Task<IReadOnlyList<AstronomicalResearchCandidate>> FindCandidatesAsync(
+    Task<AstronomicalResearchPage> FindCandidatesAsync(
+        string? afterMainId,
+        int pageSize,
         CancellationToken cancellationToken = default);
 }

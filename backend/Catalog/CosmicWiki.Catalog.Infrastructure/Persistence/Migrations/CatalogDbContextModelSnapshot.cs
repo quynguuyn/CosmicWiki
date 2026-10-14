@@ -58,7 +58,46 @@ namespace CosmicWiki.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("ID");
 
+                    b.Property<string>("Catalog")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CATALOG");
+
+                    b.Property<string>("CatalogValue")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("CATALOG_VALUE");
+
+                    b.Property<double?>("DeclinationDegrees")
+                        .HasColumnType("BINARY_DOUBLE")
+                        .HasColumnName("DEC_DEGREES");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasDefaultValue("Other")
+                        .HasColumnName("KIND");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NAME");
+
+                    b.Property<string>("ObjectType")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("OBJECT_TYPE");
+
+                    b.Property<double?>("RightAscensionDegrees")
+                        .HasColumnType("BINARY_DOUBLE")
+                        .HasColumnName("RA_DEGREES");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Catalog", "CatalogValue")
+                        .IsUnique();
 
                     b.ToTable("ASTRONOMICAL_OBJECTS", "COSMICWIKI_CATALOG");
                 });

@@ -28,10 +28,11 @@ public sealed class ProductsController : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _sender.Send(
-            new GetProductsQuery(page, pageSize),
+            new GetProductsQuery(page, pageSize, search),
             cancellationToken);
 
         return Ok(result);
