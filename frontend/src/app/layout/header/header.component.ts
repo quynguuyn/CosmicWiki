@@ -53,7 +53,7 @@ export class HeaderComponent {
   logout(): void {
     this.auth.logout();
     this.userMenuOpen.set(false);
-    this.router.navigate(['/']);
+    this.router.navigate(['/login']);
   }
 
   search(): void {

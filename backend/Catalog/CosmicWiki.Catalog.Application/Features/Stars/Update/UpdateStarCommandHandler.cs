@@ -9,15 +9,18 @@ public sealed class UpdateStarCommandHandler
     : IRequestHandler<UpdateStarCommand>
 {
     private readonly IStarRepository _starRepository;
+    private readonly IAstronomicalObjectRepository _astronomicalObjectRepository;
     private readonly ICatalogUnitOfWork _unitOfWork;
     private readonly IStarCache _starCache;
 
     public UpdateStarCommandHandler(
         IStarRepository starRepository,
+        IAstronomicalObjectRepository astronomicalObjectRepository,
         ICatalogUnitOfWork unitOfWork,
         IStarCache starCache)
     {
         _starRepository = starRepository;
+        _astronomicalObjectRepository = astronomicalObjectRepository;
         _unitOfWork = unitOfWork;
         _starCache = starCache;
     }
@@ -35,6 +38,13 @@ public sealed class UpdateStarCommandHandler
             throw new KeyNotFoundException(
                 $"Star '{request.Id}' was not found.");
         }
+
+        var astronomicalObject = await _astronomicalObjectRepository.GetByIdAsync(
+            request.Id,
+            cancellationToken);
+        if (astronomicalObject is null)
+            throw new InvalidOperationException(
+                $"Astronomical object '{request.Id}' for star was not found.");
 
         var duplicateIdentifier = request.CatalogIdentifiers
             .GroupBy(x =>
@@ -64,12 +74,17 @@ public sealed class UpdateStarCommandHandler
         }
 
         star.Rename(request.Name);
+        astronomicalObject.Rename(request.Name);
 
         star.ReplaceCatalogIdentifiers(
             request.CatalogIdentifiers.Select(identifier =>
                 CatalogIdentifier.Create(
                     identifier.Catalog,
                     identifier.Value)));
+        var primaryIdentifier = request.CatalogIdentifiers.FirstOrDefault();
+        astronomicalObject.UpdatePrimaryCatalogIdentifier(
+            primaryIdentifier?.Catalog,
+            primaryIdentifier?.Value);
 
         star.ReplaceParallaxes(
             request.Parallaxes.Select(parallax =>

@@ -32,6 +32,9 @@ public sealed class AdminJobsController(
             enabled = options.Enabled,
             schedule = "02:00 UTC mỗi ngày",
             pageSize = options.PageSize,
+            maxPagesPerRun = options.MaxPagesPerRun,
+            maxRecordsPerRun = Math.Clamp(options.PageSize, 1, 500) *
+                Math.Clamp(options.MaxPagesPerRun, 1, 100),
             source = "SIMBAD"
         });
     }
@@ -113,40 +116,87 @@ public sealed class AdminJobsController(
     [HttpGet("hangfire/jobs/{state}")]
     public IActionResult GetHangfireJobs(
         string state,
-        [FromQuery] int from = 0,
-        [FromQuery] int count = 25)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] int? from = null,
+        [FromQuery] int? count = null)
     {
-        count = Math.Clamp(count, 1, 100);
-        from = Math.Max(0, from);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(1, page);
+        var pageOffset = from.HasValue
+            ? Math.Max(0, from.Value)
+            : (page - 1) * pageSize;
+        var take = Math.Clamp(count ?? pageSize, 1, 100);
         var monitoring = JobStorage.Current.GetMonitoringApi();
+        var statistics = monitoring.GetStatistics();
 
         var normalizedState = state.ToLowerInvariant();
-        var jobs = normalizedState switch
+        var totalCount = normalizedState switch
         {
-            "enqueued" => monitoring.EnqueuedJobs("default", from, count)
+            "enqueued" => statistics.Enqueued,
+            "scheduled" => statistics.Scheduled,
+            "processing" => statistics.Processing,
+            "succeeded" => statistics.Succeeded,
+            "failed" => statistics.Failed,
+            "deleted" => statistics.Deleted,
+            _ => -1
+        };
+        if (totalCount < 0)
+            return BadRequest($"Unknown Hangfire state '{state}'.");
+
+        if (!from.HasValue)
+        {
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+            pageOffset = (page - 1) * pageSize;
+        }
+
+        IEnumerable<HangfireJobSummary> jobs = normalizedState switch
+        {
+            "enqueued" => monitoring.EnqueuedJobs("default", pageOffset, take)
                 .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
-            "scheduled" => monitoring.ScheduledJobs(from, count)
+            "scheduled" => monitoring.ScheduledJobs(pageOffset, take)
                 .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
-            "processing" => monitoring.ProcessingJobs(from, count)
+            "processing" => monitoring.ProcessingJobs(pageOffset, take)
                 .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
-            "succeeded" => monitoring.SucceededJobs(from, count)
+            "succeeded" => monitoring.SucceededJobs(pageOffset, take)
                 .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
-            "failed" => monitoring.FailedJobs(from, count)
+            "failed" => monitoring.FailedJobs(pageOffset, take)
                 .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
-            "deleted" => monitoring.DeletedJobs(from, count)
+            "deleted" => monitoring.DeletedJobs(pageOffset, take)
                 .Select(item => ToHangfireJobSummary(item.Key, item.Value.Job.Method.Name)),
-            _ => throw new ArgumentException($"Unknown Hangfire state '{state}'.")
+            _ => Array.Empty<HangfireJobSummary>()
         };
 
-        return Ok(new { state = normalizedState, jobs });
+        var effectivePageSize = count.HasValue ? take : pageSize;
+        var effectivePage = from.HasValue
+            ? pageOffset / effectivePageSize + 1
+            : page;
+
+        return Ok(new
+        {
+            state = normalizedState,
+            jobs,
+            page = effectivePage,
+            pageSize = effectivePageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling(totalCount / (double)effectivePageSize),
+            hasPreviousPage = effectivePage > 1,
+            hasNextPage = effectivePage < (int)Math.Ceiling(totalCount / (double)effectivePageSize)
+        });
     }
 
     [HttpGet("hangfire/recurring")]
-    public IActionResult GetRecurringJobs()
+    public IActionResult GetRecurringJobs(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var jobs = JobStorage.Current
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var allJobs = JobStorage.Current
             .GetConnection()
             .GetRecurringJobs()
+            .OrderBy(job => job.Id, StringComparer.Ordinal)
             .Select(job => new
             {
                 id = job.Id,
@@ -156,9 +206,23 @@ public sealed class AdminJobsController(
                 lastExecution = job.LastExecution,
                 lastJobId = job.LastJobId,
                 error = job.Error
-            });
+            })
+            .ToArray();
+        var totalCount = allJobs.Length;
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        page = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+        var jobs = allJobs.Skip((page - 1) * pageSize).Take(pageSize);
 
-        return Ok(jobs);
+        return Ok(new
+        {
+            jobs,
+            page,
+            pageSize,
+            totalCount,
+            totalPages,
+            hasPreviousPage = page > 1,
+            hasNextPage = page < totalPages
+        });
     }
 
     [HttpPost("hangfire/recurring/{jobId}/trigger")]

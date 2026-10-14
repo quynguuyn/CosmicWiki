@@ -35,6 +35,20 @@ public sealed class CategoriesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("page")]
+    [Authorize(Policy = Permissions.ProductRead)]
+    public async Task<IActionResult> GetPage(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _sender.Send(
+            new GetCategoriesPageQuery(page, pageSize, search),
+            cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("{id:guid}")]
     [Authorize(Policy = Permissions.ProductRead)]
     public async Task<IActionResult> GetById(

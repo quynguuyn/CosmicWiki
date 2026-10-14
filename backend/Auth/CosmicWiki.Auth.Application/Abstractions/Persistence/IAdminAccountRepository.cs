@@ -2,8 +2,10 @@ namespace CosmicWiki.Auth.Application.Abstractions.Persistence;
 
 public interface IAdminAccountRepository
 {
-    Task<IReadOnlyCollection<AdminAccountProjection>> GetAccountsAsync(
+    Task<(IReadOnlyCollection<AdminAccountProjection> Items, int TotalCount)> GetAccountsAsync(
         string? role,
+        int skip,
+        int take,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<RoleProjection>> GetRolesAsync(

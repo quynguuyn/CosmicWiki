@@ -86,4 +86,7 @@
 .hangfire-list-heading button, .hangfire-list-row button { border: 1px solid var(--glass-border); border-radius: 999px; padding: .3rem .6rem; background: transparent; color: inherit; cursor: pointer; }
 .hangfire-list-row { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 2fr) auto auto; align-items: center; gap: .7rem; padding: .65rem .75rem; border-radius: .65rem; background: rgba(255,255,255,.06); }
 .hangfire-recurring .hangfire-list-row { grid-template-columns: minmax(10rem, 2fr) 8rem 12rem auto; }
+.hangfire-pagination { display:flex; align-items:center; justify-content:center; gap:1rem; margin-top:.75rem; color:var(--on-surface-variant); }
+.hangfire-pagination button { border:1px solid var(--glass-border); border-radius:999px; padding:.35rem .75rem; background:transparent; color:inherit; cursor:pointer; }
+.hangfire-pagination button:disabled { cursor:not-allowed; opacity:.45; }
 @media (max-width: 700px) { .hangfire-list-row, .hangfire-recurring .hangfire-list-row { grid-template-columns: 1fr; } }
