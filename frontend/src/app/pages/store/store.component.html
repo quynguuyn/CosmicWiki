@@ -14,7 +14,7 @@
       </div>
 
       <h1>
-        Cửa Hàng Quà Lưu Niệm Bảo Tàng Vũ Trụ
+        {{ activeCategoryLabel }}
       </h1>
 
       <p class="hero-description">
@@ -128,6 +128,7 @@
 
 
   <!-- ==================== PRODUCT GRID ==================== -->
+  <p class="store-feedback" *ngIf="productsLoading">Đang tải sản phẩm...</p>
   <section class="product-grid">
 
     <article *ngFor="let product of filteredProducts" class="product-card cosmic-glass">
@@ -211,17 +212,22 @@
 
 
   <!-- Empty State -->
-  <div *ngIf="filteredProducts.length === 0" class="empty-state cosmic-glass">
+  <div *ngIf="!productsLoading && filteredProducts.length === 0" class="empty-state cosmic-glass">
     <span class="material-symbols-outlined">
       inventory_2
     </span>
 
     <h3>Không tìm thấy hiện vật</h3>
 
-    <p>
-      Không có hiện vật nào thuộc danh mục này.
-    </p>
+    <p>{{ contentError || 'Không có hiện vật nào thuộc danh mục này.' }}</p>
   </div>
+
+  <nav class="store-pagination" aria-label="Phân trang sản phẩm"
+    *ngIf="!productsLoading && productTotalPages > 1">
+    <button type="button" [disabled]="productPage <= 1" (click)="goToPage(productPage - 1)">Trước</button>
+    <span>Trang {{ productPage }} / {{ productTotalPages }} · {{ productTotalCount }} sản phẩm</span>
+    <button type="button" [disabled]="productPage >= productTotalPages" (click)="goToPage(productPage + 1)">Sau</button>
+  </nav>
 
 
   <!-- ==================== CURATORIAL BANNER ==================== -->
@@ -241,17 +247,9 @@
 
     </div>
 
-    <div class="curatorial-actions">
-
-      <button type="button" class="btn-outline">
-        Tra cứu Mã định danh RFID
-      </button>
-
-      <button type="button" class="btn-primary large">
-        Quy chuẩn Giám định
-      </button>
-
-    </div>
+    <p class="curatorial-note">
+      Tra cứu RFID và hồ sơ giám định trực tuyến hiện chưa được kết nối với hệ thống.
+    </p>
 
   </section>
 
@@ -312,7 +310,7 @@
               </span>
 
               <span class="modal-code">
-                ID: {{ selectedProduct.code }}
+                Mã sản phẩm: {{ selectedProduct.code }}
               </span>
 
             </div>
@@ -607,16 +605,3 @@
   </div>
 
 </div>
-
-
-<!-- Ambient audio control -->
-<button type="button" class="ambient-toggle" [class.active]="isAudioPlaying" (click)="toggleAudio()"
-  title="Bật/Tắt âm thanh môi trường không gian sâu">
-  <span class="material-symbols-outlined">
-    {{ isAudioPlaying ? 'volume_off' : 'graphic_eq' }}
-  </span>
-
-  <span>
-    AMBIENT
-  </span>
-</button>

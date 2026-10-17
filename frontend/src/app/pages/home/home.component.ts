@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DiscoveryService } from '../../features/discovery/services/discovery.service';
 import { ProductService } from '../../features/product/services/product.service';
@@ -58,13 +58,23 @@ export class HomeComponent {
   private readonly productsApi = inject(ProductService);
   private readonly cart = inject(CartService);
   private readonly newsletter = inject(NewsletterService);
+  private readonly router = inject(Router);
   newsletterSubmitted = false;
+  newsletterError = '';
+  newsletterSubmitting = false;
   private products: Product[] = [];
 
   subscribeNewsletter(email: string): void {
-    if (!email.trim()) return;
+    if (!email.trim() || this.newsletterSubmitting) return;
+    this.newsletterSubmitting = true;
+    this.newsletterError = '';
     this.newsletter.subscribe(email).subscribe({
-      next: () => this.newsletterSubmitted = true
+      next: () => this.newsletterSubmitted = true,
+      error: () => {
+        this.newsletterSubmitting = false;
+        this.newsletterError = 'Không thể đăng ký nhận tin lúc này. Vui lòng thử lại.';
+      },
+      complete: () => this.newsletterSubmitting = false
     });
   }
   chapters: Chapter[] = [];
@@ -88,6 +98,12 @@ export class HomeComponent {
       name: line.product.name,
       price: this.formatCurrency(line.product.salePrice)
     }));
+  }
+
+  openLibrarySearch(query: string): void {
+    this.router.navigate(['/library'], {
+      queryParams: { search: query }
+    });
   }
 
   private loadDatabaseContent(): void {
@@ -116,7 +132,7 @@ export class HomeComponent {
           chapterSub: 'Tư liệu lưu trữ',
           title: item.name,
           description: item.description ?? 'Tư liệu thiên văn được lập chỉ mục.',
-          meta: item.sourceId,
+          meta: item.sourceType,
           imageUrl: item.imageUrl ?? 'assets/images/cosmic-placeholder.svg',
           imageAlt: item.name,
           wide: index === 4

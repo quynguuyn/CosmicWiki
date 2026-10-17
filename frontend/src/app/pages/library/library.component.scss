@@ -606,6 +606,16 @@
     gap: 24px;
 }
 
+.specimen-grid--list {
+    grid-template-columns: 1fr;
+}
+
+.pagination-page {
+    min-width: 5.5rem;
+    color: var(--on-surface-variant);
+    text-align: center;
+}
+
 .specimen-card {
     min-width: 0;
 
@@ -651,6 +661,22 @@
 
     .specimen-card:hover & {
         transform: scale(1.03);
+    }
+}
+
+.specimen-image-placeholder {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 12rem;
+    place-items: center;
+    color: var(--tertiary);
+    background:
+        radial-gradient(circle at 50% 45%, rgba(143, 194, 226, .18), transparent 35%),
+        linear-gradient(145deg, rgba(18, 38, 59, .95), rgba(9, 18, 31, .98));
+
+    .material-symbols-outlined {
+        font-size: 3rem;
     }
 }
 
@@ -766,8 +792,8 @@
     padding-top: 12px;
 
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
 
     gap: 12px;
 
@@ -775,39 +801,49 @@
 }
 
 .specimen-detail {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
     color: var(--on-surface-variant);
 
     font-family: monospace;
     font-size: 11px;
 
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .detail-button {
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 8px;
 
-    padding: 0;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
 
-    border: 0;
+    border: 1px solid rgba(143, 194, 226, .4);
+    border-radius: 8px;
 
     color: var(--primary);
 
-    background: transparent;
+    background: rgba(112, 168, 204, .1);
 
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 11px;
-    line-height: 16px;
+    font-size: 12px;
+    line-height: 18px;
     letter-spacing: 0.08em;
     font-weight: 600;
 
     cursor: pointer;
+    text-decoration: none;
 
     transition: color 0.2s ease;
 
     &:hover {
         color: var(--primary-fixed);
+        background: rgba(112, 168, 204, .2);
     }
 
     .material-symbols-outlined {

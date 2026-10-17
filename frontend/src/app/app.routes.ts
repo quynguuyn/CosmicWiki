@@ -11,6 +11,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'register',
+    loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent)
+  },
+  {
     path: 'user',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/user/user.component').then(m => m.UserComponent)
@@ -42,6 +46,10 @@ export const routes: Routes = [
   {
     path: 'library',
     loadComponent: () => import('./pages/library/library.component').then(m => m.LibraryComponent)
+  },
+  {
+    path: 'store/category/:categorySlug',
+    loadComponent: () => import('./pages/store/store.component').then(m => m.StoreComponent)
   },
   {
     path: 'store',

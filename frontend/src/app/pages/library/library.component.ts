@@ -1,159 +1,162 @@
 import { Component, inject, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { DiscoveryService } from '../../features/discovery/services/discovery.service';
+import { StarDetailComponent } from './star-detail.component';
 
 interface Specimen {
-  id: number;
+  id: string;
+  sourceType: string;
   name: string;
   badge: string;
   image: string;
   alt: string;
   distance: string;
   description: string;
-  detail: string;
+  detail: string | null;
   categories: string[];
 }
 
 interface LibraryCategory {
+  id: string;
   label: string;
-  count: number;
 }
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StarDetailComponent],
   templateUrl: './library.component.html',
   styleUrl: './library.component.scss'
 })
 export class LibraryComponent {
 
   private readonly discoveryService = inject(DiscoveryService);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChild('searchInput')
   searchInput?: ElementRef<HTMLInputElement>;
 
   searchQuery = '';
-  selectedCategory = 'Tất cả';
+  selectedCategory = 'all';
 
   currentPage = 1;
   totalPages = 0;
   totalSpecimens = 0;
 
   isDossierOpen = false;
-  isAmbientPlaying = false;
-
   selectedSpecimen: Specimen | null = null;
+  selectedStarId: string | null = null;
 
-  categories: LibraryCategory[] = [];
+  categories: LibraryCategory[] = [
+    { id: 'all', label: 'Tất cả' },
+    { id: 'star', label: 'Sao' },
+    { id: 'galaxy', label: 'Thiên hà' },
+    { id: 'planet', label: 'Hành tinh' },
+    { id: 'other', label: 'Khác' }
+  ];
 
   specimens: Specimen[] = [];
   contentError = '';
+  viewMode: 'grid' | 'list' = 'grid';
+
+  get firstVisibleSpecimen(): number {
+    return this.totalSpecimens === 0 ? 0 : (this.currentPage - 1) * 8 + 1;
+  }
+
+  get lastVisibleSpecimen(): number {
+    return Math.min(this.currentPage * 8, this.totalSpecimens);
+  }
 
   ngOnInit() {
-    this.specimens = [];
+    this.route.queryParamMap.subscribe(params => {
+      this.searchQuery = params.get('search')?.trim() ?? '';
+      this.currentPage = 1;
+      this.loadSpecimens();
+    });
+  }
+
+  private loadSpecimens(): void {
+    this.contentError = '';
     this.discoveryService.search(
-      undefined,
-      undefined,
-      1,
-      20
+      this.searchQuery || undefined,
+      this.selectedCategory === 'all' ? undefined : this.selectedCategory,
+      this.currentPage,
+      8
     ).subscribe({
       next: result => {
         this.totalPages = result.totalPages;
         this.totalSpecimens = result.totalCount;
-        this.categories = Array.from(
-          result.items.reduce((counts, item) => {
-            const label = this.getDiscoveryCategory(item.sourceType);
-            counts.set(label, (counts.get(label) ?? 0) + 1);
-            return counts;
-          }, new Map<string, number>())
-        ).map(([label, count]) => ({ label, count }));
-        if (result.items.length > 0) {
-          this.specimens = result.items.map((item, index) => ({
-            id: index + 1,
+        this.specimens = result.items.map(item => ({
+            id: item.sourceId,
+            sourceType: item.sourceType.toLowerCase(),
             name: item.name,
-            badge: `${item.sourceType} • CosmicWiki`,
-            image: item.imageUrl ?? 'assets/images/cosmic-placeholder.svg',
+            badge: item.sourceType.toLowerCase() === 'star'
+              ? 'Star entity • Catalog'
+              : `${this.getDiscoveryCategory(item.sourceType)} • Catalog`,
+            image: item.imageUrl ?? '',
             alt: item.name,
             distance: 'Dữ liệu được lập chỉ mục bởi CosmicWiki',
             description: item.description ?? 'Chưa có mô tả cho hiện vật này.',
-            detail: `Mã nguồn: ${item.sourceId}`,
+            detail: null,
             categories: [this.getDiscoveryCategory(item.sourceType)]
           }));
-        } else {
-          this.specimens = [];
-          this.contentError = 'Chưa có dữ liệu hiện vật trong thư viện.';
-        }
+        if (this.totalSpecimens === 0)
+          this.contentError = 'Chưa có dữ liệu hiện vật phù hợp trong thư viện.';
       },
-      error: error => {
+      error: () => {
         this.specimens = [];
         this.contentError = 'Không thể tải dữ liệu thư viện.';
-        console.error('Discovery error:', error);
       }
     });
   }
 
   private getDiscoveryCategory(sourceType: string): string {
     const type = sourceType.toLowerCase();
+    if (type.includes('star')) {
+      return 'Sao';
+    }
     if (type.includes('galaxy')) {
       return 'Thiên hà';
     }
     if (type.includes('planet')) {
       return 'Ngoại hành tinh';
     }
-    if (type.includes('black')) {
-      return 'Hố đen & Kỳ dị';
+    if (type === 'other') {
+      return 'Khác';
     }
-    if (type.includes('solar')) {
-      return 'Thái Dương Hệ';
-    }
-    return 'Tinh vân & Sao';
+    return sourceType;
   }
 
   get filteredSpecimens(): Specimen[] {
-    const keyword = this.searchQuery.trim().toLowerCase();
-
-    return this.specimens.filter(specimen => {
-      const matchCategory =
-        this.selectedCategory === 'Tất cả' ||
-        specimen.categories.includes(this.selectedCategory);
-
-      if (!matchCategory) {
-        return false;
-      }
-
-      if (!keyword) {
-        return true;
-      }
-
-      const searchableText = [
-        specimen.name,
-        specimen.badge,
-        specimen.distance,
-        specimen.description,
-        specimen.detail
-      ]
-        .join(' ')
-        .toLowerCase();
-
-      return searchableText.includes(keyword);
-    });
+    return this.specimens;
   }
 
   selectCategory(category: string): void {
     this.selectedCategory = category;
     this.currentPage = 1;
+    this.loadSpecimens();
   }
 
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery = input.value;
     this.currentPage = 1;
+    this.loadSpecimens();
   }
 
   openDossier(specimen: Specimen): void {
+    if (specimen.sourceType === 'star') {
+      this.selectedStarId = specimen.id;
+      return;
+    }
+
     this.selectedSpecimen = specimen;
     this.isDossierOpen = true;
+  }
+
+  closeStarDetail(): void {
+    this.selectedStarId = null;
   }
 
   closeDossier(): void {
@@ -161,16 +164,39 @@ export class LibraryComponent {
     this.selectedSpecimen = null;
   }
 
-  toggleAmbientAudio(): void {
-    this.isAmbientPlaying = !this.isAmbientPlaying;
-  }
-
   setPage(page: number): void {
-    if (page < 1 || page > this.totalPages) {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) {
       return;
     }
 
     this.currentPage = page;
+    this.loadSpecimens();
+  }
+
+  setViewMode(mode: 'grid' | 'list'): void {
+    this.viewMode = mode;
+  }
+
+  exportDossier(): void {
+    if (!this.selectedSpecimen) return;
+
+    const dossier = {
+      name: this.selectedSpecimen.name,
+      categories: this.selectedSpecimen.categories,
+      source: this.selectedSpecimen.badge,
+      imageUrl: this.selectedSpecimen.image,
+      description: this.selectedSpecimen.description,
+      sourceReference: this.selectedSpecimen.detail,
+      exportedAtUtc: new Date().toISOString()
+    };
+    const blobUrl = URL.createObjectURL(
+      new Blob([JSON.stringify(dossier, null, 2)], { type: 'application/json' })
+    );
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `cosmicwiki-${this.selectedSpecimen.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+    link.click();
+    URL.revokeObjectURL(blobUrl);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -183,15 +209,18 @@ export class LibraryComponent {
       this.searchInput?.nativeElement.focus();
     }
 
-    if (event.key === 'Escape' && this.isDossierOpen) {
-      this.closeDossier();
+    if (event.key === 'Escape') {
+      if (this.selectedStarId)
+        this.closeStarDetail();
+      else if (this.isDossierOpen)
+        this.closeDossier();
     }
   }
 
   trackById(
     _index: number,
     specimen: Specimen
-  ): number {
+  ): string {
     return specimen.id;
   }
 }
