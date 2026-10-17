@@ -11,6 +11,10 @@ public interface IAstronomicalImageRepository
     Task<IReadOnlyList<AstronomicalImage>> GetByAstronomicalObjectIdAsync(
         Guid astronomicalObjectId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> HasImageForAstronomicalObjectAsync(
+        Guid astronomicalObjectId,
+        CancellationToken cancellationToken = default);
     
     Task<AstronomicalImage?> GetByIdAsync(
         Guid astronomicalObjectId,

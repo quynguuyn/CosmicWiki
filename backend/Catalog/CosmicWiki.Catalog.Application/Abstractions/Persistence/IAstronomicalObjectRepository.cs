@@ -9,6 +9,15 @@ public interface IAstronomicalObjectRepository
         Guid id,
         CancellationToken cancellationToken = default);
 
+    Task<AstronomicalObjectReadModel?> GetReadModelByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AstronomicalObjectImageTarget>> GetImageTargetsByCatalogValuesAsync(
+        string catalog,
+        IReadOnlyCollection<string> catalogValues,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         AstronomicalObject astronomicalObject,
         CancellationToken cancellationToken = default);
@@ -28,6 +37,14 @@ public sealed record AstronomicalObjectReadModel(
     AstronomicalObjectKind Kind,
     string? ObjectType,
     string? Catalog,
+    string? CatalogValue,
+    double? RightAscensionDegrees,
+    double? DeclinationDegrees,
+    string? ImageUrl);
+
+public sealed record AstronomicalObjectImageTarget(
+    Guid Id,
+    AstronomicalObjectKind Kind,
     string? CatalogValue,
     double? RightAscensionDegrees,
     double? DeclinationDegrees);

@@ -36,6 +36,15 @@ public sealed class AstronomicalImageRepository
                 x.AstronomicalObjectId == astronomicalObjectId)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<bool> HasImageForAstronomicalObjectAsync(
+        Guid astronomicalObjectId,
+        CancellationToken cancellationToken = default) =>
+        _dbContext.AstronomicalImages
+            .AsNoTracking()
+            .AnyAsync(
+                image => image.AstronomicalObjectId == astronomicalObjectId,
+                cancellationToken);
     
     public async Task<AstronomicalImage?> GetByIdAsync(
         Guid astronomicalObjectId,

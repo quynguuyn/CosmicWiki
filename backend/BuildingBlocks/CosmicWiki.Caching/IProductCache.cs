@@ -6,7 +6,8 @@ public interface IProductCache
         int page,
         int pageSize,
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? categoryId = null);
 
     Task InvalidateAsync(
         Guid productId,

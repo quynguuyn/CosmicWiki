@@ -13,4 +13,8 @@ export class StoriesService {
   getCategories() {
     return this.api.getCategories();
   }
+
+  getBySlug(slug: string) {
+    return this.api.getBySlug(slug);
+  }
 }
