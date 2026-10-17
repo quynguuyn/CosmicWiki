@@ -38,7 +38,6 @@ import { RouterLink } from '@angular/router';
 
         <div class="order-card" *ngFor="let order of filteredOrders" [ngClass]="order.status.toLowerCase()">
           <div class="order-header">
-            <span class="order-id">Đơn: {{ order.orderId | slice:0:8 }}...</span>
             <span class="order-date" *ngIf="order.createdAtUtc">{{ order.createdAtUtc | date:'short' }}</span>
           </div>
           <div class="order-body">

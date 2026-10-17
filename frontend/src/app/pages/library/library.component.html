@@ -21,9 +21,8 @@
             </h1>
 
             <p class="body-lg hero-description">
-                Hệ thống biên mục tương tác hiển thị hơn 1,248 thực thể vũ trụ,
-                quang phổ thiên thể và dữ liệu viễn thám từ các mạng lưới đài
-                thiên văn mặt đất và kính không gian.
+                Tra cứu các Star entity và những thực thể thiên văn khác trong
+                một thư viện thống nhất. Mỗi loại mở đúng hồ sơ nguồn trong Catalog.
             </p>
 
         </div>
@@ -42,7 +41,7 @@
                     </div>
 
                     <div class="title-md">
-                        1,248 thiên thể
+                                {{ totalSpecimens | number }} thiên thể
                     </div>
                 </div>
             </div>
@@ -58,7 +57,7 @@
                     </div>
 
                     <div class="title-md">
-                        JWST &amp; Hubble Online
+                                Star entities &amp; object catalog
                     </div>
                 </div>
             </div>
@@ -70,11 +69,11 @@
 
                 <div>
                     <div class="label-sm muted">
-                        Tọa độ vòm quan trắc
+                        Bộ lọc thư viện
                     </div>
 
                     <div class="title-md">
-                        RA 18h 36m / Dec +38° 47′
+                        Sao · Thiên hà · Hành tinh
                     </div>
                 </div>
             </div>
@@ -86,11 +85,11 @@
 
                 <div>
                     <div class="label-sm muted">
-                        Cập nhật quang phổ
+                        Nguồn dữ liệu
                     </div>
 
                     <div class="title-md">
-                        12 phút trước
+                        Catalog + Discovery
                     </div>
                 </div>
             </div>
@@ -131,22 +130,22 @@
                         swap_vert
                     </span>
 
-                    <span>
-                        Sắp xếp: Khoảng cách ánh sáng ↓
-                    </span>
+                    <span>Toàn bộ loại thực thể</span>
                 </div>
 
                 <div class="view-switcher">
 
-                    <button type="button" class="view-button active" title="Chế độ xem Lưới">
+                    <button type="button" class="view-button" [class.active]="viewMode === 'grid'"
+                        title="Chế độ xem Lưới" (click)="setViewMode('grid')">
                         <span class="material-symbols-outlined">
                             grid_view
                         </span>
                     </button>
 
-                    <button type="button" class="view-button" title="Chế độ xem Quang phổ">
+                    <button type="button" class="view-button" [class.active]="viewMode === 'list'"
+                        title="Chế độ xem Danh sách" (click)="setViewMode('list')">
                         <span class="material-symbols-outlined">
-                            format_clear
+                            view_list
                         </span>
                     </button>
 
@@ -161,17 +160,16 @@
         <div class="category-list">
 
             <button *ngFor="let category of categories" type="button" class="category-chip"
-                [class.active]="selectedCategory === category.label" (click)="selectCategory(category.label)">
-                {{ category.label }} ({{ category.count | number }})
+                [class.active]="selectedCategory === category.id" (click)="selectCategory(category.id)">
+                {{ category.label }}
             </button>
 
         </div>
-
     </section>
 
 
     <!-- CELESTIAL SPECIMENS -->
-    <section class="specimen-grid">
+    <section class="specimen-grid" [class.specimen-grid--list]="viewMode === 'list'">
 
         <article *ngFor="
         let specimen of filteredSpecimens;
@@ -181,7 +179,13 @@
             <!-- IMAGE -->
             <div class="specimen-image-wrapper">
 
-                <img class="specimen-image" [src]="specimen.image" [alt]="specimen.alt" loading="lazy" />
+                <img *ngIf="specimen.image; else imagePlaceholder"
+                    class="specimen-image" [src]="specimen.image" [alt]="specimen.alt" loading="lazy" />
+                <ng-template #imagePlaceholder>
+                    <div class="specimen-image-placeholder" aria-hidden="true">
+                        <span class="material-symbols-outlined">auto_awesome</span>
+                    </div>
+                </ng-template>
 
                 <div class="image-gradient"></div>
 
@@ -209,18 +213,14 @@
 
                 <div class="specimen-footer">
 
-                    <span class="specimen-detail">
+                    <span class="specimen-detail" *ngIf="specimen.detail">
                         {{ specimen.detail }}
                     </span>
 
-                    <button type="button" class="detail-button" (click)="openDossier(specimen)">
-                        <span>
-                            Xem chi tiết
-                        </span>
-
-                        <span class="material-symbols-outlined">
-                            arrow_forward
-                        </span>
+                    <button type="button" class="detail-button"
+                        (click)="openDossier(specimen)">
+                        <span>Xem chi tiết</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
                     </button>
 
                 </div>
@@ -254,11 +254,11 @@
         <div class="pagination-info label-md">
             Hiển thị
             <span class="surface-text">
-                1 - 8
+                {{ firstVisibleSpecimen }} - {{ lastVisibleSpecimen }}
             </span>
             trong số
             <span class="tertiary-text">
-                1,248
+                {{ totalSpecimens | number }}
             </span>
             thực thể vũ trụ đã lập chỉ mục
         </div>
@@ -272,28 +272,11 @@
                 </span>
             </button>
 
-            <button type="button" class="pagination-button" [class.current]="currentPage === 1" (click)="setPage(1)">
-                1
-            </button>
-
-            <button type="button" class="pagination-button" [class.current]="currentPage === 2" (click)="setPage(2)">
-                2
-            </button>
-
-            <button type="button" class="pagination-button" [class.current]="currentPage === 3" (click)="setPage(3)">
-                3
-            </button>
-
-            <span class="pagination-dots">
-                ...
+            <span class="pagination-page" *ngIf="totalPages > 0">
+                Trang {{ currentPage }} / {{ totalPages }}
             </span>
 
-            <button type="button" class="pagination-button" [class.current]="currentPage === 156"
-                (click)="setPage(156)">
-                156
-            </button>
-
-            <button type="button" class="pagination-button" [disabled]="currentPage === totalPages"
+            <button type="button" class="pagination-button" [disabled]="currentPage >= totalPages"
                 (click)="setPage(currentPage + 1)">
                 <span class="material-symbols-outlined">
                     chevron_right
@@ -306,19 +289,11 @@
 
 </main>
 
-
-<!-- AMBIENT AUDIO -->
-<button type="button" class="ambient-audio-button" [class.active]="isAmbientPlaying" (click)="toggleAmbientAudio()"
-    title="Không gian âm thanh vũ trụ">
-    <span class="material-symbols-outlined">
-        graphic_eq
-    </span>
-
-    <span>
-        AMBIENT
-    </span>
-</button>
-
+<app-star-detail
+    *ngIf="selectedStarId"
+    [starId]="selectedStarId"
+    (closed)="closeStarDetail()">
+</app-star-detail>
 
 <!-- DOSSIER MODAL -->
 <div *ngIf="isDossierOpen" class="dossier-overlay" (click)="closeDossier()">
@@ -335,7 +310,7 @@
                     <span class="dossier-ping"></span>
 
                     <span class="label-sm tertiary-text">
-                        HỒ SƠ VIỄN THÁM THIÊN VĂN: CW-DS-087
+                        HỒ SƠ THỰC THỂ · {{ selectedSpecimen?.badge }}
                     </span>
 
                 </div>
@@ -369,13 +344,8 @@
 
                 <div class="dossier-image-meta">
 
-                    <span>
-                        Kênh viễn thám: F160W + F200W
-                    </span>
-
-                    <span class="primary-text mono">
-                        JWST / NIRCam
-                    </span>
+                    <span>Ảnh được cung cấp bởi Catalog</span>
+                    <span class="primary-text mono">{{ selectedSpecimen?.sourceType }}</span>
 
                 </div>
 
@@ -391,61 +361,14 @@
                         dataset
                     </span>
 
-                    Bảng Dữ Liệu Tọa Độ &amp; Vật Lý Thiên Văn
+                    Thông Tin Chỉ Mục
 
                 </h4>
 
                 <div class="data-table mono body-sm">
 
-                    <div class="data-row">
-                        <span>
-                            Xích kinh (Right Ascension):
-                        </span>
-
-                        <strong>
-                            18h 36m 56.3s
-                        </strong>
-                    </div>
-
-                    <div class="data-row">
-                        <span>
-                            Xích vĩ (Declination):
-                        </span>
-
-                        <strong>
-                            +38° 47′ 01.2″
-                        </strong>
-                    </div>
-
-                    <div class="data-row">
-                        <span>
-                            Độ dịch chuyển đỏ (z):
-                        </span>
-
-                        <strong>
-                            +0.00428 ± 0.00002
-                        </strong>
-                    </div>
-
-                    <div class="data-row">
-                        <span>
-                            Vận tốc xuyên tâm:
-                        </span>
-
-                        <strong>
-                            −296.3 km/s
-                        </strong>
-                    </div>
-
-                    <div class="data-row">
-                        <span>
-                            Khối lượng ước tính:
-                        </span>
-
-                        <strong>
-                            1.5 × 10¹² M☉
-                        </strong>
-                    </div>
+                    <div class="data-row"><span>Loại thực thể:</span><strong>{{ selectedSpecimen?.categories?.[0] }}</strong></div>
+                    <div class="data-row"><span>Nguồn:</span><strong>Discovery search index</strong></div>
 
                 </div>
 
@@ -455,8 +378,7 @@
                         Ghi chú giám tuyển:
                     </span>
 
-                    Mẫu vật thiên văn này thể hiện sự cân bằng tĩnh học hoàn hảo
-                    giữa áp suất bức xạ photon và lực hấp dẫn lượng tử co cụm.
+                    {{ selectedSpecimen?.description }}
 
                 </div>
 
@@ -471,11 +393,11 @@
             <div class="copyright-notice label-sm">
 
                 <span class="material-symbols-outlined tertiary-text">
-                    lock_open
+                    database
                 </span>
 
                 <span>
-                    Dữ liệu mở theo Quy chế Bản quyền Đài Quan Sát Quốc Tế
+                    Hồ sơ này hiển thị dữ liệu thực tế có trong Discovery index
                 </span>
 
             </div>
@@ -486,13 +408,13 @@
                     Đóng hồ sơ
                 </button>
 
-                <button type="button" class="download-button">
+                <button type="button" class="download-button" (click)="exportDossier()">
                     <span class="material-symbols-outlined">
                         download
                     </span>
 
                     <span>
-                        Tải bộ dữ liệu FITS
+                        Tải hồ sơ JSON
                     </span>
                 </button>
 
