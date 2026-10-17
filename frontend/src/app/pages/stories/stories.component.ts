@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StoriesService } from '../../features/stories/services/stories.service';
 import { NewsletterService } from '../../features/newsletter/services/newsletter.service';
 
 interface Story {
   id: string | number;
+  slug: string;
   category: string;
   era: string;
   code: string;
@@ -35,6 +37,8 @@ interface StoryCategory {
 export class StoriesComponent {
   private readonly storiesApi = inject(StoriesService);
   private readonly newsletter = inject(NewsletterService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   // ============================================================
   // UI STATE
@@ -45,16 +49,18 @@ export class StoriesComponent {
   sortMode = 'newest';
 
   isModalOpen = false;
-  isHeroAudioPlaying = false;
-  isModalAudioPlaying = false;
-  isAmbientOn = false;
 
   isSubscribing = false;
   isSubscribed = false;
+  subscriptionError = '';
+  shareMessage = '';
+  storiesError = '';
 
   selectedStory: Story | null = null;
 
   isLoading = false;
+  private storiesLoaded = false;
+  private pendingStorySlug: string | null = null;
 
   // ============================================================
   // CATEGORY DATA
@@ -75,6 +81,9 @@ export class StoriesComponent {
   stories: Story[] = [];
 
   constructor() {
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.syncStoryFromUrl());
     this.loadStories();
   }
 
@@ -95,12 +104,18 @@ export class StoriesComponent {
             }))
           ];
         }
+        this.storiesError = '';
+        this.storiesLoaded = true;
+        this.syncStoryFromUrl();
         this.isLoading = false;
       },
       error: () => {
         this.stories = [];
         this.heroStory = null;
         this.categories = [];
+        this.storiesError = 'Không thể tải biên niên sử. Vui lòng thử lại sau.';
+        this.storiesLoaded = true;
+        this.syncStoryFromUrl();
         this.isLoading = false;
       }
     });
@@ -108,6 +123,7 @@ export class StoriesComponent {
 
   private mapStory(story: {
     id: string;
+    slug: string;
     category: string;
     era: string;
     code: string;
@@ -121,6 +137,7 @@ export class StoriesComponent {
   }): Story {
     return {
       id: story.id,
+      slug: story.slug,
       category: story.category,
       era: story.era,
       code: story.code,
@@ -169,7 +186,7 @@ export class StoriesComponent {
     }
 
     switch (this.sortMode) {
-      case 'popular':
+      case 'shortest':
         return [...result].sort((a, b) => a.readTime - b.readTime);
 
       case 'duration':
@@ -216,34 +233,100 @@ export class StoriesComponent {
       return;
     }
 
+    this.pendingStorySlug = story.slug;
+    this.showModal(story);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { story: story.slug },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
+
+  private showModal(story: Story): void {
     this.selectedStory = story;
     this.isModalOpen = true;
-    this.isModalAudioPlaying = false;
-
     document.body.style.overflow = 'hidden';
   }
 
-  closeModal(): void {
-    this.isModalOpen = false;
-    this.isModalAudioPlaying = false;
+  private syncStoryFromUrl(): void {
+    const storySlug = this.route.snapshot.queryParamMap.get('story');
+    if (!storySlug) {
+      this.pendingStorySlug = null;
+      if (this.isModalOpen) this.hideModal();
+      return;
+    }
 
+    if (!this.storiesLoaded) return;
+    if (storySlug === this.pendingStorySlug) return;
+    this.pendingStorySlug = storySlug;
+
+    const story = this.stories.find(item => item.slug === storySlug);
+    if (story) {
+      this.showModal(story);
+    } else if (this.storiesLoaded) {
+      this.storiesApi.getBySlug(storySlug).subscribe({
+        next: result => {
+          if (this.route.snapshot.queryParamMap.get('story') === storySlug) {
+            this.showModal(this.mapStory(result));
+          }
+        },
+        error: () => {
+          if (this.route.snapshot.queryParamMap.get('story') !== storySlug) return;
+          this.storiesError = 'Không tìm thấy biên niên sử được chia sẻ.';
+          this.clearStoryQuery();
+        }
+      });
+    }
+  }
+
+  closeModal(): void {
+    this.hideModal();
+    if (this.route.snapshot.queryParamMap.has('story')) {
+      this.clearStoryQuery();
+    }
+  }
+
+  private clearStoryQuery(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { story: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+  }
+
+  private hideModal(): void {
+    this.isModalOpen = false;
+    this.selectedStory = null;
     document.body.style.overflow = 'auto';
   }
 
-  // ============================================================
-  // AUDIO
-  // ============================================================
+  async shareStory(): Promise<void> {
+    if (!this.selectedStory) return;
 
-  toggleHeroAudio(): void {
-    this.isHeroAudioPlaying = !this.isHeroAudioPlaying;
-  }
+    this.shareMessage = '';
+    const url = new URL(
+      `/stories?story=${encodeURIComponent(this.selectedStory.slug)}`,
+      window.location.origin
+    ).toString();
+    const shareData = {
+      title: this.selectedStory.title,
+      text: this.selectedStory.description,
+      url
+    };
 
-  toggleModalAudio(): void {
-    this.isModalAudioPlaying = !this.isModalAudioPlaying;
-  }
-
-  toggleAmbient(): void {
-    this.isAmbientOn = !this.isAmbientOn;
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        this.shareMessage = 'Đã mở tùy chọn chia sẻ.';
+      } else {
+        await navigator.clipboard.writeText(url);
+        this.shareMessage = 'Đã sao chép liên kết bài viết.';
+      }
+    } catch {
+      this.shareMessage = 'Không thể chia sẻ bài viết trên thiết bị này.';
+    }
   }
 
   // ============================================================
@@ -257,6 +340,7 @@ export class StoriesComponent {
 
     this.isSubscribing = true;
     this.isSubscribed = false;
+    this.subscriptionError = '';
     this.newsletter.subscribe(email).subscribe({
       next: () => {
         this.isSubscribing = false;
@@ -265,6 +349,7 @@ export class StoriesComponent {
       },
       error: () => {
         this.isSubscribing = false;
+        this.subscriptionError = 'Không thể đăng ký nhận tin. Vui lòng thử lại.';
       }
     });
   }

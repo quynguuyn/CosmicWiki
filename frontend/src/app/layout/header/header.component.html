@@ -22,10 +22,8 @@
     <!-- Right Actions -->
     <div class="header-actions">
       <form class="header-search" (ngSubmit)="search()">
-        <input [(ngModel)]="searchTerm" name="searchTerm" placeholder="Tìm kiếm" aria-label="Tìm kiếm sản phẩm">
-        <button class="icon-btn" type="submit" title="Tìm kiếm biên mục">
-        <span class="material-symbols-outlined">search</span>
-        </button>
+        <span class="material-symbols-outlined" aria-hidden="true">search</span>
+        <input [(ngModel)]="searchTerm" name="searchTerm" placeholder="Tìm kiếm..." aria-label="Tìm kiếm trong thư viện">
       </form>
 
       <div class="cart-wrapper">
@@ -37,8 +35,14 @@
         }
       </div>
 
-      <div class="user-menu-wrapper">
-        <button class="icon-btn" type="button" title="Tài khoản" (click)="toggleUserMenu()">
+      <div class="user-menu-wrapper"
+        (mouseenter)="openUserMenu()"
+        (mouseleave)="userMenuOpen.set(false)"
+        (focusin)="openUserMenu()"
+        (focusout)="closeUserMenuOnFocusExit($event)">
+        <button class="icon-btn" type="button" title="Tài khoản"
+          aria-haspopup="menu" [attr.aria-expanded]="userMenuOpen()"
+          (click)="openUserMenu()">
           <span class="material-symbols-outlined">person</span>
         </button>
         @if (userMenuOpen()) {
@@ -72,7 +76,7 @@
         }
       </div>
 
-      <button class="observatory-btn font-label-md">
+      <button type="button" class="observatory-btn font-label-md" (click)="openObservatory()">
         <!-- <span class="material-symbols-outlined">telescope</span> -->
         <span class="w-2 h-2 rounded-full bg-surface animate-ping"></span>
         <span>Đài quan sát</span>
@@ -90,7 +94,7 @@
   <div class="mobile-menu cosmic-glass">
     @for (link of navLinks; track link.route) {
     <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{exact: link.route === '/'}"
-      class="mobile-nav-link font-label-md" (click)="toggleMobileMenu()">{{ link.label }}</a>
+      class="mobile-nav-link font-label-md" (click)="closeMobileMenu()">{{ link.label }}</a>
     }
   </div>
   }

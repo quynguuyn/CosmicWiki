@@ -1721,3 +1721,38 @@ button {
     bottom: 12px;
   }
 }
+.curatorial-note {
+  margin: 1.25rem 0 0;
+  color: var(--on-surface-variant);
+  font-size: var(--text-body-sm);
+}
+
+.store-feedback {
+  width: min(100%, 1280px);
+  margin: 1rem auto;
+  color: var(--on-surface-variant);
+}
+
+.store-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem auto 0;
+  color: var(--on-surface-variant);
+}
+
+.store-pagination button {
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: .45rem .8rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.store-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}

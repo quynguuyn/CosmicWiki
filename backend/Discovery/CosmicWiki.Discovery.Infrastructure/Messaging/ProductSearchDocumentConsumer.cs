@@ -15,7 +15,7 @@ namespace CosmicWiki.Discovery.Infrastructure.Messaging;
 
 public sealed class ProductSearchDocumentConsumer : BackgroundService
 {
-    private const string ProductSourceType = "product";
+    private const string ProductSourceType = SearchDocumentSourceType.Product;
     private const string ConsumerGroupId = "cosmicwiki.discovery.product-indexer";
 
     private readonly IServiceScopeFactory _scopeFactory;

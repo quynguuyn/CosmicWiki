@@ -46,8 +46,30 @@ export class HeaderComponent {
     this.mobileMenuOpen.update(v => !v);
   }
 
-  toggleUserMenu(): void {
-    this.userMenuOpen.update(value => !value);
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
+  }
+
+  openUserMenu(): void {
+    this.userMenuOpen.set(true);
+  }
+
+  closeUserMenuOnFocusExit(event: FocusEvent): void {
+    const wrapper = event.currentTarget;
+    if (!(wrapper instanceof HTMLElement) ||
+        !(event.relatedTarget instanceof Node) ||
+        !wrapper.contains(event.relatedTarget)) {
+      this.userMenuOpen.set(false);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeUserMenuOnOutsideClick(event: MouseEvent): void {
+    if (!(event.target instanceof Element) ||
+        !event.target.closest('.user-menu-wrapper')) {
+      this.userMenuOpen.set(false);
+    }
+
   }
 
   logout(): void {
@@ -59,7 +81,11 @@ export class HeaderComponent {
   search(): void {
     const query = this.searchTerm.trim();
     if (query) {
-      this.router.navigate(['/store'], { queryParams: { search: query } });
+      this.router.navigate(['/library'], { queryParams: { search: query } });
     }
+  }
+
+  openObservatory(): void {
+    this.router.navigate(['/visit']);
   }
 }

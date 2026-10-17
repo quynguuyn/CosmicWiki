@@ -19,11 +19,13 @@ public interface IProductRepository
         int skip,
         int take,
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? categoryId = null);
 
     Task<int> CountAsync(
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? categoryId = null);
 
     Task<bool> ExistsBySkuAsync(
         string sku,
