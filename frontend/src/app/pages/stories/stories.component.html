@@ -116,7 +116,7 @@
 
             <div class="hero-actions">
 
-              <button type="button" class="btn btn-primary" (click)="openModal(heroStory)">
+              <button type="button" class="btn btn-primary" [disabled]="!heroStory" (click)="openModal(heroStory)">
                 <span class="material-symbols-outlined">
                   menu_book
                 </span>
@@ -127,19 +127,7 @@
               </button>
 
 
-              <button type="button" class="btn btn-secondary" (click)="toggleHeroAudio()">
-                <span class="material-symbols-outlined">
-                  {{ isHeroAudioPlaying ? 'pause' : 'multitrack_audio' }}
-                </span>
-
-                <span>
-                  {{
-                  isHeroAudioPlaying
-                  ? 'Đang phát thuyết minh... (14:20)'
-                  : 'Nghe bản thuyết minh (14:20)'
-                  }}
-                </span>
-              </button>
+              <span class="muted">Bản thuyết minh chưa khả dụng trực tuyến.</span>
 
             </div>
 
@@ -161,11 +149,11 @@
 
                 <div>
                   <span class="archive-label">
-                    HIỆN VẬT LƯU TRỮ VOYAGER-01
+                    {{ heroStory?.category }}
                   </span>
 
                   <span class="archive-item">
-                    Bản sao mạ vàng đĩa đồng khắc âm thanh Trái Đất
+                    {{ heroStory?.title }}
                   </span>
                 </div>
 
@@ -270,12 +258,12 @@
                 Mới nhất
               </option>
 
-              <option value="popular">
-                Được đọc nhiều nhất
+              <option value="shortest">
+                Thời lượng đọc ngắn nhất
               </option>
 
               <option value="duration">
-                Thời lượng đọc
+                Thời lượng đọc dài nhất
               </option>
             </select>
 
@@ -298,7 +286,9 @@
 
     <section class="content-container story-section">
 
-      <div class="story-grid" *ngIf="filteredStories.length > 0">
+      <p *ngIf="isLoading" role="status">Đang tải biên niên sử...</p>
+      <p *ngIf="storiesError" role="alert">{{ storiesError }}</p>
+      <div class="story-grid" *ngIf="!isLoading && filteredStories.length > 0">
 
         <article *ngFor="let story of filteredStories" class="story-card cosmic-card">
 
@@ -370,7 +360,7 @@
 
       <!-- Empty State -->
 
-      <div *ngIf="filteredStories.length === 0" class="empty-state cosmic-card">
+      <div *ngIf="!isLoading && !storiesError && filteredStories.length === 0" class="empty-state cosmic-card">
         <span class="material-symbols-outlined">
           search_off
         </span>
@@ -450,6 +440,7 @@
             </button>
 
           </form>
+          <p class="newsletter-error" *ngIf="subscriptionError" role="alert">{{ subscriptionError }}</p>
 
 
           <div class="newsletter-notes">
@@ -503,7 +494,7 @@
 
         <div class="reader-actions">
 
-          <button type="button" title="Chia sẻ bài viết">
+          <button type="button" title="Chia sẻ bài viết" (click)="shareStory()">
             <span class="material-symbols-outlined">
               share
             </span>
@@ -516,34 +507,14 @@
           </button>
 
         </div>
+        <p class="share-feedback" *ngIf="shareMessage" role="status">{{ shareMessage }}</p>
 
       </div>
 
 
       <!-- Audio Bar -->
 
-      <div class="reader-audio">
-
-        <div>
-
-          <button type="button" class="audio-play" (click)="toggleModalAudio()">
-            <span class="material-symbols-outlined">
-              {{ isModalAudioPlaying ? 'pause' : 'play_arrow' }}
-            </span>
-          </button>
-
-          <span>
-            Thuyết minh âm thanh phòng đọc
-            (Carl Sagan AI Master Record)
-          </span>
-
-        </div>
-
-        <span class="audio-duration">
-          14:20 / HD FLAC
-        </span>
-
-      </div>
+      <p class="reader-audio muted">Bản thu âm chưa khả dụng trực tuyến.</p>
 
 
       <!-- Scroll Body -->
@@ -553,87 +524,37 @@
         <div class="reader-heading">
 
           <span class="special-badge">
-            SỐ ĐẶC BIỆT THƯ VIỆN KHOA HỌC
+            {{ selectedStory.category }}
           </span>
 
           <h2>
             {{ selectedStory.title }}
           </h2>
 
-          <div class="reader-coordinate">
-            TỌA ĐỘ PHÁT HÀNH: CAPE CANAVERAL
-            • NGÀY 5 THÁNG 9 NĂM 1977
-            • VẬN TỐC HIỆN TẠI: 17 KM/S
-          </div>
+          <div class="reader-coordinate">{{ selectedStory.era }} · {{ selectedStory.author }}</div>
 
         </div>
-
-
-        <!-- Pull Quote -->
-
-        <blockquote>
-
-          “Đây là một món quà từ một thế giới nhỏ bé,
-          xa xôi, một minh chứng cho những thanh âm,
-          khoa học, hình ảnh, âm nhạc, suy tư và cảm xúc
-          của chúng tôi.”
-
-          <footer>
-            — Thông điệp của Tổng thống Jimmy Carter
-            gắn trên Đĩa Vàng Voyager
-          </footer>
-
-        </blockquote>
 
 
         <!-- Article -->
 
-        <div class="article-content">
-
-          <p>
-            Vào mùa thu năm 1977, hai con tàu thám hiểm Voyager 1
-            và 2 rời khỏi bệ phóng tại Florida mang theo sứ mệnh
-            lịch sử: Khảo sát các hành tinh khí khổng lồ ở vành đai
-            ngoài của Hệ Mặt Trời.
-          </p>
-
-          <p>
-            Nhưng vượt lên trên tất cả mục tiêu kỹ thuật,
-            mỗi con tàu đều mang một thông điệp vĩnh cửu gửi đến
-            bất kỳ nền văn minh ngoài Trái Đất nào có thể bắt gặp chúng.
-          </p>
-
-          <p>
-            Chiếc đĩa mạ vàng đường kính 12-inch làm bằng đồng
-            mạ vàng, bọc trong lớp vỏ nhôm bảo vệ mạ đồng vị
-            Uranium-238 siêu tinh khiết.
-          </p>
-
-          <p>
-            Trên mặt đĩa được khắc 115 hình ảnh mã hóa tương tự,
-            những lời chào bằng 55 ngôn ngữ cổ xưa và hiện đại,
-            cùng 90 phút những bản nhạc từ nhiều nền văn hóa
-            khác nhau trên Trái Đất.
-          </p>
-
-        </div>
+        <div class="article-content">{{ selectedStory.content }}</div>
 
 
         <!-- Inline Image -->
 
         <div class="reader-image">
 
-          <img [src]="heroStory?.image" alt="Voyager Golden Record archival artifact" />
+          <img [src]="selectedStory.image" [alt]="selectedStory.alt" />
 
           <div class="reader-image-caption">
 
             <span>
-              Chi tiết bản ghi âm đĩa mạ vàng lưu giữ
-              tại bảo tàng CosmicWiki
+              {{ selectedStory.description }}
             </span>
 
             <span>
-              ARCHIVE REF: VOY-GOLD-01
+              {{ selectedStory.code }}
             </span>
 
           </div>
@@ -690,25 +611,5 @@
 
   </div>
 
-
-  <!-- ============================================================
-       AMBIENT BUTTON
-  ============================================================ -->
-
-  <button type="button" class="ambient-button" [class.active]="isAmbientOn" [title]="
-      isAmbientOn
-        ? 'Đang phát tiếng vọng không gian vũ trụ'
-        : 'Phát âm thanh không gian sâu'
-    " (click)="toggleAmbient()">
-
-    <span class="material-symbols-outlined">
-      {{ isAmbientOn ? 'graphic_eq' : 'volume_off' }}
-    </span>
-
-    <span>
-      AMBIENT
-    </span>
-
-  </button>
 
 </div>

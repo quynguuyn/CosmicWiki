@@ -26,6 +26,56 @@ public sealed class AstronomicalObjectRepository
                 cancellationToken);
     }
 
+    public async Task<AstronomicalObjectReadModel?> GetReadModelByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.AstronomicalObjects
+            .AsNoTracking()
+            .Where(item => item.Id == id)
+            .Select(item => new AstronomicalObjectReadModel(
+                item.Id,
+                item.Name,
+                item.Kind,
+                item.ObjectType,
+                item.Catalog,
+                item.CatalogValue,
+                item.RightAscensionDegrees,
+                item.DeclinationDegrees,
+                _dbContext.AstronomicalImages
+                    .Where(image => image.AstronomicalObjectId == item.Id)
+                    .OrderBy(image => image.Id)
+                    .Select(image => image.Url)
+                    .FirstOrDefault()))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AstronomicalObjectImageTarget>>
+        GetImageTargetsByCatalogValuesAsync(
+            string catalog,
+            IReadOnlyCollection<string> catalogValues,
+            CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(catalog);
+        ArgumentNullException.ThrowIfNull(catalogValues);
+        if (catalogValues.Count == 0)
+            return [];
+
+        return await _dbContext.AstronomicalObjects
+            .AsNoTracking()
+            .Where(item =>
+                item.Catalog == catalog &&
+                item.CatalogValue != null &&
+                catalogValues.Contains(item.CatalogValue))
+            .Select(item => new AstronomicalObjectImageTarget(
+                item.Id,
+                item.Kind,
+                item.CatalogValue,
+                item.RightAscensionDegrees,
+                item.DeclinationDegrees))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(
         AstronomicalObject astronomicalObject,
         CancellationToken cancellationToken = default)
@@ -62,7 +112,12 @@ public sealed class AstronomicalObjectRepository
                 item.Catalog,
                 item.CatalogValue,
                 item.RightAscensionDegrees,
-                item.DeclinationDegrees))
+                item.DeclinationDegrees,
+                _dbContext.AstronomicalImages
+                    .Where(image => image.AstronomicalObjectId == item.Id)
+                    .OrderBy(image => image.Id)
+                    .Select(image => image.Url)
+                    .FirstOrDefault()))
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);

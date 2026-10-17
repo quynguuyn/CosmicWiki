@@ -12,11 +12,15 @@ export class ProductApi extends FeatureApi {
     super(api, '/api/product');
   }
 
-  getProducts(page = 1, pageSize = 50) {
+  getProducts(page = 1, pageSize = 50, search?: string, categoryId?: string) {
     const params = new HttpParams()
       .set('page', page)
       .set('pageSize', pageSize);
-    return this.get<PagedResult<Product>>('/products', params);
+    const queryParams = search ? params.set('search', search) : params;
+    const filteredParams = categoryId
+      ? queryParams.set('categoryId', categoryId)
+      : queryParams;
+    return this.get<PagedResult<Product>>('/products', filteredParams);
   }
 
   getCategories() {

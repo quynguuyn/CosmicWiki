@@ -12,6 +12,7 @@ import { AuthApi } from '../api/auth.api';
 import { AuthSessionService } from './auth-session.service';
 import { LoginRequest } from '../models/login-request.model';
 import { LoginResponse } from '../models/login-response.model';
+import { RegisterRequest } from '../models/register-request.model';
 
 @Injectable({
     providedIn: 'root'
@@ -24,6 +25,10 @@ export class AuthService {
 
     login(request: LoginRequest) {
         return this.api.login(request);
+    }
+
+    register(request: RegisterRequest) {
+        return this.api.register(request);
     }
 
     saveSession(response: Parameters<

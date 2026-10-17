@@ -23,6 +23,7 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
     private readonly IAstronomicalResearchProvider _provider;
     private readonly IStarRepository _starRepository;
     private readonly IAstronomicalObjectRepository _objectRepository;
+    private readonly IAstronomicalImageRepository _imageRepository;
     private readonly ICatalogUnitOfWork _unitOfWork;
     private readonly IOutboxWriter _outboxWriter;
     private readonly AstronomicalResearchOptions _options;
@@ -33,6 +34,7 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
         IAstronomicalResearchProvider provider,
         IStarRepository starRepository,
         IAstronomicalObjectRepository objectRepository,
+        IAstronomicalImageRepository imageRepository,
         ICatalogUnitOfWork unitOfWork,
         IOutboxWriter outboxWriter,
         IOptions<AstronomicalResearchOptions> options,
@@ -42,6 +44,7 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
         _provider = provider;
         _starRepository = starRepository;
         _objectRepository = objectRepository;
+        _imageRepository = imageRepository;
         _unitOfWork = unitOfWork;
         _outboxWriter = outboxWriter;
         _options = options.Value;
@@ -105,89 +108,119 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
                     cancellationToken);
             var existingSet = existingValues.ToHashSet(
                 StringComparer.OrdinalIgnoreCase);
-            var pageCreatedCount = 0;
+            var existingObjects =
+                await _objectRepository.GetImageTargetsByCatalogValuesAsync(
+                    "SIMBAD",
+                    uniqueCandidates.Select(candidate => candidate.CatalogValue).ToArray(),
+                    cancellationToken);
+            var existingObjectByCatalogValue = existingObjects
+                .Where(item => item.CatalogValue is not null)
+                .ToDictionary(
+                    item => item.CatalogValue!,
+                    StringComparer.OrdinalIgnoreCase);
+            var pageChanged = false;
 
             foreach (var candidate in uniqueCandidates)
             {
-                if (existingSet.Contains(candidate.CatalogValue))
+                existingObjectByCatalogValue.TryGetValue(
+                    candidate.CatalogValue,
+                    out var existingObject);
+                var existingStar = candidate.Kind == AstronomicalObjectKind.Star &&
+                                   existingSet.Contains(candidate.CatalogValue)
+                    ? await _starRepository.GetByCatalogIdentifierAsync(
+                        candidate.Catalog,
+                        candidate.CatalogValue,
+                        cancellationToken)
+                    : null;
+
+                var objectCreated = existingObject is null;
+                var astronomicalObjectId = existingObject?.Id ??
+                                           existingStar?.Id ??
+                                           Guid.NewGuid();
+                if (objectCreated)
                 {
-                    existingCount++;
-                    continue;
+                    var astronomicalObject = AstronomicalObject.Create(
+                        astronomicalObjectId,
+                        candidate.Name,
+                        candidate.Kind,
+                        candidate.ObjectType,
+                        candidate.Catalog,
+                        candidate.CatalogValue,
+                        candidate.RightAscensionDegrees,
+                        candidate.DeclinationDegrees);
+                    await _objectRepository.AddAsync(
+                        astronomicalObject,
+                        cancellationToken);
                 }
 
-                var astronomicalObject = AstronomicalObject.Create(
-                    candidate.Name,
-                    candidate.Kind,
-                    candidate.ObjectType,
-                    candidate.Catalog,
-                    candidate.CatalogValue,
-                    candidate.RightAscensionDegrees,
-                    candidate.DeclinationDegrees);
-                await _objectRepository.AddAsync(
-                    astronomicalObject,
+                var starCreated = candidate.Kind == AstronomicalObjectKind.Star &&
+                                  existingStar is null;
+                if (starCreated)
+                {
+                    var star = CreateStar(astronomicalObjectId, candidate);
+                    await _starRepository.AddAsync(star, cancellationToken);
+                }
+
+                var imageCandidate = candidate with
+                {
+                    RightAscensionDegrees =
+                        candidate.RightAscensionDegrees ??
+                        existingObject?.RightAscensionDegrees,
+                    DeclinationDegrees =
+                        candidate.DeclinationDegrees ??
+                        existingObject?.DeclinationDegrees
+                };
+                var (imageUrl, imageChanged) = await EnsureSurveyImagesAsync(
+                    astronomicalObjectId,
+                    imageCandidate,
                     cancellationToken);
 
                 if (candidate.Kind == AstronomicalObjectKind.Star)
                 {
-                    var star = Star.Create(astronomicalObject.Id, candidate.Name);
-                    star.AddCatalogIdentifier(
-                        CatalogIdentifier.Create(
-                            candidate.Catalog,
-                            candidate.CatalogValue));
-                    star.AddObjectType(
-                        AstronomicalObjectType.Create(
-                            candidate.ObjectType,
-                            candidate.ObjectType,
-                            "Imported by the scheduled astronomical research job."));
-                    if (candidate.RightAscensionDegrees.HasValue &&
-                        candidate.DeclinationDegrees.HasValue)
+                    if (starCreated || imageChanged)
                     {
-                        star.AddCoordinate(
-                            AstronomicalCoordinate.Create(
-                                candidate.RightAscensionDegrees.Value,
-                                candidate.DeclinationDegrees.Value,
-                                CoordinateSystem.ICRS,
-                                2000.0));
+                        _outboxWriter.Add(
+                            new StarCreatedIntegrationEvent(
+                                Guid.NewGuid(),
+                                1,
+                                DateTime.UtcNow,
+                                astronomicalObjectId,
+                                astronomicalObjectId,
+                                candidate.Name,
+                                null,
+                                imageUrl),
+                            KafkaTopics.CatalogStarCreated);
                     }
-
-                    if (candidate.ParallaxMas.HasValue)
-                        star.AddParallax(
-                            ParallaxMeasurement.Create(candidate.ParallaxMas.Value));
-
-                    await _starRepository.AddAsync(star, cancellationToken);
-
-                    _outboxWriter.Add(
-                        new StarCreatedIntegrationEvent(
-                            Guid.NewGuid(),
-                            1,
-                            DateTime.UtcNow,
-                            star.Id,
-                            star.Id,
-                            candidate.Name,
-                            null,
-                            null),
-                        KafkaTopics.CatalogStarCreated);
                 }
-                else
+                else if (objectCreated || imageChanged)
                 {
                     _outboxWriter.Add(
                         new AstronomicalObjectCreatedIntegrationEvent(
                             Guid.NewGuid(),
                             1,
                             DateTime.UtcNow,
-                            astronomicalObject.Id,
-                            astronomicalObject.Id,
+                            astronomicalObjectId,
+                            astronomicalObjectId,
                             candidate.Kind.ToString(),
                             candidate.Name,
-                            candidate.ObjectType),
+                            candidate.ObjectType,
+                            imageUrl),
                         KafkaTopics.CatalogAstronomicalObjectCreated);
                 }
 
-                createdCount++;
-                pageCreatedCount++;
+                if (objectCreated || starCreated || imageChanged)
+                {
+                    pageChanged = true;
+                    if (objectCreated || starCreated)
+                        createdCount++;
+                }
+                else
+                {
+                    existingCount++;
+                }
             }
 
-            if (pageCreatedCount > 0)
+            if (pageChanged)
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             if (page.HasMore && string.IsNullOrWhiteSpace(page.NextCursor))
@@ -237,6 +270,110 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
             createdCount,
             sweepCompleted,
             cursor);
+    }
+
+    private async Task<(string? MainUrl, bool Changed)> EnsureSurveyImagesAsync(
+        Guid astronomicalObjectId,
+        AstronomicalResearchCandidate candidate,
+        CancellationToken cancellationToken)
+    {
+        if (!candidate.RightAscensionDegrees.HasValue ||
+            !candidate.DeclinationDegrees.HasValue)
+            return (null, false);
+
+        var mainUrl = BuildSurveyImageUrl(
+            "CDS/P/DSS2/color",
+            candidate.RightAscensionDegrees.Value,
+            candidate.DeclinationDegrees.Value);
+        var alternateUrls = new[]
+        {
+            BuildSurveyImageUrl(
+                "CDS/P/DSS2/red",
+                candidate.RightAscensionDegrees.Value,
+                candidate.DeclinationDegrees.Value),
+            BuildSurveyImageUrl(
+                "CDS/P/DSS2/blue",
+                candidate.RightAscensionDegrees.Value,
+                candidate.DeclinationDegrees.Value),
+            BuildSurveyImageUrl(
+                "CDS/P/DSS2/IR",
+                candidate.RightAscensionDegrees.Value,
+                candidate.DeclinationDegrees.Value),
+            BuildSurveyImageUrl(
+                "CDS/P/2MASS/color",
+                candidate.RightAscensionDegrees.Value,
+                candidate.DeclinationDegrees.Value),
+            BuildSurveyImageUrl(
+                "CDS/P/AllWISE/color",
+                candidate.RightAscensionDegrees.Value,
+                candidate.DeclinationDegrees.Value)
+        };
+
+        var images = await _imageRepository.GetByAstronomicalObjectIdAsync(
+            astronomicalObjectId,
+            cancellationToken);
+        var image = images.FirstOrDefault();
+        if (image is null)
+        {
+            await _imageRepository.AddAsync(
+                AstronomicalImage.Create(
+                    astronomicalObjectId,
+                    mainUrl,
+                    alternateUrls),
+                cancellationToken);
+            return (mainUrl, true);
+        }
+
+        if (image.Url != mainUrl ||
+            !image.Urls.SequenceEqual(alternateUrls, StringComparer.Ordinal))
+        {
+            image.Update(mainUrl, alternateUrls);
+            return (mainUrl, true);
+        }
+
+        return (mainUrl, false);
+    }
+
+    private static Star CreateStar(
+        Guid id,
+        AstronomicalResearchCandidate candidate)
+    {
+        var star = Star.Create(id, candidate.Name);
+        star.AddCatalogIdentifier(
+            CatalogIdentifier.Create(
+                candidate.Catalog,
+                candidate.CatalogValue));
+        star.AddObjectType(
+            AstronomicalObjectType.Create(
+                candidate.ObjectType,
+                candidate.ObjectType,
+                "Imported by the scheduled astronomical research job."));
+        if (candidate.RightAscensionDegrees.HasValue &&
+            candidate.DeclinationDegrees.HasValue)
+        {
+            star.AddCoordinate(
+                AstronomicalCoordinate.Create(
+                    candidate.RightAscensionDegrees.Value,
+                    candidate.DeclinationDegrees.Value,
+                    CoordinateSystem.ICRS,
+                    2000.0));
+        }
+
+        if (candidate.ParallaxMas.HasValue)
+            star.AddParallax(
+                ParallaxMeasurement.Create(candidate.ParallaxMas.Value));
+
+        return star;
+    }
+
+    private static string BuildSurveyImageUrl(
+        string survey,
+        double rightAscensionDegrees,
+        double declinationDegrees)
+    {
+        var encodedSurvey = Uri.EscapeDataString(survey);
+        return FormattableString.Invariant(
+            $"https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips={encodedSurvey}&ra={rightAscensionDegrees:R}&dec={declinationDegrees:R}&fov=0.12&width=800&height=600&format=jpg");
     }
 
     private sealed record ResearchCheckpoint(string? AfterMainId);

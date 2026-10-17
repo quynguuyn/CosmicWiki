@@ -89,7 +89,7 @@
           <p class="card-desc font-body-sm line-clamp-3">{{ chapter.description }}</p>
           <div class="card-footer">
             <span class="font-label-sm card-meta">{{ chapter.meta }}</span>
-            <button class="card-link font-label-md">
+            <button type="button" class="card-link font-label-md" (click)="openLibrarySearch(chapter.title)">
               <span>Đi vào chương này</span>
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>
@@ -117,7 +117,7 @@
               <span class="material-symbols-outlined">satellite_alt</span>
               <span>{{ chapter.meta }}</span>
             </div>
-            <button class="btn-outline font-label-md">
+            <button type="button" class="btn-outline font-label-md" (click)="openLibrarySearch(chapter.title)">
               <span>Khảo sát biên niên viễn chinh</span>
               <span class="material-symbols-outlined">arrow_forward</span>
             </button>
@@ -159,9 +159,9 @@
           <p class="card-desc font-body-sm line-clamp-3">{{ item.description }}</p>
           <div class="card-footer">
             <span class="font-label-sm card-meta">{{ item.classification }}</span>
-            <a href="javascript:void(0)" class="card-link font-label-md">
+            <button type="button" class="card-link font-label-md" (click)="openLibrarySearch(item.title)">
               Chi tiết <span class="material-symbols-outlined">chevron_right</span>
-            </a>
+            </button>
           </div>
         </div>
       </article>
@@ -266,11 +266,12 @@
       </p>
       <form class="newsletter-form" (submit)="$event.preventDefault(); subscribeNewsletter(newsletterEmail.value)">
         <input #newsletterEmail type="email" required placeholder="observatory@cosmicwiki.space" class="newsletter-input font-body-md" />
-        <button type="submit" class="btn-primary font-label-md">
-          Đăng ký quan trắc
+        <button type="submit" class="btn-primary font-label-md" [disabled]="newsletterSubmitting">
+          {{ newsletterSubmitting ? 'Đang đăng ký...' : 'Đăng ký quan trắc' }}
         </button>
       </form>
       <p *ngIf="newsletterSubmitted" class="newsletter-note font-label-sm">Đăng ký thành công. Vui lòng kiểm tra email để xác nhận.</p>
+      <p *ngIf="newsletterError" class="newsletter-note newsletter-note--error font-label-sm" role="alert">{{ newsletterError }}</p>
       <p class="newsletter-note font-label-sm">Không spam • Hủy đăng ký bất kỳ lúc nào • Dữ liệu được mã hóa
         quantum-grade</p>
     </div>

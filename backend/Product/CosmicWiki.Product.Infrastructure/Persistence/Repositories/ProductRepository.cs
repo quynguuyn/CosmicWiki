@@ -50,9 +50,12 @@ public sealed class ProductRepository : IProductRepository
         int skip,
         int take,
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? categoryId = null)
     {
         var query = _dbContext.Products.AsNoTracking();
+        if (categoryId.HasValue)
+            query = query.Where(product => product.CategoryId == categoryId.Value);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var normalizedSearch = search.Trim().ToLower();
@@ -73,9 +76,12 @@ public sealed class ProductRepository : IProductRepository
 
     public async Task<int> CountAsync(
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? categoryId = null)
     {
         var query = _dbContext.Products.AsNoTracking();
+        if (categoryId.HasValue)
+            query = query.Where(product => product.CategoryId == categoryId.Value);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var normalizedSearch = search.Trim().ToLower();

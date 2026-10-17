@@ -47,7 +47,7 @@ public sealed class AstronomicalObjectsController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var item = await objectRepository.GetByIdAsync(id, cancellationToken);
+        var item = await objectRepository.GetReadModelByIdAsync(id, cancellationToken);
         return item is null ? NotFound() : Ok(ToDto(item));
     }
 
@@ -60,18 +60,8 @@ public sealed class AstronomicalObjectsController(
             item.Catalog,
             item.CatalogValue,
             item.RightAscensionDegrees,
-            item.DeclinationDegrees);
-
-    private static AstronomicalObjectDto ToDto(AstronomicalObject item) =>
-        new(
-            item.Id,
-            item.Name,
-            item.Kind.ToString(),
-            item.ObjectType,
-            item.Catalog,
-            item.CatalogValue,
-            item.RightAscensionDegrees,
-            item.DeclinationDegrees);
+            item.DeclinationDegrees,
+            item.ImageUrl);
 
     private sealed record AstronomicalObjectDto(
         Guid Id,
@@ -81,5 +71,6 @@ public sealed class AstronomicalObjectsController(
         string? Catalog,
         string? CatalogValue,
         double? RightAscensionDegrees,
-        double? DeclinationDegrees);
+        double? DeclinationDegrees,
+        string? ImageUrl);
 }
