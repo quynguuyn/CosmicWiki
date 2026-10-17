@@ -5,8 +5,8 @@ import { ProductApi } from '../api/product.api';
 export class ProductService {
   private readonly api = inject(ProductApi);
 
-  getProducts(page = 1, pageSize = 50) {
-    return this.api.getProducts(page, pageSize);
+  getProducts(page = 1, pageSize = 50, search?: string, categoryId?: string) {
+    return this.api.getProducts(page, pageSize, search, categoryId);
   }
 
   getCategories() {

@@ -7,6 +7,7 @@ import { ApiService } from '../../core/services/api.service';
 
 interface ObservatoryEvent {
   date: string;
+  requestedDateUtc: string;
   name: string;
   description: string;
   specification: string;
@@ -91,6 +92,7 @@ export class VisitComponent implements OnInit {
           this.events = result.items.map(item => ({
             date: new Intl.DateTimeFormat('vi-VN', { dateStyle: 'long' })
               .format(new Date(item.eventDateUtc)),
+            requestedDateUtc: item.eventDateUtc,
             name: item.name,
             description: item.description,
             specification: item.specification ?? '',
@@ -124,11 +126,15 @@ export class VisitComponent implements OnInit {
   showConfirmationModal = false;
   submissionError = '';
   referenceCode = '';
+  selectedExhibition: Exhibition | null = null;
+  selectedEvent: ObservatoryEvent | null = null;
 
   form = {
     name: '',
     email: '',
     subject: 'booking',
+    requestedDate: this.toLocalDateTimeInput(new Date()),
+    partySize: 1,
     message: ''
   };
 
@@ -140,6 +146,13 @@ export class VisitComponent implements OnInit {
 
   submitTransmission(): void {
     if (this.isSubmitting || !this.form.name.trim() || !this.form.email.trim() || !this.form.message.trim()) {
+      return;
+    }
+
+    const requestedDate = new Date(this.form.requestedDate);
+    if (!Number.isFinite(requestedDate.getTime()) || !Number.isInteger(this.form.partySize) ||
+      this.form.partySize < 1 || this.form.partySize > 20) {
+      this.submissionError = 'Vui lòng chọn ngày hợp lệ và số khách từ 1 đến 20.';
       return;
     }
 
@@ -158,8 +171,8 @@ export class VisitComponent implements OnInit {
     >('/api/visit/requests', {
       name: this.form.name,
       email: this.form.email,
-      requestedDateUtc: new Date().toISOString(),
-      partySize: 1,
+      requestedDateUtc: requestedDate.toISOString(),
+      partySize: this.form.partySize,
       notes: `[${this.form.subject}] ${this.form.message}`
     }).subscribe({
       next: response => {
@@ -169,6 +182,8 @@ export class VisitComponent implements OnInit {
           name: '',
           email: '',
           subject: 'booking',
+          requestedDate: this.toLocalDateTimeInput(new Date()),
+          partySize: 1,
           message: ''
         };
       },
@@ -205,6 +220,38 @@ export class VisitComponent implements OnInit {
 
   closeModal(): void {
     this.showConfirmationModal = false;
+  }
+
+  openExhibition(exhibition: Exhibition): void {
+    this.selectedEvent = null;
+    this.selectedExhibition = exhibition;
+  }
+
+  openEvent(event: ObservatoryEvent): void {
+    this.selectedExhibition = null;
+    this.selectedEvent = event;
+  }
+
+  closeContentDetails(): void {
+    this.selectedExhibition = null;
+    this.selectedEvent = null;
+  }
+
+  requestEventParticipation(event: ObservatoryEvent): void {
+    this.form.subject = 'visit';
+    this.form.requestedDate = this.toLocalDateTimeInput(new Date(event.requestedDateUtc));
+    this.form.message = `Tôi quan tâm đến sự kiện "${event.name}" diễn ra ngày ${event.date}.`;
+    this.closeContentDetails();
+    this.scrollToBooking();
+  }
+
+  get minimumRequestedDate(): string {
+    return this.toLocalDateTimeInput(new Date());
+  }
+
+  private toLocalDateTimeInput(date: Date): string {
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return localDate.toISOString().slice(0, 16);
   }
 
   scrollToBooking(): void {

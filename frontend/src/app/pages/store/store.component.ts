@@ -2,7 +2,6 @@ import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
 import { CartService } from '../../core/services/cart.service';
 import { Product, ProductCategory } from '../../features/product/models/product.model';
 import { ProductService } from '../../features/product/services/product.service';
@@ -53,10 +52,19 @@ export class StoreComponent {
 
   products: StoreProduct[] = [];
   contentError = '';
+  productsLoading = false;
+  productPage = 1;
+  readonly productPageSize = 12;
+  productTotalCount = 0;
+  productTotalPages = 0;
 
   categories: Array<{ value: string; label: string }> = [
     { value: 'all', label: 'Tất cả hiện vật' }
   ];
+  private productCategoryEntities: ProductCategory[] = [];
+  private categorySlugs: Array<{ value: string; slug: string }> = [];
+  private routeCategorySlug: string | null = null;
+  private categoriesLoaded = false;
 
   activeCategory = 'all';
   sortMode = 'newest';
@@ -67,7 +75,6 @@ export class StoreComponent {
   isQuickViewOpen = false;
   isCartOpen = false;
   isSuccessOpen = false;
-  isAudioPlaying = false;
   isCheckoutLoading = false;
 
   customerName = '';
@@ -75,32 +82,65 @@ export class StoreComponent {
   customerAddress = '';
 
   constructor() {
-    this.route.queryParamMap.subscribe(params => this.searchTerm = params.get('search')?.trim() ?? '');
+    this.route.queryParamMap.subscribe(params => {
+      this.searchTerm = params.get('search')?.trim() ?? '';
+      this.productPage = 1;
+      if (this.categoriesLoaded) this.loadProducts();
+    });
+    this.route.paramMap.subscribe(params => {
+      this.routeCategorySlug = params.get('categorySlug');
+      this.applyRouteCategory();
+      this.productPage = 1;
+      if (this.categoriesLoaded) this.loadProducts();
+    });
     this.products = [];
-    forkJoin({
-      products: this.productService.getProducts(),
-      categories: this.productService.getCategories()
-    }).subscribe({
-      next: ({ products, categories }) => {
+    this.productService.getCategories().subscribe({
+      next: categories => {
+        this.productCategoryEntities = categories;
         this.categories = [
           { value: 'all', label: 'Tất cả hiện vật' },
-          ...categories.map(category => ({
-            value: category.id,
-            label: category.name
-          }))
+          ...categories.map(category => ({ value: category.id, label: category.name }))
         ];
-        if (products.items.length > 0) {
-          this.products = products.items.map(product =>
-            this.mapProduct(product, categories));
-        } else {
-          this.products = [];
-          this.contentError = 'Hiện chưa có hiện vật nào trong cửa hàng.';
-        }
+        this.categorySlugs = categories.map(category => ({
+          value: category.id,
+          slug: category.slug
+        }));
+        this.categoriesLoaded = true;
+        this.applyRouteCategory();
+        this.loadProducts();
       },
-      error: error => {
+      error: () => {
         this.products = [];
+        this.contentError = 'Không thể tải danh mục cửa hàng.';
+      }
+    });
+  }
+
+  private loadProducts(): void {
+    this.productsLoading = true;
+    this.contentError = '';
+    const categoryId = this.activeCategory === 'all' ? undefined : this.activeCategory;
+    this.productService.getProducts(
+      this.productPage,
+      this.productPageSize,
+      this.searchTerm || undefined,
+      categoryId
+    ).subscribe({
+      next: result => {
+        this.products = result.items.map(product =>
+          this.mapProduct(product, this.productCategoryEntities));
+        this.productTotalCount = result.totalCount;
+        this.productTotalPages = result.totalPages;
+        this.productsLoading = false;
+        if (this.productTotalCount === 0)
+          this.contentError = 'Hiện chưa có hiện vật phù hợp trong cửa hàng.';
+      },
+      error: () => {
+        this.products = [];
+        this.productTotalCount = 0;
+        this.productTotalPages = 0;
+        this.productsLoading = false;
         this.contentError = 'Không thể tải dữ liệu cửa hàng.';
-        console.error('Product API error:', error);
       }
     });
   }
@@ -163,13 +203,14 @@ export class StoreComponent {
   }
 
   get categoryCount(): number {
-    if (this.activeCategory === 'all') {
-      return this.products.length;
-    }
+    return this.productTotalCount;
+  }
 
-    return this.products.filter(
-      product => product.category === this.activeCategory
-    ).length;
+  get activeCategoryLabel(): string {
+    const category = this.categories.find(item => item.value === this.activeCategory);
+    return category && category.value !== 'all'
+      ? category.label
+      : 'Cửa Hàng Quà Lưu Niệm Bảo Tàng Vũ Trụ';
   }
 
   formatCurrency(value: number): string {
@@ -177,7 +218,35 @@ export class StoreComponent {
   }
 
   setCategory(category: string): void {
-    this.activeCategory = category;
+    this.productPage = 1;
+    const slug = this.categorySlugs.find(item => item.value === category)?.slug;
+    if (slug) {
+      this.router.navigate(['/store/category', slug]);
+      return;
+    }
+    this.router.navigate(['/store']);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.productTotalPages || page === this.productPage) return;
+    this.productPage = page;
+    this.loadProducts();
+  }
+
+  private applyRouteCategory(): void {
+    if (!this.routeCategorySlug) {
+      this.activeCategory = 'all';
+      return;
+    }
+
+    if (!this.categoriesLoaded) return;
+
+    const category = this.categorySlugs.find(item => item.slug === this.routeCategorySlug);
+    if (!category) {
+      this.router.navigate(['/store'], { replaceUrl: true });
+      return;
+    }
+    this.activeCategory = category.value;
   }
 
   setSort(event: Event): void {
@@ -229,10 +298,6 @@ export class StoreComponent {
 
   closeCart(): void {
     this.isCartOpen = false;
-  }
-
-  toggleAudio(): void {
-    this.isAudioPlaying = !this.isAudioPlaying;
   }
 
   submitCheckout(): void {

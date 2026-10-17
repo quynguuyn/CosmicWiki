@@ -1,0 +1,215 @@
+import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, forkJoin, of } from 'rxjs';
+import { StarCatalogApi } from '../../features/catalog/api/star-catalog.api';
+import { AstronomicalImage, Star } from '../../features/catalog/models/star.model';
+
+@Component({
+  selector: 'app-star-detail',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="star-modal-overlay" (click)="close()" (keydown.escape)="close()">
+      <section class="star-page" role="dialog" aria-modal="true"
+        aria-label="Hồ sơ sao" aria-labelledby="star-detail-title"
+        (click)="$event.stopPropagation()">
+        <button type="button" class="star-modal-close" aria-label="Đóng hồ sơ sao" (click)="close()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <p class="eyebrow">COSMICWIKI · HỒ SƠ SAO</p>
+      <p class="state-message" *ngIf="loading">Đang tải dữ liệu sao từ Catalog...</p>
+      <section class="error-panel" *ngIf="error" role="alert">
+        <span class="material-symbols-outlined">error</span>
+        <div><h1>Không thể tải hồ sơ sao</h1><p>{{ error }}</p></div>
+      </section>
+
+      <ng-container *ngIf="star as item">
+        <header class="star-hero">
+          <div class="star-gallery">
+            <div class="star-gallery__main">
+              <img *ngIf="selectedImageUrl; else noImage" [src]="selectedImageUrl" [alt]="item.name || 'Star image'">
+              <ng-template #noImage>
+                <div class="image-placeholder"><span class="material-symbols-outlined">flare</span></div>
+              </ng-template>
+            </div>
+            <div class="image-thumbnails image-thumbnails-side" *ngIf="alternateImageUrls.length">
+              <button type="button" *ngFor="let url of alternateImageUrls | slice:0:2"
+                [class.active]="selectedImageUrl === url" (click)="selectImage(url)"
+                [attr.aria-label]="'Xem ảnh ' + item.name">
+                <img [src]="url" [alt]="item.name || 'Ảnh thiên văn'" loading="lazy">
+              </button>
+            </div>
+            <div class="image-thumbnails image-thumbnails-bottom" *ngIf="alternateImageUrls.length > 2">
+              <button type="button" *ngFor="let url of alternateImageUrls | slice:2:5"
+                [class.active]="selectedImageUrl === url" (click)="selectImage(url)"
+                [attr.aria-label]="'Xem ảnh ' + item.name">
+                <img [src]="url" [alt]="item.name || 'Ảnh thiên văn'" loading="lazy">
+              </button>
+            </div>
+          </div>
+          <div class="star-hero__content">
+            <span class="entity-badge">STAR ENTITY · CATALOG</span>
+            <h1 id="star-detail-title">{{ item.name || 'Chưa đặt tên' }}</h1>
+            <p class="classification" *ngIf="item.spectralClassifications.length">
+              Phân loại quang phổ:
+              <strong>{{ item.spectralClassifications[0].rawType }}</strong>
+            </p>
+            <div class="catalog-tags" *ngIf="item.catalogIdentifiers.length">
+              <span *ngFor="let identifier of item.catalogIdentifiers">
+                {{ identifier.catalog }} {{ identifier.value }}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <p class="image-note" *ngIf="imagesError">{{ imagesError }}</p>
+
+        <section class="quick-facts">
+          <article><span>Quang sai thị sai</span><strong *ngIf="item.parallaxes.length; else unavailable">{{ item.parallaxes[0].valueMas }} mas</strong></article>
+          <article><span>Vận tốc xuyên tâm</span><strong *ngIf="item.radialVelocities.length; else unavailable">{{ item.radialVelocities[0].valueKmPerSecond }} km/s</strong></article>
+          <article><span>Nhiệt độ hiệu dụng</span><strong *ngIf="item.atmosphericParameters[0]?.effectiveTemperature as temperature; else unavailable">{{ temperature.kelvin | number }} K</strong></article>
+          <article><span>Loại thiên thể</span><strong *ngIf="item.objectTypes.length; else unavailable">{{ item.objectTypes[0].name || item.objectTypes[0].code }}</strong></article>
+          <ng-template #unavailable><strong class="unavailable">Chưa có dữ liệu</strong></ng-template>
+        </section>
+
+        <section class="data-section">
+          <div class="section-heading"><span class="material-symbols-outlined">public</span><div><h2>Tọa độ & chuyển động</h2><p>Dữ liệu quan trắc được lưu trong Star entity.</p></div></div>
+          <div class="data-grid">
+            <article class="data-card" *ngFor="let coordinate of item.coordinates; let index = index">
+              <h3>Tọa độ {{ index + 1 }}</h3>
+              <dl><dt>Xích kinh (RA)</dt><dd>{{ coordinate.rightAscension }}°</dd><dt>Xích vĩ (Dec)</dt><dd>{{ coordinate.declination }}°</dd><dt>Epoch</dt><dd>{{ coordinate.epoch }}</dd><dt>Hệ tọa độ</dt><dd>{{ coordinate.coordinateSystem }}</dd></dl>
+            </article>
+            <article class="data-card" *ngFor="let motion of item.properMotions; let index = index">
+              <h3>Chuyển động riêng {{ index + 1 }}</h3>
+              <dl><dt>RA</dt><dd>{{ motion.rightAscension }}</dd><dt>Dec</dt><dd>{{ motion.declination }}</dd><dt>Chất lượng</dt><dd>{{ motion.quality }}</dd></dl>
+            </article>
+            <p class="empty-note" *ngIf="!item.coordinates.length && !item.properMotions.length">Chưa có tọa độ hoặc dữ liệu chuyển động.</p>
+          </div>
+        </section>
+
+        <section class="data-section">
+          <div class="section-heading"><span class="material-symbols-outlined">science</span><div><h2>Đặc tính vật lý</h2><p>Đo đạc và phân loại của đối tượng sao.</p></div></div>
+          <div class="data-grid">
+            <article class="data-card" *ngFor="let parallax of item.parallaxes; let index = index"><h3>Parallax {{ index + 1 }}</h3><dl><dt>Giá trị</dt><dd>{{ parallax.valueMas }} mas</dd><dt>Chất lượng</dt><dd>{{ parallax.quality }}</dd><dt>Sai số âm / dương</dt><dd>{{ parallax.uncertainty?.negative ?? '—' }} / {{ parallax.uncertainty?.positive ?? '—' }}</dd></dl></article>
+            <article class="data-card" *ngFor="let velocity of item.radialVelocities; let index = index"><h3>Vận tốc xuyên tâm {{ index + 1 }}</h3><dl><dt>Giá trị</dt><dd>{{ velocity.valueKmPerSecond }} km/s</dd><dt>Chất lượng</dt><dd>{{ velocity.quality }}</dd></dl></article>
+            <article class="data-card" *ngFor="let distance of item.distances; let index = index"><h3>Khoảng cách {{ index + 1 }}</h3><dl><dt>Giá trị</dt><dd>{{ distance.value }} {{ distance.unit }}</dd><dt>Phương pháp</dt><dd>{{ distance.method }}</dd><dt>Chất lượng</dt><dd>{{ distance.quality }}</dd></dl></article>
+            <article class="data-card" *ngFor="let spectral of item.spectralClassifications; let index = index"><h3>Phân loại quang phổ {{ index + 1 }}</h3><dl><dt>Phân loại</dt><dd>{{ spectral.rawType }}</dd><dt>Phân lớp nhiệt độ</dt><dd>{{ spectral.temperatureClass ?? '—' }}</dd><dt>Phân lớp độ sáng</dt><dd>{{ spectral.luminosityClass || '—' }}</dd><dt>Đặc điểm</dt><dd>{{ spectral.peculiarities.join(', ') || '—' }}</dd></dl></article>
+            <article class="data-card" *ngFor="let atmosphere of item.atmosphericParameters; let index = index"><h3>Khí quyển sao {{ index + 1 }}</h3><dl><dt>Nhiệt độ hiệu dụng</dt><dd>{{ atmosphere.effectiveTemperature?.kelvin ?? '—' }} K</dd><dt>Log g</dt><dd>{{ atmosphere.surfaceGravity?.value ?? '—' }}</dd><dt>Kim loại [Fe/H]</dt><dd>{{ atmosphere.metallicity?.feH ?? '—' }}</dd><dt>Catalog</dt><dd>{{ atmosphere.catalogNumber || '—' }}</dd></dl></article>
+            <article class="data-card" *ngFor="let diameter of item.diameters; let index = index"><h3>Đường kính góc {{ index + 1 }}</h3><dl><dt>Giá trị</dt><dd>{{ diameter.value }} {{ diameter.unit }}</dd><dt>Bước sóng / filter</dt><dd>{{ diameter.filterOrWavelength || '—' }}</dd><dt>Phương pháp</dt><dd>{{ diameter.method || '—' }}</dd></dl></article>
+            <article class="data-card" *ngFor="let rotation of item.projectedRotationalVelocities; let index = index"><h3>Tốc độ quay chiếu {{ index + 1 }}</h3><dl><dt>Giá trị</dt><dd>{{ rotation.value }}</dd><dt>Số phép đo</dt><dd>{{ rotation.measurementCount ?? '—' }}</dd></dl></article>
+            <p class="empty-note" *ngIf="!hasPhysicalMeasurements">Chưa có dữ liệu đo đạc vật lý cho sao này.</p>
+          </div>
+        </section>
+
+        <section class="data-section" *ngIf="item.photometricMeasurements.length || item.variableStarMeasurements.length">
+          <div class="section-heading"><span class="material-symbols-outlined">monitoring</span><div><h2>Độ sáng & biến quang</h2><p>Dữ liệu quang trắc gắn với Star entity.</p></div></div>
+          <div class="data-grid">
+            <article class="data-card" *ngFor="let measurement of item.photometricMeasurements; let index = index"><h3>Quang trắc {{ index + 1 }}</h3><dl><dt>Giá trị</dt><dd>{{ measurement.measurement.value }} {{ measurement.measurement.unit }}</dd><dt>Filter / hệ</dt><dd>{{ measurement.filter }} / {{ measurement.system }}</dd><dt>Biến quang</dt><dd>{{ measurement.flags?.variabilityCode || '—' }}</dd></dl></article>
+            <article class="data-card" *ngFor="let variable of item.variableStarMeasurements; let index = index"><h3>Biến quang {{ index + 1 }}</h3><dl><dt>Loại</dt><dd>{{ variable.variabilityType }}</dd><dt>Chu kỳ</dt><dd>{{ variable.periodDays ?? '—' }} ngày</dd><dt>Độ sáng lớn nhất / nhỏ nhất</dt><dd>{{ variable.maximumBrightness ?? '—' }} / {{ variable.minimumBrightness ?? '—' }}</dd><dt>Dải quang trắc</dt><dd>{{ variable.photometricBand || '—' }}</dd></dl></article>
+          </div>
+        </section>
+
+        <section class="data-section" *ngIf="item.objectTypes.length">
+          <div class="section-heading"><span class="material-symbols-outlined">category</span><div><h2>Phân loại thiên thể</h2><p>Các nhãn phân loại thuộc dữ liệu sao.</p></div></div>
+          <div class="data-grid">
+            <article class="data-card" *ngFor="let type of item.objectTypes"><h3>{{ type.name || type.code }}</h3><p class="object-code">{{ type.code }}</p><p *ngIf="type.description">{{ type.description }}</p></article>
+          </div>
+        </section>
+
+        <section class="data-section">
+          <div class="section-heading"><span class="material-symbols-outlined">menu_book</span><div><h2>Định danh danh mục</h2><p>Tên gọi trong các catalog thiên văn.</p></div></div>
+          <div class="catalog-list" *ngIf="item.catalogIdentifiers.length; else noCatalogs">
+            <div *ngFor="let identifier of item.catalogIdentifiers"><strong>{{ identifier.catalog }}</strong><code>{{ identifier.value }}</code></div>
+          </div>
+          <ng-template #noCatalogs><p class="empty-note">Chưa có định danh catalog.</p></ng-template>
+        </section>
+      </ng-container>
+      </section>
+    </div>
+  `,
+  styleUrl: './star-detail.component.scss'
+})
+export class StarDetailComponent implements OnChanges {
+  private readonly catalogApi = inject(StarCatalogApi);
+  private readonly destroyRef = inject(DestroyRef);
+
+  @Input({ required: true }) starId!: string;
+  @Output() closed = new EventEmitter<void>();
+
+  star: Star | null = null;
+  images: AstronomicalImage[] = [];
+  selectedImageUrl: string | null = null;
+  loading = true;
+  error = '';
+  imagesError = '';
+
+  get heroImage(): string | null {
+    return this.images[0]?.url ?? null;
+  }
+
+  get alternateImageUrls(): string[] {
+    const primary = this.heroImage;
+    return [...new Set(this.images.flatMap(image => image.urls))]
+      .filter(url => !!url && url !== primary)
+      .slice(0, 5);
+  }
+
+  selectImage(url: string): void {
+    this.selectedImageUrl = url;
+  }
+
+  close(): void {
+    this.closed.emit();
+  }
+
+  get hasPhysicalMeasurements(): boolean {
+    const item = this.star;
+    return !!item && (
+      item.parallaxes.length > 0 ||
+      item.radialVelocities.length > 0 ||
+      item.distances.length > 0 ||
+      item.spectralClassifications.length > 0 ||
+      item.atmosphericParameters.length > 0 ||
+      item.diameters.length > 0 ||
+      item.projectedRotationalVelocities.length > 0
+    );
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['starId'] || !this.starId)
+      return;
+
+    this.loading = true;
+    this.error = '';
+    this.star = null;
+    this.images = [];
+    this.selectedImageUrl = null;
+    this.imagesError = '';
+    forkJoin({
+      star: this.catalogApi.getStar(this.starId),
+      images: this.catalogApi.getImages(this.starId).pipe(
+        catchError(() => {
+          this.imagesError = 'Không thể tải ảnh của sao; các thông số vẫn được hiển thị.';
+          return of([] as AstronomicalImage[]);
+        })
+      )
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: result => {
+        this.star = result.star;
+        this.images = result.images;
+        this.selectedImageUrl = result.images[0]?.url ?? null;
+        if (result.images.length === 0 && !this.imagesError) {
+          this.imagesError = 'Sao này chưa có ảnh trong Catalog.';
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Không thể truy xuất Star entity từ Catalog. Hãy kiểm tra quyền truy cập hoặc thử lại.';
+        this.loading = false;
+      }
+    });
+  }
+}

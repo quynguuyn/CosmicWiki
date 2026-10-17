@@ -47,7 +47,7 @@
             view_in_ar
           </span>
 
-          Tham Quan Thực Tế Ảo 3D (VR Tour)
+          Xem khu trưng bày trực tuyến
         </a>
       </div>
 
@@ -209,7 +209,7 @@
               {{ exhibition.status }}
             </span>
 
-            <button type="button">
+            <button type="button" (click)="openExhibition(exhibition)">
               Khám phá
 
               <span class="material-symbols-outlined">
@@ -318,7 +318,7 @@
 
               <td class="event-action">
 
-                <button type="button">
+                <button type="button" (click)="openEvent(event)">
                   {{ event.action }}
                 </button>
 
@@ -458,6 +458,22 @@
 
           </div>
 
+          <div class="form-grid">
+
+            <div class="form-field">
+              <label for="requested-date">Ngày và giờ mong muốn *</label>
+              <input id="requested-date" name="requestedDate" type="datetime-local"
+                [(ngModel)]="form.requestedDate" [min]="minimumRequestedDate" required />
+            </div>
+
+            <div class="form-field">
+              <label for="party-size">Số khách (1–20) *</label>
+              <input id="party-size" name="partySize" type="number" [(ngModel)]="form.partySize"
+                min="1" max="20" step="1" required />
+            </div>
+
+          </div>
+
           <div class="form-field">
 
             <label for="transmission-subject">
@@ -575,6 +591,31 @@
   </section>
 
 </main>
+
+<div class="modal-backdrop" *ngIf="selectedExhibition || selectedEvent" (click)="closeContentDetails()">
+  <section class="glass-panel confirmation-modal visit-detail-modal" role="dialog" aria-modal="true"
+    [attr.aria-label]="selectedEvent?.name || selectedExhibition?.title"
+    (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Đóng chi tiết" (click)="closeContentDetails()">×</button>
+    <ng-container *ngIf="selectedExhibition as exhibition">
+      <p class="eyebrow">{{ exhibition.category }} · KHU TRƯNG BÀY {{ exhibition.number }}</p>
+      <h2>{{ exhibition.title }}</h2>
+      <p>{{ exhibition.description }}</p>
+      <span class="event-status">{{ exhibition.status }}</span>
+    </ng-container>
+    <ng-container *ngIf="selectedEvent as event">
+      <p class="eyebrow">SỰ KIỆN ĐÀI QUAN SÁT</p>
+      <h2>{{ event.name }}</h2>
+      <p>{{ event.description }}</p>
+      <p *ngIf="event.specification">{{ event.specification }}</p>
+      <p *ngIf="event.location">Địa điểm: {{ event.location }}</p>
+      <p>{{ event.date }} · {{ event.status }}</p>
+      <button type="button" class="btn btn-gold" (click)="requestEventParticipation(event)">
+        Gửi yêu cầu tham gia
+      </button>
+    </ng-container>
+  </section>
+</div>
 
 <!-- ========================================================= -->
 <!-- CONFIRMATION MODAL -->

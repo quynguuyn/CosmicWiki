@@ -24,7 +24,7 @@
 .header-inner {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 1 var(--gutter-desktop);
+  padding: 0 var(--gutter-desktop);
   height: 5rem;
   display: flex;
   align-items: center;
@@ -138,9 +138,46 @@
   align-items: center;
   gap: var(--space-sm);
 }
-.header-search { display: flex; align-items: center; gap: .25rem; }
-.header-search input { width: 0; opacity: 0; padding: .55rem; border: 1px solid transparent; border-radius: var(--radius-md); background: rgba(18, 28, 42, .8); color: var(--on-surface); transition: .2s ease; }
-.header-search:focus-within input, .header-search:hover input { width: 9rem; opacity: 1; border-color: var(--glass-border); }
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  width: clamp(5.5rem, 8.5vw, 8.5rem);
+  height: 1.85rem;
+  min-width: 0;
+  padding: 0 .7rem;
+  border: 1px solid rgba(184, 212, 232, .2);
+  border-radius: 999px;
+  background: rgba(18, 28, 42, .72);
+  color: var(--tertiary);
+  transition: border-color .2s ease, box-shadow .2s ease;
+
+  &:focus-within {
+    border-color: rgba(158, 204, 239, .6);
+    box-shadow: 0 0 0 3px rgba(114, 160, 193, .12);
+  }
+
+  .material-symbols-outlined {
+    font-size: 1.15rem;
+    flex: 0 0 auto;
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--on-surface);
+    font: inherit;
+
+    &::placeholder {
+      color: var(--on-surface-variant);
+      opacity: .8;
+    }
+  }
+}
 
 .icon-btn {
   width: 2.5rem;
@@ -172,11 +209,23 @@
 
 .user-menu-wrapper {
   position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+
+  &::after {
+    position: absolute;
+    top: 100%;
+    right: -.35rem;
+    left: -.35rem;
+    height: .65rem;
+    content: '';
+  }
 }
 
 .user-menu {
   position: absolute;
-  top: calc(100% + .75rem);
+  top: calc(100% + .45rem);
   right: 0;
   min-width: 158px;
   padding: .3rem;
@@ -264,6 +313,32 @@
 
   @media (max-width: 768px) {
     display: flex;
+  }
+}
+
+@media (max-width: 1100px) {
+  .header-search {
+    width: clamp(4.5rem, 9.5vw, 6.5rem);
+  }
+
+  .nav-desktop {
+    gap: .8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-search {
+    width: clamp(5.5rem, 20vw, 7.5rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .header-search {
+    width: 5rem;
+  }
+
+  .header-search input::placeholder {
+    color: transparent;
   }
 }
 

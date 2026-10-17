@@ -10,4 +10,5 @@ public sealed record AstronomicalObjectCreatedIntegrationEvent(
     Guid ObjectId,
     string Kind,
     string Name,
-    string? ObjectType) : IIntegrationEvent;
+    string? ObjectType,
+    string? ImageUrl) : IIntegrationEvent;

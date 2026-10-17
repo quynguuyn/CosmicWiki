@@ -62,10 +62,16 @@ public sealed class SearchDocumentRepository
 
         if (!string.IsNullOrWhiteSpace(sourceType))
         {
-            sourceType = sourceType.Trim();
-
+            var normalizedSourceType = sourceType.Trim().ToLowerInvariant();
+            query = query.Where(x => x.SourceType == normalizedSourceType);
+        }
+        else
+        {
             query = query.Where(x =>
-                x.SourceType == sourceType);
+                x.SourceType == SearchDocumentSourceType.Star ||
+                x.SourceType == SearchDocumentSourceType.Galaxy ||
+                x.SourceType == SearchDocumentSourceType.Planet ||
+                x.SourceType == SearchDocumentSourceType.Other);
         }
 
         return query;

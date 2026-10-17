@@ -12,8 +12,6 @@
       <p *ngIf="['Paid', 'Shipping'].includes(order.status)">Thanh toán Stripe đã được xác nhận thành công.</p>
       <p *ngIf="order.status === 'PaymentFailed'">Thanh toán chưa thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
       <div class="payment-details">
-        <div><span>Mã đơn</span><strong>{{ order.orderId }}</strong></div>
-        <div><span>Payment intent</span><strong>{{ order.paymentIntentId || 'Đang chờ cấp' }}</strong></div>
         <div><span>Trạng thái</span><strong class="status">{{ order.status }}</strong></div>
         <div><span>Tổng tiền</span><strong>{{ order.totalAmount | number:'1.0-0' }} {{ order.currency }}</strong></div>
       </div>

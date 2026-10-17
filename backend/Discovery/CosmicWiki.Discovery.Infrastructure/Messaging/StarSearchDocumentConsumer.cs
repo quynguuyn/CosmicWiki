@@ -89,7 +89,7 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
                 ?? throw new InvalidOperationException(
                     "Could not deserialize StarCreatedIntegrationEvent.");
             sourceId = integrationEvent.StarId;
-            sourceType = "star";
+            sourceType = SearchDocumentSourceType.Star;
             name = integrationEvent.Name;
             description = integrationEvent.Description;
             imageUrl = integrationEvent.ImageUrl;
@@ -102,11 +102,22 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
                     result.Message.Value)
                 ?? throw new InvalidOperationException(
                     "Could not deserialize AstronomicalObjectCreatedIntegrationEvent.");
+            if (string.Equals(
+                integrationEvent.Kind,
+                SearchDocumentSourceType.Star,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation(
+                    "Ignoring astronomical-object event for Star {StarId}; Star search documents are indexed from Star entity events.",
+                    integrationEvent.ObjectId);
+                return;
+            }
+
             sourceId = integrationEvent.ObjectId;
             sourceType = integrationEvent.Kind.ToLowerInvariant();
             name = integrationEvent.Name;
             description = integrationEvent.ObjectType;
-            imageUrl = null;
+            imageUrl = integrationEvent.ImageUrl;
             occurredAtUtc = integrationEvent.OccurredAtUtc;
         }
 
