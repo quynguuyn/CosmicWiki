@@ -11,7 +11,8 @@ namespace CosmicWiki.Auth.Infrastructure.Security;
 public sealed class RefreshTokenService : IRefreshTokenService
 {
     private readonly AuthDbContext _dbContext;
-    private readonly int _expirationDays;
+    private readonly int _persistentExpirationDays;
+    private readonly int _sessionExpirationHours;
 
     public RefreshTokenService(
         AuthDbContext dbContext,
@@ -23,23 +24,39 @@ public sealed class RefreshTokenService : IRefreshTokenService
 
         if (configuredExpirationDays is null)
         {
-            _expirationDays = 7;
+            _persistentExpirationDays = 30;
         }
         else if (
             int.TryParse(configuredExpirationDays, out var expirationDays)
             && expirationDays > 0)
         {
-            _expirationDays = expirationDays;
+            _persistentExpirationDays = expirationDays;
         }
         else
         {
             throw new InvalidOperationException(
                 "Refresh token expiration days must be a positive integer.");
         }
+
+        var configuredSessionHours = configuration["RefreshToken:SessionExpirationHours"];
+        if (configuredSessionHours is null)
+        {
+            _sessionExpirationHours = 24;
+        }
+        else if (int.TryParse(configuredSessionHours, out var sessionHours) && sessionHours > 0)
+        {
+            _sessionExpirationHours = sessionHours;
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                "Refresh token session expiration hours must be a positive integer.");
+        }
     }
 
-    public async Task<string> CreateAsync(
+    public async Task<RefreshTokenCreation> CreateAsync(
         Guid userId,
+        bool rememberMe,
         CancellationToken cancellationToken = default)
     {
         await _dbContext.RefreshTokens
@@ -47,16 +64,20 @@ public sealed class RefreshTokenService : IRefreshTokenService
             .ExecuteDeleteAsync(cancellationToken);
 
         var rawToken = GenerateToken();
+        var expiresAtUtc = rememberMe
+            ? DateTime.UtcNow.AddDays(_persistentExpirationDays)
+            : DateTime.UtcNow.AddHours(_sessionExpirationHours);
         var token = RefreshToken.Create(
             userId,
             Guid.NewGuid(),
             HashToken(rawToken),
-            DateTime.UtcNow.AddDays(_expirationDays));
+            expiresAtUtc,
+            rememberMe);
 
         _dbContext.RefreshTokens.Add(token);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return rawToken;
+        return new RefreshTokenCreation(rawToken, expiresAtUtc, rememberMe);
     }
 
     public async Task<RefreshTokenRotation?> RotateAsync(
@@ -105,7 +126,8 @@ public sealed class RefreshTokenService : IRefreshTokenService
                 currentToken.UserId,
                 currentToken.FamilyId,
                 replacementHash,
-                DateTime.UtcNow.AddDays(_expirationDays)));
+                currentToken.ExpiresAtUtc,
+                currentToken.RememberMe));
 
         try
         {
@@ -122,7 +144,9 @@ public sealed class RefreshTokenService : IRefreshTokenService
 
         return new RefreshTokenRotation(
             currentToken.UserId,
-            replacementToken);
+            replacementToken,
+            currentToken.ExpiresAtUtc,
+            currentToken.RememberMe);
     }
 
     public async Task RevokeAsync(

@@ -17,8 +17,8 @@ interface Permission { permissionId: string; code: string; name: string; descrip
   template: `
     <main class="admin-crud-page">
       <a routerLink="/admin" class="back-link">← Admin Dashboard</a>
-      <header><p class="eyebrow">COSMICWIKI · ACCESS CONTROL</p><h1>Tài khoản</h1><p>Chỉ hiển thị employee và các tài khoản có vai trò quản trị, không hiển thị account User mua hàng.</p></header>
-      <nav class="tabs"><button *ngFor="let filter of roleFilters" [class.active]="roleFilter === filter" (click)="setRoleFilter(filter)">{{ filter || 'Tất cả employee' }}</button></nav>
+      <header><p class="eyebrow">COSMICWIKI · ACCESS CONTROL</p><h1>Tài khoản</h1><p>Tạo tài khoản thông thường trước, sau đó chọn bộ lọc User và cấp role Delivery để mở luồng giao hàng.</p><a routerLink="/register">Tạo tài khoản mới</a></header>
+      <nav class="tabs"><button *ngFor="let filter of roleFilters" [class.active]="roleFilter === filter" (click)="setRoleFilter(filter)">{{ filter || 'Nhân viên' }}</button></nav>
       <p class="feedback" *ngIf="error">{{ error }}</p>
       <section class="account-layout">
         <div>
@@ -38,7 +38,7 @@ export class AdminAccountsComponent implements OnInit {
   accounts: Account[] = []; roles: Role[] = []; permissions: Permission[] = []; rolePermissions: Permission[] = [];
   selected?: Account; selectedRole = ''; selectedPermission = ''; roleFilter = ''; error = '';
   page = 1; readonly pageSize = 10; totalCount = 0; totalPages = 0; loading = false;
-  readonly roleFilters = ['', 'Admin', 'Employee'];
+  readonly roleFilters = ['', 'User', 'Admin', 'Delivery'];
 
   ngOnInit() { this.loadAccounts(); this.http.get<Role[]>(`${this.base}/api/auth/admin/roles`).subscribe({ next: r => this.roles = r }); this.http.get<Permission[]>(`${this.base}/api/auth/admin/permissions`).subscribe({ next: p => this.permissions = p }); }
   loadAccounts() {

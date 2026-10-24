@@ -22,6 +22,13 @@ public static class OrderingAuthorizationExtensions
                     policy.RequireAuthenticatedUser();
                     policy.RequireClaim("permission", Permissions.ShippingWrite);
                 });
+            options.AddPolicy(
+                Permissions.DeliveryWrite,
+                policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("permission", Permissions.DeliveryWrite);
+                });
         });
 
         return services;

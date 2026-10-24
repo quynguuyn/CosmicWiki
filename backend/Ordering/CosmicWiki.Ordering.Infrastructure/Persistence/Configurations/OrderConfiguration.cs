@@ -14,10 +14,16 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.CustomerEmail).HasMaxLength(320);
         builder.Property(x => x.IdempotencyKey).HasMaxLength(200).IsRequired();
         builder.Property(x => x.RequestFingerprint).HasMaxLength(64).IsRequired();
-        builder.Property(x => x.Status).HasConversion<int>().IsRequired();
+        builder.Property(x => x.Status).HasConversion<int>().IsRequired().IsConcurrencyToken();
         builder.Property(x => x.TotalAmount).HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.PaymentIntentId).HasMaxLength(200);
         builder.Property(x => x.ClientSecret).HasMaxLength(200);
+        builder.Property(x => x.DeliveryPersonId).HasColumnName("DELIVERY_PERSON_ID");
+        builder.Property(x => x.DeliveryPersonName).HasColumnName("DELIVERY_PERSON_NAME").HasMaxLength(100);
+        builder.Property(x => x.DeliveryLatitude).HasColumnName("DELIVERY_LATITUDE");
+        builder.Property(x => x.DeliveryLongitude).HasColumnName("DELIVERY_LONGITUDE");
+        builder.Property(x => x.DeliveryLocationUpdatedAtUtc).HasColumnName("DELIVERY_LOCATION_UPDATED_AT_UTC");
+        builder.HasIndex(x => new { x.DeliveryPersonId, x.Status });
         builder.HasIndex(x => x.IdempotencyKey).IsUnique();
         builder.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
     }

@@ -5,4 +5,6 @@ namespace CosmicWiki.Auth.Application.Features.Authentication.Login;
 public sealed record LoginResponse(
     string AccessToken,
     int ExpiresIn,
-    [property: JsonIgnore] string RefreshToken);
+    [property: JsonIgnore] string RefreshToken,
+    [property: JsonIgnore] DateTime RefreshTokenExpiresAtUtc,
+    bool RememberMe);

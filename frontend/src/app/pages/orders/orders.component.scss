@@ -230,3 +230,26 @@
     }
   }
 }
+.delivery-tracking {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(142, 185, 214, 0.16);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.45);
+}
+
+.delivery-tracking h3 {
+  margin: 0 0 .5rem;
+}
+
+.delivery-tracking p {
+  color: rgba(184, 212, 232, .72);
+}
+
+.delivery-tracking iframe {
+  display: block;
+  width: 100%;
+  min-height: 280px;
+  border: 0;
+  border-radius: 8px;
+}
