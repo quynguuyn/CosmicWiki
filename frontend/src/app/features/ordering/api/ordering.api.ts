@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../../core/config/api.config';
 import { PagedResult } from '../../../core/models/paged-result.model';
-import { AdminOrder, CreateOrderRequest, CreateOrderResult, OrderStatus } from '../models/order.model';
+import { AdminOrder, CreateOrderRequest, CreateOrderResult, DeliveryOrder, OrderStatus } from '../models/order.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrderingApi {
@@ -47,5 +47,24 @@ export class OrderingApi {
       `${this.baseUrl}/api/admin/orders/${orderId}/status`,
       { status }
     );
+  }
+
+  getDeliveryOrders() {
+    return this.http.get<DeliveryOrder[]>(`${this.baseUrl}/api/delivery/orders`);
+  }
+
+  claimDeliveryOrder(orderId: string) {
+    return this.http.post<DeliveryOrder>(`${this.baseUrl}/api/delivery/orders/${orderId}/claim`, {});
+  }
+
+  updateDeliveryLocation(orderId: string, latitude: number, longitude: number) {
+    return this.http.put<DeliveryOrder>(
+      `${this.baseUrl}/api/delivery/orders/${orderId}/location`,
+      { latitude, longitude }
+    );
+  }
+
+  markDeliveryComplete(orderId: string) {
+    return this.http.post<DeliveryOrder>(`${this.baseUrl}/api/delivery/orders/${orderId}/delivered`, {});
   }
 }

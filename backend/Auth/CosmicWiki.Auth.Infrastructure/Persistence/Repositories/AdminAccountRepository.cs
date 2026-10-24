@@ -31,7 +31,6 @@ public sealed class AdminAccountRepository(AuthDbContext db)
                     FROM USER_ROLES ur
                     JOIN ROLES r ON r.ID = ur.ROLE_ID
                     WHERE ur.USER_ID = u.ID
-                      AND r.NAME <> {"User"}
                       AND r.NAME = {role})");
         var totalCount = await query.CountAsync(cancellationToken);
         var users = await query
@@ -49,7 +48,6 @@ public sealed class AdminAccountRepository(AuthDbContext db)
                 Roles = user.Roles
                     .Join(db.Roles, userRole => userRole.RoleId, assignedRole => assignedRole.Id,
                         (_, assignedRole) => assignedRole.Name)
-                    .Where(name => name != "User")
                     .Distinct()
             })
             .ToListAsync(cancellationToken);

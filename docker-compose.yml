@@ -75,6 +75,16 @@ services:
       Auth__SeedUser__Username: ${AUTH_SEED_USER_USERNAME:-}
       Auth__SeedUser__Email: ${AUTH_SEED_USER_EMAIL:-}
       Auth__SeedUser__Password: ${AUTH_SEED_USER_PASSWORD:-}
+      PasswordResetEmail__Enabled: ${PASSWORD_RESET_EMAIL_ENABLED:-${ORDER_EMAIL_ENABLED:-false}}
+      PasswordResetEmail__ExposeDevelopmentLink: ${PASSWORD_RESET_EXPOSE_DEVELOPMENT_LINK:-false}
+      PasswordResetEmail__FrontendUrl: ${PASSWORD_RESET_FRONTEND_URL:-http://localhost:4200}
+      PasswordResetEmail__SmtpHost: ${ORDER_EMAIL_SMTP_HOST:-}
+      PasswordResetEmail__SmtpPort: ${ORDER_EMAIL_SMTP_PORT:-587}
+      PasswordResetEmail__UseSsl: ${ORDER_EMAIL_USE_SSL:-true}
+      PasswordResetEmail__Username: ${ORDER_EMAIL_SMTP_USERNAME:-}
+      PasswordResetEmail__Password: ${ORDER_EMAIL_SMTP_PASSWORD:-}
+      PasswordResetEmail__FromAddress: ${ORDER_EMAIL_FROM_ADDRESS:-}
+      PasswordResetEmail__FromName: ${ORDER_EMAIL_FROM_NAME:-CosmicWiki}
     depends_on:
       oracle:
         condition: service_healthy

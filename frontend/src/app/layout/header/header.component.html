@@ -61,6 +61,12 @@
             <span class="material-symbols-outlined">inventory_2</span>
             Đơn hàng
           </a>
+          @if (auth.hasPermission('delivery.write')) {
+          <a routerLink="/delivery" (click)="userMenuOpen.set(false)">
+            <span class="material-symbols-outlined">local_shipping</span>
+            Giao hàng
+          </a>
+          }
           @if (auth.hasPermission('shipping.write')) {
           <a routerLink="/admin" (click)="userMenuOpen.set(false)">
             <span class="material-symbols-outlined">dashboard</span>

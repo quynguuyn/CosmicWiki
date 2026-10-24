@@ -62,6 +62,8 @@ public sealed class RefreshCommandHandler
         return new LoginResponse(
             _tokenService.GenerateAccessToken(user, permissions),
             3600,
-            rotation.RefreshToken);
+            rotation.RefreshToken,
+            rotation.ExpiresAtUtc,
+            rotation.RememberMe);
     }
 }

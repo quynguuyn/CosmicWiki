@@ -19,3 +19,13 @@ export const adminGuard: CanActivateFn = () => {
       ? true
       : router.createUrlTree(['/forbidden']);
 };
+
+export const deliveryGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return !auth.isAuthenticated()
+    ? router.createUrlTree(['/login'])
+    : auth.hasPermission('delivery.write')
+      ? true
+      : router.createUrlTree(['/forbidden']);
+};

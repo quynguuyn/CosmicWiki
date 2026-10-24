@@ -34,6 +34,18 @@ public sealed class OrderRepository(
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyCollection<Order>> GetAvailableForDeliveryAsync(CancellationToken cancellationToken) =>
+        await dbContext.Orders
+            .Where(x => x.Status == Domain.Enums.OrderStatus.Paid && x.DeliveryPersonId == null)
+            .OrderBy(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyCollection<Order>> GetByDeliveryPersonIdAsync(Guid deliveryPersonId, CancellationToken cancellationToken) =>
+        await dbContext.Orders
+            .Where(x => x.DeliveryPersonId == deliveryPersonId && x.Status == Domain.Enums.OrderStatus.Shipping)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyCollection<Order>> GetCreatedSinceAsync(DateTime sinceUtc, CancellationToken cancellationToken) =>
         await dbContext.Orders
             .Where(x => x.CreatedAtUtc >= sinceUtc)

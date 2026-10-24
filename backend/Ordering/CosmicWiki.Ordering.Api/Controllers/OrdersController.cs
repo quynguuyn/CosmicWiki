@@ -73,6 +73,10 @@ public sealed class OrdersController(
             order.TotalAmount,
             order.Currency,
             order.PaidAtUtc,
+            order.DeliveryPersonName,
+            order.DeliveryLatitude,
+            order.DeliveryLongitude,
+            order.DeliveryLocationUpdatedAtUtc,
             paymentExpiresAtUtc = order.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
         });
     }
@@ -96,6 +100,10 @@ public sealed class OrdersController(
             o.Currency,
             o.PaidAtUtc,
             o.CreatedAtUtc,
+            o.DeliveryPersonName,
+            o.DeliveryLatitude,
+            o.DeliveryLongitude,
+            o.DeliveryLocationUpdatedAtUtc,
             paymentExpiresAtUtc = o.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
         }));
     }
@@ -110,6 +118,8 @@ public sealed class OrdersController(
     {
         if (request is null || !Enum.TryParse<OrderStatus>(request.Status, true, out var nextStatus))
             return BadRequest("A valid order status is required.");
+        if (nextStatus == OrderStatus.Shipping)
+            return Conflict(new { message = "A delivery person must claim the order from the delivery dashboard." });
 
         var order = await orders.GetAsync(orderId, cancellationToken);
         if (order is null)

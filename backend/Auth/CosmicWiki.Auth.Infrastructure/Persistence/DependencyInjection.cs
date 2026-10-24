@@ -29,6 +29,9 @@ public static class DependencyInjection
         
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IPasswordRecoveryService, PasswordRecoveryService>();
+        services.Configure<PasswordResetEmailOptions>(
+            configuration.GetSection(PasswordResetEmailOptions.SectionName));
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AuthDbContext>());
 

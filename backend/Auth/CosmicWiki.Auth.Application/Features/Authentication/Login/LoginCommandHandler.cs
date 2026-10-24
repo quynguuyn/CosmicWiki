@@ -59,8 +59,14 @@ public sealed class LoginCommandHandler
         var accessToken = _tokenService.GenerateAccessToken(user, permissions);
         var refreshToken = await _refreshTokenService.CreateAsync(
             user.Id,
+            request.RememberMe,
             cancellationToken);
 
-        return new LoginResponse(accessToken, 3600, refreshToken);
+        return new LoginResponse(
+            accessToken,
+            3600,
+            refreshToken.RefreshToken,
+            refreshToken.ExpiresAtUtc,
+            refreshToken.RememberMe);
     }
 }

@@ -9,7 +9,8 @@ using CosmicWiki.Auth.Api.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using CosmicWiki.Auth.Application.Features.Authentication.Refresh;
 using CosmicWiki.Auth.Application.Features.Authentication.Logout;
-using Microsoft.Extensions.Configuration;
+using CosmicWiki.Auth.Application.Features.Authentication.RequestPasswordReset;
+using CosmicWiki.Auth.Application.Features.Authentication.ResetPassword;
 using Microsoft.AspNetCore.Hosting;
 
 namespace CosmicWiki.Auth.Api.Controllers;
@@ -20,16 +21,13 @@ namespace CosmicWiki.Auth.Api.Controllers;
 public sealed class AuthController : ControllerBase
 {
     private readonly ISender _sender;
-    private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
 
     public AuthController(
         ISender sender,
-        IConfiguration configuration,
         IWebHostEnvironment environment)
     {
         _sender = sender;
-        _configuration = configuration;
         _environment = environment;
     }
 
@@ -56,7 +54,7 @@ public sealed class AuthController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _sender.Send(command, cancellationToken);
-        SetRefreshTokenCookie(result.RefreshToken);
+        SetRefreshTokenCookie(result);
 
         return Ok(result);
     }
@@ -84,7 +82,7 @@ public sealed class AuthController : ControllerBase
             throw;
         }
 
-        SetRefreshTokenCookie(result.RefreshToken);
+        SetRefreshTokenCookie(result);
         return Ok(result);
     }
 
@@ -104,6 +102,36 @@ public sealed class AuthController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPost("password/forgot")]
+    [AllowAnonymous]
+    [EnableRateLimiting(AuthRateLimitingExtensions.LoginPolicy)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    public async Task<IActionResult> RequestPasswordReset(
+        [FromBody] RequestPasswordResetCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(command, cancellationToken);
+        return Accepted(new
+        {
+            result.Message,
+            result.EmailDeliveryEnabled,
+            developmentResetUrl = _environment.IsDevelopment()
+                ? result.DevelopmentResetUrl
+                : null
+        });
+    }
+
+    [HttpPost("password/reset")]
+    [AllowAnonymous]
+    [EnableRateLimiting(AuthRateLimitingExtensions.LoginPolicy)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordCommand command,
+        CancellationToken cancellationToken)
+    {
+        var reset = await _sender.Send(command, cancellationToken);
+        return reset ? NoContent() : BadRequest("The reset link is invalid or expired.");
+    }
     
     [HttpGet("getCurrentUser")]
     [Authorize(Policy = Permissions.AuthRead)]
@@ -120,16 +148,20 @@ public sealed class AuthController : ControllerBase
 
     private const string RefreshTokenCookieName = "cosmicwiki_refresh_token";
 
-    private void SetRefreshTokenCookie(string refreshToken)
+    private void SetRefreshTokenCookie(LoginResponse result)
     {
-        var expirationDays = GetRefreshTokenExpirationDays();
         var options = GetRefreshTokenCookieOptions();
-        options.Expires = DateTimeOffset.UtcNow.AddDays(expirationDays);
-        options.MaxAge = TimeSpan.FromDays(expirationDays);
+        if (result.RememberMe)
+        {
+            options.Expires = new DateTimeOffset(DateTime.SpecifyKind(
+                result.RefreshTokenExpiresAtUtc,
+                DateTimeKind.Utc));
+            options.MaxAge = options.Expires - DateTimeOffset.UtcNow;
+        }
 
         Response.Cookies.Append(
             RefreshTokenCookieName,
-            refreshToken,
+            result.RefreshToken,
             options);
     }
 
@@ -141,21 +173,4 @@ public sealed class AuthController : ControllerBase
             SameSite = SameSiteMode.Strict,
             Path = "/api/auth"
         };
-
-    private int GetRefreshTokenExpirationDays()
-    {
-        var configuredDays = _configuration["RefreshToken:ExpirationDays"];
-        if (configuredDays is null)
-        {
-            return 7;
-        }
-
-        if (int.TryParse(configuredDays, out var days) && days > 0)
-        {
-            return days;
-        }
-
-        throw new InvalidOperationException(
-            "Refresh token expiration days must be a positive integer.");
-    }
 }
