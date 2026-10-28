@@ -31,10 +31,8 @@ export class AuthService {
         return this.api.register(request);
     }
 
-    saveSession(response: Parameters<
-        AuthSessionService['saveSession']
-    >[0]): void {
-        this.session.saveSession(response);
+    saveSession(response: Parameters<AuthSessionService['saveSession']>[0], rememberMe = false): void {
+        this.session.saveSession(response, rememberMe);
     }
 
     logout() {
@@ -46,7 +44,7 @@ export class AuthService {
     refreshSession() {
         if (!this.refreshRequest$) {
             this.refreshRequest$ = this.api.refresh().pipe(
-                tap(response => this.session.saveSession(response)),
+                tap(response => this.session.saveSession(response, response.rememberMe)),
                 catchError(error => {
                     this.session.clearSession();
                     return throwError(() => error);

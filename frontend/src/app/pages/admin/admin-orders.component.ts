@@ -39,8 +39,6 @@ import { OrderingApi } from '../../features/ordering/api/ordering.api';
             <span class="status" [class]="order.status.toLowerCase()">{{ label(order.status) }}</span>
           </div>
           <div class="order-actions">
-            <button *ngIf="order.status === 'Paid'" type="button" class="primary"
-                    (click)="update(order, 'Shipping')">Xác nhận giao ngay</button>
             <button *ngIf="order.status === 'PendingPayment' || order.status === 'Paid'"
                     type="button" class="danger" (click)="update(order, 'Cancelled')">Hủy đơn</button>
             <button *ngIf="order.status === 'Shipping'" type="button" (click)="update(order, 'Delivered')">Đã giao</button>
@@ -71,7 +69,7 @@ export class AdminOrdersComponent implements OnInit {
   readonly filters = [
     { value: 'all', label: 'Tất cả' },
     { value: 'PendingPayment', label: 'Chờ thanh toán' },
-    { value: 'Paid', label: 'Chờ xác nhận' },
+    { value: 'Paid', label: 'Chờ nhân viên nhận giao' },
     { value: 'Shipping', label: 'Đang giao' },
     { value: 'Delivered', label: 'Đã giao' },
     { value: 'Cancelled', label: 'Đã hủy' }

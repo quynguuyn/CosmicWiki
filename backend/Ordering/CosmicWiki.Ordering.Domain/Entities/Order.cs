@@ -30,6 +30,11 @@ public sealed class Order : AggregateRoot<Guid>
     public string? ClientSecret { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? PaidAtUtc { get; private set; }
+    public Guid? DeliveryPersonId { get; private set; }
+    public string? DeliveryPersonName { get; private set; }
+    public double? DeliveryLatitude { get; private set; }
+    public double? DeliveryLongitude { get; private set; }
+    public DateTime? DeliveryLocationUpdatedAtUtc { get; private set; }
     public IReadOnlyCollection<OrderLine> Lines => _lines.AsReadOnly();
 
     public static Order Create(
@@ -104,5 +109,45 @@ public sealed class Order : AggregateRoot<Guid>
 
         Status = nextStatus;
         return true;
+    }
+
+    public void AssignDeliveryPerson(Guid deliveryPersonId, string deliveryPersonName)
+    {
+        if (deliveryPersonId == Guid.Empty)
+            throw new ArgumentException("Delivery person ID is required.", nameof(deliveryPersonId));
+        if (Status != OrderStatus.Paid || DeliveryPersonId is not null)
+            throw new InvalidOperationException("Only an unassigned paid order can be claimed for delivery.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(deliveryPersonName);
+
+        DeliveryPersonId = deliveryPersonId;
+        DeliveryPersonName = deliveryPersonName.Trim();
+        TransitionTo(OrderStatus.Shipping);
+    }
+
+    public void UpdateDeliveryLocation(Guid deliveryPersonId, double latitude, double longitude)
+    {
+        EnsureAssignedDeliveryPerson(deliveryPersonId);
+        if (Status != OrderStatus.Shipping)
+            throw new InvalidOperationException("Location can only be updated while the order is shipping.");
+        if (!double.IsFinite(latitude) || latitude is < -90 or > 90)
+            throw new ArgumentOutOfRangeException(nameof(latitude));
+        if (!double.IsFinite(longitude) || longitude is < -180 or > 180)
+            throw new ArgumentOutOfRangeException(nameof(longitude));
+
+        DeliveryLatitude = latitude;
+        DeliveryLongitude = longitude;
+        DeliveryLocationUpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void MarkDeliveredBy(Guid deliveryPersonId)
+    {
+        EnsureAssignedDeliveryPerson(deliveryPersonId);
+        TransitionTo(OrderStatus.Delivered);
+    }
+
+    private void EnsureAssignedDeliveryPerson(Guid deliveryPersonId)
+    {
+        if (deliveryPersonId == Guid.Empty || DeliveryPersonId != deliveryPersonId)
+            throw new InvalidOperationException("This delivery is not assigned to the current account.");
     }
 }

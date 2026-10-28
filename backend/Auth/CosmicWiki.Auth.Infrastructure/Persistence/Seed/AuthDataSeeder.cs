@@ -146,7 +146,8 @@ public static class AuthDataSeeder
             (Permissions.VisitWrite, "Write Visit"),
 
             (Permissions.OrderingWrite, "Create Orders"),
-            (Permissions.ShippingWrite, "Update shipping statuses")
+            (Permissions.ShippingWrite, "Update shipping statuses"),
+            (Permissions.DeliveryWrite, "Manage assigned deliveries")
         };
 
         foreach (var (code, name) in permissions)
@@ -173,6 +174,7 @@ public static class AuthDataSeeder
         var roles = new[]
         {
             ("Admin", "System administrator"),
+            ("Delivery", "Delivery personnel"),
             ("User", "Standard user")
         };
 
@@ -206,6 +208,8 @@ public static class AuthDataSeeder
             .SingleAsync(
                 x => x.Name == "User",
                 cancellationToken);
+        var delivery = await dbContext.Roles
+            .SingleAsync(x => x.Name == "Delivery", cancellationToken);
 
         var permissions = await dbContext.Permissions
             .ToDictionaryAsync(
@@ -230,6 +234,15 @@ public static class AuthDataSeeder
                 RolePermission.Create(
                     admin.Id,
                     permission.Id));
+        }
+
+        var deliveryPermission = permissions[Permissions.DeliveryWrite];
+        if (!await dbContext.RolePermissions.AnyAsync(
+                x => x.RoleId == delivery.Id && x.PermissionId == deliveryPermission.Id,
+                cancellationToken))
+        {
+            dbContext.RolePermissions.Add(
+                RolePermission.Create(delivery.Id, deliveryPermission.Id));
         }
 
         var userPermissionCodes = new[]

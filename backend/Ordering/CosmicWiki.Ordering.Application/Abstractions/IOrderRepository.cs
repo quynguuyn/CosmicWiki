@@ -9,6 +9,8 @@ public interface IOrderRepository
     Task<Order?> GetAsync(Guid id, CancellationToken cancellationToken);
     void Add(Order order);
     Task<IReadOnlyCollection<Order>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Order>> GetAvailableForDeliveryAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Order>> GetByDeliveryPersonIdAsync(Guid deliveryPersonId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<Order>> GetCreatedSinceAsync(DateTime sinceUtc, CancellationToken cancellationToken);
     Task<(IReadOnlyCollection<Order> Items, int TotalCount)> GetCreatedSincePageAsync(
         DateTime sinceUtc,

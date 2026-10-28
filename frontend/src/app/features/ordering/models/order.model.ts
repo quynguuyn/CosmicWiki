@@ -28,6 +28,23 @@ export interface OrderStatus {
   paidAtUtc: string | null;
   createdAtUtc: string;
   paymentExpiresAtUtc?: string;
+  deliveryPersonName?: string | null;
+  deliveryLatitude?: number | null;
+  deliveryLongitude?: number | null;
+  deliveryLocationUpdatedAtUtc?: string | null;
+}
+
+export interface DeliveryOrder {
+  orderId: string;
+  status: string;
+  availableToClaim: boolean;
+  totalAmount: number;
+  currency: string;
+  createdAtUtc: string;
+  deliveryPersonName: string | null;
+  deliveryLatitude: number | null;
+  deliveryLongitude: number | null;
+  deliveryLocationUpdatedAtUtc: string | null;
 }
 
 export interface AdminOrder extends OrderStatus {
