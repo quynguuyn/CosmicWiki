@@ -1,0 +1,28 @@
+<main class="register-page">
+  <section class="register-card cosmic-glass">
+    <a routerLink="/" class="register-brand">CosmicWiki</a>
+    <p class="eyebrow">COSMIC ACCESS</p>
+    <h1>Tạo tài khoản</h1>
+    <p class="register-intro">Đăng ký để tiếp tục hành trình khám phá vũ trụ.</p>
+    <form *ngIf="!registered" (ngSubmit)="submit()">
+      <label>Tên tài khoản
+        <input name="username" [(ngModel)]="username" autocomplete="username" required minlength="3">
+      </label>
+      <label>Email
+        <input name="email" [(ngModel)]="email" type="email" autocomplete="email" required>
+      </label>
+      <label>Mật khẩu
+        <input name="password" [(ngModel)]="password" type="password"
+          autocomplete="new-password" required minlength="8">
+      </label>
+      <p class="register-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản' }}
+      </button>
+    </form>
+    <p class="register-success" *ngIf="registered" role="status">
+      Tài khoản đã được tạo. Bạn có thể đăng nhập ngay.
+    </p>
+    <a routerLink="/login" class="register-login">{{ registered ? 'Đăng nhập' : 'Đã có tài khoản? Đăng nhập' }}</a>
+  </section>
+</main>

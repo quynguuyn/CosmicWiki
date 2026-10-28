@@ -1,0 +1,21 @@
+<nav class="pagination" [attr.aria-label]="ariaLabel">
+  <div class="pagination-controls">
+    <button type="button" aria-label="Trang đầu" title="Trang đầu"
+      [disabled]="page <= 1" (click)="selectPage(1)">«</button>
+    <button type="button" aria-label="Trang trước" title="Trang trước"
+      [disabled]="page <= 1" (click)="selectPage(page - 1)">‹</button>
+    <span class="pagination-summary">
+      {{ page }} / {{ totalPages }}
+      <ng-container *ngIf="totalCount !== undefined"> · {{ totalCount | number }} {{ itemLabel }}</ng-container>
+    </span>
+    <button type="button" aria-label="Trang sau" title="Trang sau"
+      [disabled]="page >= totalPages" (click)="selectPage(page + 1)">›</button>
+    <button type="button" aria-label="Trang cuối" title="Trang cuối"
+      [disabled]="page >= totalPages" (click)="selectPage(totalPages)">»</button>
+  </div>
+  <form class="pagination-jump" aria-label="Đi tới trang" (ngSubmit)="jumpToPage()">
+    <input [id]="inputId" type="number" name="targetPage" min="1" [max]="totalPages"
+      step="1" required [(ngModel)]="targetPage" inputmode="numeric" aria-label="Nhập số trang"
+      (keydown.enter)="jumpToPage(); $event.preventDefault()">
+  </form>
+</nav>

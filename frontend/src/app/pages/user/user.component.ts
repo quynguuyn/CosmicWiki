@@ -7,20 +7,7 @@ import { AuthService } from '../../features/auth/services/auth.service';
   selector: 'app-user',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  template: `
-    <main class="user-page">
-      <section class="user-card cosmic-glass">
-        <span class="material-symbols-outlined user-icon">account_circle</span>
-        <p class="eyebrow">COSMICWIKI · USER PROFILE</p>
-        <h1>Hồ sơ người dùng</h1>
-        <p class="user-email">{{ email || 'Chưa cập nhật email' }}</p>
-        <div class="user-actions">
-          <a routerLink="/orders" class="btn-primary">Xem đơn hàng</a>
-          <button type="button" class="btn-secondary" (click)="logout()">Đăng xuất</button>
-        </div>
-      </section>
-    </main>
-  `,
+  templateUrl: './user.component.html',
   styleUrl: './user.component.scss'
 })
 export class UserComponent {

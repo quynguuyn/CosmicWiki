@@ -184,8 +184,7 @@
 .hangfire-queue-list { display: flex; flex-wrap: wrap; gap: .45rem; }
 .hangfire-message { margin: .75rem 0; color: var(--on-surface-variant); }
 .hangfire-message--error { color: #ffab9e; }
-.hangfire-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: .25rem; color: var(--on-surface-variant); }
-.hangfire-pagination button:disabled { cursor: not-allowed; opacity: .45; }
+.hangfire-pagination { margin-top: .25rem; }
 .hangfire-overview { display: grid; gap: 1.1rem; margin-top: 1rem; }
 .hangfire-overview__summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
 .hangfire-overview__summary > div,
@@ -266,5 +265,5 @@
   .hangfire-console__health { align-items: flex-start; }
   .hangfire-section-heading { align-items: flex-start; }
   .hangfire-section-heading__actions { align-items: flex-start; }
-  .hangfire-pagination { gap: .5rem; font-size: var(--text-body-sm); }
+  .hangfire-pagination { font-size: var(--text-body-sm); }
 }

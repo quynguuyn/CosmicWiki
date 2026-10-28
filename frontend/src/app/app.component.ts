@@ -10,18 +10,8 @@ import { FooterComponent } from './layout/footer/footer.component';
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent],
-  template: `
-    <app-header *ngIf="!adminShell()"></app-header>
-    <main class="pt-20">
-      <router-outlet></router-outlet>
-    </main>
-    <app-footer *ngIf="!adminShell()"></app-footer>
-  `,
-  styles: [`
-    main {
-      min-height: calc(100vh - 5rem);
-    }
-  `]
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
 })
 export class AppComponent {
   private readonly router = inject(Router);
