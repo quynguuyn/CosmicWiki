@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { DiscoveryService } from '../../features/discovery/services/discovery.service';
 import { StarDetailComponent } from './star-detail.component';
+import { PaginationComponent } from '../../core/components/pagination/pagination.component';
 
 interface Specimen {
   id: string;
@@ -25,7 +26,7 @@ interface LibraryCategory {
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, StarDetailComponent],
+  imports: [CommonModule, StarDetailComponent, PaginationComponent],
   templateUrl: './library.component.html',
   styleUrl: './library.component.scss'
 })
