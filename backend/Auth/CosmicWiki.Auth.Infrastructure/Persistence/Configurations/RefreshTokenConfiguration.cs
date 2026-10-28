@@ -39,6 +39,10 @@ public sealed class RefreshTokenConfiguration
             .HasColumnName("EXPIRES_AT_UTC")
             .IsRequired();
 
+        builder.Property(x => x.RememberMe)
+            .HasColumnName("REMEMBER_ME")
+            .IsRequired();
+
         builder.Property(x => x.RevokedAtUtc)
             .HasColumnName("REVOKED_AT_UTC")
             .IsConcurrencyToken();

@@ -11,24 +11,19 @@ export class AuthSessionService {
     private readonly expiresAtKey = 'cosmicwiki_access_token_expires_at';
     readonly authenticated = signal(this.hasValidSession());
 
-    saveSession(response: LoginResponse): void {
-        localStorage.setItem(
-            this.accessTokenKey,
-            response.accessToken
-        );
+    saveSession(response: LoginResponse, rememberMe = false): void {
+        this.clearSessionStorage();
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem(this.accessTokenKey, response.accessToken);
 
         const expiresAt = Date.now() + response.expiresIn * 1000;
-        localStorage.setItem(
-            this.expiresAtKey,
-            expiresAt.toString()
-        );
+        storage.setItem(this.expiresAtKey, expiresAt.toString());
         this.authenticated.set(true);
     }
 
     getAccessToken(): string | null {
-        return localStorage.getItem(
-            this.accessTokenKey
-        );
+        return localStorage.getItem(this.accessTokenKey)
+            ?? sessionStorage.getItem(this.accessTokenKey);
     }
 
     getCustomerId(): string | null {
@@ -40,8 +35,7 @@ export class AuthSessionService {
     }
 
     clearSession(): void {
-        localStorage.removeItem(this.accessTokenKey);
-        localStorage.removeItem(this.expiresAtKey);
+        this.clearSessionStorage();
         this.authenticated.set(false);
     }
 
@@ -52,9 +46,21 @@ export class AuthSessionService {
     }
 
     private hasValidSession(): boolean {
-        const token = localStorage.getItem(this.accessTokenKey);
-        const expiresAt = Number(localStorage.getItem(this.expiresAtKey));
-        return Boolean(token && expiresAt && Date.now() < expiresAt);
+        const token = this.getAccessToken();
+        const expiresAt = Number(
+            localStorage.getItem(this.expiresAtKey)
+                ?? sessionStorage.getItem(this.expiresAtKey)
+        );
+        if (!token || !expiresAt) return false;
+        return Date.now() < expiresAt
+            || localStorage.getItem(this.accessTokenKey) !== null;
+    }
+
+    private clearSessionStorage(): void {
+        localStorage.removeItem(this.accessTokenKey);
+        localStorage.removeItem(this.expiresAtKey);
+        sessionStorage.removeItem(this.accessTokenKey);
+        sessionStorage.removeItem(this.expiresAtKey);
     }
 
     hasPermission(permission: string): boolean {

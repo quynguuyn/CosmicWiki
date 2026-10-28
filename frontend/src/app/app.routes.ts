@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, deliveryGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -15,6 +15,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent)
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
     path: 'user',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/user/user.component').then(m => m.UserComponent)
@@ -23,6 +31,11 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+  },
+  {
+    path: 'delivery',
+    canActivate: [deliveryGuard],
+    loadComponent: () => import('./pages/delivery/delivery.component').then(m => m.DeliveryComponent)
   },
   {
     path: 'admin/orders',

@@ -68,6 +68,8 @@ public sealed class AdminOrdersController(
     {
         if (request is null || !Enum.TryParse<OrderStatus>(request.Status, true, out var nextStatus))
             return BadRequest("A valid order status is required.");
+        if (nextStatus == OrderStatus.Shipping)
+            return Conflict(new { message = "A delivery person must claim the order from the delivery dashboard." });
 
         var order = await orders.GetAsync(orderId, cancellationToken);
         if (order is null)

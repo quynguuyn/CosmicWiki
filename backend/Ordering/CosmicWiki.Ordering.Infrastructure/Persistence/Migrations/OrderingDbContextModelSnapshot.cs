@@ -48,6 +48,27 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("RAW(16)");
 
+                    b.Property<double?>("DeliveryLatitude")
+                        .HasColumnType("BINARY_DOUBLE")
+                        .HasColumnName("DELIVERY_LATITUDE");
+
+                    b.Property<DateTime?>("DeliveryLocationUpdatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DELIVERY_LOCATION_UPDATED_AT_UTC");
+
+                    b.Property<double?>("DeliveryLongitude")
+                        .HasColumnType("BINARY_DOUBLE")
+                        .HasColumnName("DELIVERY_LONGITUDE");
+
+                    b.Property<Guid?>("DeliveryPersonId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("DELIVERY_PERSON_ID");
+
+                    b.Property<string>("DeliveryPersonName")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("DELIVERY_PERSON_NAME");
+
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -66,6 +87,7 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                         .HasColumnType("NVARCHAR2(64)");
 
                     b.Property<int>("Status")
+                        .IsConcurrencyToken()
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<decimal>("TotalAmount")
@@ -76,6 +98,8 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("DeliveryPersonId", "Status");
 
                     b.ToTable("ORDERS", "COSMICWIKI_ORDERING");
                 });

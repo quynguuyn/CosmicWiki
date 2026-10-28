@@ -47,4 +47,20 @@ export class AuthApi extends FeatureApi {
             true
         );
     }
+
+    requestPasswordReset(email: string) {
+        return this.post<{ email: string }, { message: string; emailDeliveryEnabled: boolean; developmentResetUrl?: string | null }>(
+            '/password/forgot',
+            { email },
+            true
+        );
+    }
+
+    resetPassword(token: string, newPassword: string) {
+        return this.post<{ token: string; newPassword: string }, void>(
+            '/password/reset',
+            { token, newPassword },
+            true
+        );
+    }
 }

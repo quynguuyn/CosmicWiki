@@ -11,7 +11,8 @@ public sealed class RefreshToken
         Guid userId,
         Guid familyId,
         string tokenHash,
-        DateTime expiresAtUtc)
+        DateTime expiresAtUtc,
+        bool rememberMe)
     {
         Id = id;
         UserId = userId;
@@ -19,6 +20,7 @@ public sealed class RefreshToken
         TokenHash = tokenHash;
         CreatedAtUtc = DateTime.UtcNow;
         ExpiresAtUtc = expiresAtUtc;
+        RememberMe = rememberMe;
     }
 
     public Guid Id { get; private set; }
@@ -33,6 +35,8 @@ public sealed class RefreshToken
 
     public DateTime ExpiresAtUtc { get; private set; }
 
+    public bool RememberMe { get; private set; }
+
     public DateTime? RevokedAtUtc { get; private set; }
 
     public string? ReplacedByTokenHash { get; private set; }
@@ -41,7 +45,8 @@ public sealed class RefreshToken
         Guid userId,
         Guid familyId,
         string tokenHash,
-        DateTime expiresAtUtc)
+        DateTime expiresAtUtc,
+        bool rememberMe = false)
     {
         if (userId == Guid.Empty)
         {
@@ -76,7 +81,8 @@ public sealed class RefreshToken
             userId,
             familyId,
             tokenHash,
-            expiresAtUtc);
+            expiresAtUtc,
+            rememberMe);
     }
 
     public bool IsActive(DateTime nowUtc) =>

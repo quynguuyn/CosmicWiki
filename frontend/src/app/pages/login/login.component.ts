@@ -39,17 +39,20 @@ export class LoginComponent {
 
         const request = {
             username: this.username,
-            password: this.password
+            password: this.password,
+            rememberMe: this.rememberMe
         };
 
         this.authService.login(request).subscribe({
             next: response => {
-                this.authService.saveSession(response);
+                this.authService.saveSession(response, this.rememberMe);
 
                 this.isLoading = false;
 
                 this.router.navigate([
-                    this.authService.hasPermission('shipping.write') ? '/admin' : '/'
+                    this.authService.hasPermission('shipping.write')
+                        ? '/admin'
+                        : this.authService.hasPermission('delivery.write') ? '/delivery' : '/'
                 ]);
             },
 

@@ -32,6 +32,17 @@ if (!builder.Environment.IsDevelopment())
         throw new InvalidOperationException(
             "JWT private key material must be configured outside Development.");
     }
+
+    var passwordResetFrontendUrl = builder.Configuration["PasswordResetEmail:FrontendUrl"];
+    if (!builder.Configuration.GetValue<bool>("PasswordResetEmail:Enabled") ||
+        string.IsNullOrWhiteSpace(builder.Configuration["PasswordResetEmail:SmtpHost"]) ||
+        string.IsNullOrWhiteSpace(builder.Configuration["PasswordResetEmail:FromAddress"]) ||
+        !Uri.TryCreate(passwordResetFrontendUrl, UriKind.Absolute, out var resetUri) ||
+        resetUri.Scheme != Uri.UriSchemeHttps)
+    {
+        throw new InvalidOperationException(
+            "Password reset email delivery, SMTP settings, and an HTTPS frontend URL must be configured outside Development.");
+    }
 }
 
 builder.Services
