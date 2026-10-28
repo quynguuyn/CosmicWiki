@@ -3,57 +3,13 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminOrder } from '../../features/ordering/models/order.model';
 import { OrderingApi } from '../../features/ordering/api/ordering.api';
+import { PaginationComponent } from '../../core/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-admin-orders',
   standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
-    <main class="admin-orders-page">
-      <a routerLink="/admin" class="back-link">← Admin Dashboard</a>
-      <header class="admin-orders-header">
-        <div>
-          <p class="eyebrow">COSMICWIKI · OPERATIONS</p>
-          <h1>Đơn hàng & giao hàng</h1>
-          <p>Điều phối các đơn được tạo trong ngày hôm nay.</p>
-        </div>
-        <button type="button" class="refresh-button" (click)="load()">Làm mới</button>
-      </header>
-
-      <nav class="admin-filters" aria-label="Lọc đơn quản trị">
-        <button *ngFor="let filter of filters" type="button"
-                [class.active]="activeFilter === filter.value"
-                (click)="setFilter(filter.value)">{{ filter.label }}</button>
-      </nav>
-
-      <p class="feedback" *ngIf="error">{{ error }}</p>
-      <p class="loading" *ngIf="loading">Đang tải đơn hàng...</p>
-      <section class="admin-order-list" *ngIf="!loading">
-        <article class="admin-order-card cosmic-glass" *ngFor="let order of orders">
-          <div class="order-main">
-            <div>
-              <span class="order-id">{{ order.orderId | slice:0:8 }}...</span>
-              <h2>{{ order.customerEmail || 'Chưa có email' }}</h2>
-              <p>{{ order.createdAtUtc | date:'medium' }} · {{ order.totalAmount | currency:order.currency }}</p>
-            </div>
-            <span class="status" [class]="order.status.toLowerCase()">{{ label(order.status) }}</span>
-          </div>
-          <div class="order-actions">
-            <button *ngIf="order.status === 'PendingPayment' || order.status === 'Paid'"
-                    type="button" class="danger" (click)="update(order, 'Cancelled')">Hủy đơn</button>
-            <button *ngIf="order.status === 'Shipping'" type="button" (click)="update(order, 'Delivered')">Đã giao</button>
-            <button *ngIf="order.status === 'Delivered'" type="button" (click)="update(order, 'Returned')">Đã trả</button>
-          </div>
-        </article>
-        <p class="empty" *ngIf="orders.length === 0">Không có đơn phù hợp.</p>
-        <nav class="admin-pagination" aria-label="Phân trang đơn hàng" *ngIf="totalPages > 1">
-          <button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">Trước</button>
-          <span>Trang {{ page }} / {{ totalPages }} · {{ totalCount }} đơn</span>
-          <button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Sau</button>
-        </nav>
-      </section>
-    </main>
-  `,
+  imports: [CommonModule, RouterLink, PaginationComponent],
+  templateUrl: './admin-orders.component.html',
   styleUrl: './admin-orders.component.scss'
 })
 export class AdminOrdersComponent implements OnInit {

@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { API_CONFIG } from '../../core/config/api.config';
 import { PagedResult } from '../../core/models/paged-result.model';
+import { PaginationComponent } from '../../core/components/pagination/pagination.component';
 
 interface Account { userId: string; username: string; email: string; status: string; createdAt: string; roles: string[]; }
 interface Role { roleId: string; name: string; description?: string; }
@@ -13,23 +14,8 @@ interface Permission { permissionId: string; code: string; name: string; descrip
 @Component({
   selector: 'app-admin-accounts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <main class="admin-crud-page">
-      <a routerLink="/admin" class="back-link">← Admin Dashboard</a>
-      <header><p class="eyebrow">COSMICWIKI · ACCESS CONTROL</p><h1>Tài khoản</h1><p>Tạo tài khoản thông thường trước, sau đó chọn bộ lọc User và cấp role Delivery để mở luồng giao hàng.</p><a routerLink="/register">Tạo tài khoản mới</a></header>
-      <nav class="tabs"><button *ngFor="let filter of roleFilters" [class.active]="roleFilter === filter" (click)="setRoleFilter(filter)">{{ filter || 'Nhân viên' }}</button></nav>
-      <p class="feedback" *ngIf="error">{{ error }}</p>
-      <section class="account-layout">
-        <div>
-          <p class="loading" *ngIf="loading">Đang tải tài khoản...</p>
-          <div class="table-wrap cosmic-glass" *ngIf="!loading"><table><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tạo</th><th></th></tr></thead><tbody><tr *ngFor="let account of accounts"><td><b>{{ account.username }}</b><small>{{ account.email }}</small></td><td><span *ngFor="let role of account.roles" class="tag">{{ role }}</span></td><td>{{ account.status }}</td><td>{{ account.createdAt | date:'short' }}</td><td><button (click)="selected = account">Phân quyền</button></td></tr></tbody></table><p class="empty" *ngIf="accounts.length === 0">Không có tài khoản phù hợp.</p></div>
-          <nav class="admin-pagination" aria-label="Phân trang tài khoản" *ngIf="!loading && totalPages > 1"><button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">Trước</button><span>Trang {{ page }} / {{ totalPages }} · {{ totalCount }} tài khoản</span><button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Sau</button></nav>
-        </div>
-        <aside class="editor cosmic-glass" *ngIf="selected"><h2>{{ selected.username }}</h2><p>{{ selected.email }}</p><label>Thêm vai trò</label><select [(ngModel)]="selectedRole"><option value="">Chọn role</option><option *ngFor="let role of roles" [value]="role.roleId">{{ role.name }}</option></select><button class="primary" (click)="assignRole()">Gán role</button><hr><h3>Permission của role</h3><select [(ngModel)]="selectedPermission"><option value="">Chọn permission</option><option *ngFor="let permission of permissions" [value]="permission.permissionId">{{ permission.code }}</option></select><button class="primary" (click)="assignPermission()">Gán permission</button><div class="permission-list"><span *ngFor="let permission of rolePermissions" class="tag">{{ permission.code }}</span></div></aside>
-      </section>
-    </main>
-  `,
+  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent],
+  templateUrl: './admin-accounts.component.html',
   styleUrl: './admin-crud.component.scss'
 })
 export class AdminAccountsComponent implements OnInit {

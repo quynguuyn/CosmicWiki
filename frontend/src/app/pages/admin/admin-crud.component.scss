@@ -6,9 +6,7 @@
 .search-bar { display:flex; align-items:center; gap:1rem; margin:1rem auto 0; padding:.75rem 1rem; border:1px solid var(--glass-border); border-radius:var(--radius-lg); }
 .search-bar input { flex:1; }
 .search-bar span { color:var(--on-surface-variant); white-space:nowrap; }
-.admin-pagination { display:flex; align-items:center; justify-content:center; gap:1rem; margin:1.25rem auto; color:var(--on-surface-variant); }
-.admin-pagination button { padding:.6rem .9rem; border:1px solid var(--glass-border); border-radius:var(--radius-md); background:transparent; color:var(--on-surface); cursor:pointer; }
-.admin-pagination button:disabled { cursor:not-allowed; opacity:.45; }
+.admin-pagination { margin:1.25rem auto; color:var(--on-surface-variant); }
 .loading, .empty { text-align:center; color:var(--on-surface-variant); }
 select option { background:#1b2a3a; color:var(--on-surface); }
 @media(max-width:700px) { .admin-crud-page { padding:6rem var(--gutter-mobile) 3rem; } .editor { grid-template-columns:1fr; } }
