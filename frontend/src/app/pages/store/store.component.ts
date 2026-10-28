@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { Product, ProductCategory } from '../../features/product/models/product.model';
 import { ProductService } from '../../features/product/services/product.service';
+import { PaginationComponent } from '../../core/components/pagination/pagination.component';
 
 interface StoreProduct {
   id: string;
@@ -38,7 +39,8 @@ interface CartItem {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    PaginationComponent
   ],
   templateUrl: './store.component.html',
   styleUrl: './store.component.scss'

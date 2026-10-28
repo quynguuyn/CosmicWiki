@@ -222,12 +222,11 @@
     <p>{{ contentError || 'Không có hiện vật nào thuộc danh mục này.' }}</p>
   </div>
 
-  <nav class="store-pagination" aria-label="Phân trang sản phẩm"
-    *ngIf="!productsLoading && productTotalPages > 1">
-    <button type="button" [disabled]="productPage <= 1" (click)="goToPage(productPage - 1)">Trước</button>
-    <span>Trang {{ productPage }} / {{ productTotalPages }} · {{ productTotalCount }} sản phẩm</span>
-    <button type="button" [disabled]="productPage >= productTotalPages" (click)="goToPage(productPage + 1)">Sau</button>
-  </nav>
+  <app-pagination class="store-pagination" ariaLabel="Phân trang sản phẩm"
+    *ngIf="!productsLoading && productTotalPages > 1"
+    [page]="productPage" [totalPages]="productTotalPages" [totalCount]="productTotalCount"
+    itemLabel="sản phẩm" (pageChange)="goToPage($event)">
+  </app-pagination>
 
 
   <!-- ==================== CURATORIAL BANNER ==================== -->
