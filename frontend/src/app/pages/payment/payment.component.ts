@@ -47,7 +47,7 @@ export class PaymentComponent implements OnInit {
     this.refreshOrder(orderId);
     timer(3000, 5000).pipe(
       switchMap(() => this.orders.getOrder(orderId)),
-      takeWhile(order => !['Paid', 'Shipping', 'PaymentFailed', 'Cancelled'].includes(order.status), true),
+      takeWhile(order => !['Paid', 'Confirmed', 'Shipping', 'PaymentFailed', 'Cancelled'].includes(order.status), true),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: order => {
@@ -69,16 +69,29 @@ export class PaymentComponent implements OnInit {
     this.paymentError = '';
     const result = await this.stripe.confirmPayment({
       elements: this.elements,
-      confirmParams: { return_url: `${window.location.origin}/payment-success` },
+      confirmParams: { return_url: this.paymentSuccessUrl() },
       redirect: 'if_required'
     });
     this.paymentSubmitting = false;
     if (result.error) {
       this.paymentError = result.error.message ?? 'Không thể xác nhận thanh toán.';
-    } else {
+    } else if (result.paymentIntent?.status === 'succeeded') {
       this.cart.clear();
-      window.location.href = `${window.location.origin}/payment-success`;
+      window.location.href = this.paymentSuccessUrl('succeeded');
+    } else if (result.paymentIntent?.status === 'processing') {
+      this.cart.clear();
+      window.location.href = this.paymentSuccessUrl('processing');
+    } else {
+      this.paymentError = 'Stripe chưa xác nhận thanh toán. Vui lòng kiểm tra lại trạng thái đơn hàng.';
     }
+  }
+
+  private paymentSuccessUrl(redirectStatus?: string): string {
+    const url = new URL('/payment-success', window.location.origin);
+    const orderId = this.order?.orderId;
+    if (orderId) url.searchParams.set('orderId', orderId);
+    if (redirectStatus) url.searchParams.set('redirect_status', redirectStatus);
+    return url.toString();
   }
 
   refresh(): void {

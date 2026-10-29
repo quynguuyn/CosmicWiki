@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using CosmicWiki.Ordering.Application.Abstractions;
+using CosmicWiki.Ordering.Application.Events;
 using CosmicWiki.Ordering.Domain.Entities;
 using CosmicWiki.Ordering.Domain.Enums;
 using CosmicWiki.Ordering.Infrastructure.Notifications;
@@ -15,7 +16,8 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 [Authorize(Policy = Permissions.DeliveryWrite)]
 public sealed class DeliveryController(
     IOrderRepository orders,
-    IOrderEmailSender emailSender) : ControllerBase
+    IOrderEmailSender emailSender,
+    IOrderNotificationPublisher notificationPublisher) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetOrders(CancellationToken cancellationToken)
@@ -59,12 +61,14 @@ public sealed class DeliveryController(
             return Conflict(new { message = "This order was claimed by another delivery person." });
         }
 
+        await notificationPublisher.PublishStatusChangedAsync(order, cancellationToken);
         await emailSender.SendOrderStatusChangedAsync(
             order.Id,
             order.CustomerEmail,
             order.TotalAmount,
             order.Currency,
             order.Status.ToString(),
+            ToEmailLines(order),
             cancellationToken);
         return Ok(ToResponse(order, false));
     }
@@ -126,12 +130,14 @@ public sealed class DeliveryController(
             return Conflict(new { message = "The order status changed. Refresh and try again." });
         }
 
+        await notificationPublisher.PublishStatusChangedAsync(order, cancellationToken);
         await emailSender.SendOrderStatusChangedAsync(
             order.Id,
             order.CustomerEmail,
             order.TotalAmount,
             order.Currency,
             order.Status.ToString(),
+            ToEmailLines(order),
             cancellationToken);
         return Ok(ToResponse(order, false));
     }
@@ -151,7 +157,23 @@ public sealed class DeliveryController(
             order.DeliveryPersonName,
             order.DeliveryLatitude,
             order.DeliveryLongitude,
-            order.DeliveryLocationUpdatedAtUtc);
+            order.DeliveryLocationUpdatedAtUtc,
+            order.Lines.Select(line => new DeliveryOrderLineResponse(
+                line.ProductId,
+                line.SKU,
+                line.ProductName,
+                line.UnitPrice,
+                line.ProductImageUrl,
+                line.Quantity,
+                line.LineTotal)).ToArray());
+
+    private static IReadOnlyCollection<OrderCreatedLine> ToEmailLines(Order order) =>
+        order.Lines.Select(line => new OrderCreatedLine(
+            line.SKU,
+            line.ProductName,
+            line.UnitPrice,
+            line.Quantity,
+            line.LineTotal)).ToArray();
 }
 
 public sealed record UpdateDeliveryLocationRequest(double Latitude, double Longitude);
@@ -166,4 +188,14 @@ public sealed record DeliveryOrderResponse(
     string? DeliveryPersonName,
     double? DeliveryLatitude,
     double? DeliveryLongitude,
-    DateTime? DeliveryLocationUpdatedAtUtc);
+    DateTime? DeliveryLocationUpdatedAtUtc,
+    IReadOnlyCollection<DeliveryOrderLineResponse> Lines);
+
+public sealed record DeliveryOrderLineResponse(
+    Guid ProductId,
+    string SKU,
+    string ProductName,
+    decimal UnitPrice,
+    string? ProductImageUrl,
+    int Quantity,
+    decimal LineTotal);

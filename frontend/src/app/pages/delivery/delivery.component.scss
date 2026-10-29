@@ -19,6 +19,12 @@ button:disabled { cursor:not-allowed; opacity:.5; }
 .status { padding:.35rem .65rem; border-radius:999px; background:rgba(114,160,193,.14); color:var(--tertiary); white-space:nowrap; }
 .status.available { background:rgba(201,168,106,.16); color:#e4c487; }
 .amount { font-size:1.15rem; font-weight:700; }
+.delivery-items { margin:1rem 0; }
+.delivery-items h2 { font-size:1rem; margin:.5rem 0; }
+.delivery-item { display:grid; grid-template-columns:3rem minmax(0, 1fr) auto; gap:.75rem; align-items:center; padding:.6rem 0; border-top:1px solid var(--glass-border); }
+.delivery-item img { width:3rem; height:3rem; object-fit:cover; border-radius:.4rem; }
+.delivery-item div { display:grid; gap:.2rem; }
+.delivery-item span { color:var(--on-surface-variant); font-size:.85rem; }
 .position { font-size:.9rem; }
 .empty,.loading { padding:2rem; text-align:center; color:var(--on-surface-variant); }
 

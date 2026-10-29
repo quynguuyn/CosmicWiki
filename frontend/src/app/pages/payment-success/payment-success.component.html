@@ -6,8 +6,23 @@
     </svg>
   </div>
 
-  <h1>Thanh toán thành công!</h1>
-  <p>Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đang được xử lý.</p>
+  <h1 *ngIf="orderStatus === 'Paid' || orderStatus === 'Confirmed' || orderStatus === 'Shipping'">Thanh toán thành công!</h1>
+  <h1 *ngIf="loading || orderStatus === 'PendingPayment'">Đang xác nhận thanh toán</h1>
+  <h1 *ngIf="orderStatus === 'PaymentFailed' || orderStatus === 'Cancelled'">Đơn hàng chưa được xác nhận</h1>
+  <p *ngIf="loading">Đang kiểm tra trạng thái đơn hàng...</p>
+  <p *ngIf="orderStatus === 'Paid'">Thanh toán đã được xác nhận. Đơn hàng đang chờ admin xác nhận.</p>
+  <p *ngIf="orderStatus === 'Confirmed'">Đơn hàng đã được xác nhận và đang chờ nhân viên giao hàng nhận.</p>
+  <p *ngIf="orderStatus === 'Shipping'">Đơn hàng đang được giao.</p>
+  <p *ngIf="orderStatus === 'PendingPayment' && redirectStatus === 'succeeded'">
+    Stripe đã báo thanh toán thành công; hệ thống đang chờ webhook để đồng bộ đơn hàng. Trang sẽ tự kiểm tra trong tối đa 2 phút.
+  </p>
+  <p *ngIf="orderStatus === 'PendingPayment' && redirectStatus !== 'succeeded'">
+    Thanh toán đang được xử lý. Trạng thái đơn hàng sẽ cập nhật khi hệ thống nhận được xác nhận từ Stripe.
+  </p>
+  <p *ngIf="orderStatus === 'PaymentFailed'">Thanh toán chưa thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
+  <p *ngIf="orderStatus === 'Cancelled'">Đơn hàng đã hết hạn hoặc bị hủy. Nếu Stripe đã thu tiền, vui lòng liên hệ hỗ trợ.</p>
+  <p *ngIf="error" role="alert">{{ error }}</p>
+  <p *ngIf="!orderId && !loading">Không tìm thấy mã đơn hàng để kiểm tra trạng thái.</p>
 
   <div class="actions">
     <a routerLink="/orders" class="btn btn-primary">Xem lịch sử đơn hàng</a>

@@ -10,4 +10,12 @@ public sealed record OrderCreatedIntegrationEvent(
     Guid CustomerId,
     string? CustomerEmail,
     decimal TotalAmount,
-    string Currency) : IIntegrationEvent;
+    string Currency,
+    IReadOnlyCollection<OrderCreatedLine>? Lines = null) : IIntegrationEvent;
+
+public sealed record OrderCreatedLine(
+    string SKU,
+    string ProductName,
+    decimal UnitPrice,
+    int Quantity,
+    decimal LineTotal);

@@ -6,9 +6,10 @@ namespace CosmicWiki.IntegrationTests;
 public sealed class DeliveryOrderTests
 {
     [Fact]
-    public void Delivery_person_claims_a_paid_order()
+    public void Delivery_person_claims_a_confirmed_order()
     {
         var order = CreatePaidOrder();
+        order.TransitionTo(OrderStatus.Confirmed);
         var deliveryPersonId = Guid.NewGuid();
 
         order.AssignDeliveryPerson(deliveryPersonId, "space-courier");
@@ -19,11 +20,36 @@ public sealed class DeliveryOrderTests
     }
 
     [Fact]
+    public void Delivery_person_cannot_claim_an_order_before_admin_confirmation()
+    {
+        var order = CreatePaidOrder();
+
+        Assert.Throws<InvalidOperationException>(
+            () => order.AssignDeliveryPerson(Guid.NewGuid(), "space-courier"));
+    }
+
+    [Fact]
+    public void Duplicate_payment_events_do_not_change_a_confirmed_order()
+    {
+        var order = CreatePaidOrder();
+        order.TransitionTo(OrderStatus.Confirmed);
+
+        order.MarkPaid();
+        order.MarkPaymentFailed();
+
+        Assert.Equal(OrderStatus.Confirmed, order.Status);
+        Assert.Equal(
+            [OrderStatus.PendingPayment, OrderStatus.Paid, OrderStatus.Confirmed],
+            order.StatusHistory.Select(entry => entry.Status));
+    }
+
+    [Fact]
     public void Order_records_each_distinct_status_transition_once()
     {
         var order = CreatePaidOrder();
 
         order.MarkPaid();
+        order.TransitionTo(OrderStatus.Confirmed);
         order.AssignDeliveryPerson(Guid.NewGuid(), "space-courier");
         order.TransitionTo(OrderStatus.Delivered);
         order.TransitionTo(OrderStatus.Returned);
@@ -32,6 +58,7 @@ public sealed class DeliveryOrderTests
             [
                 OrderStatus.PendingPayment,
                 OrderStatus.Paid,
+                OrderStatus.Confirmed,
                 OrderStatus.Shipping,
                 OrderStatus.Delivered,
                 OrderStatus.Returned
@@ -44,6 +71,7 @@ public sealed class DeliveryOrderTests
     {
         var order = CreatePaidOrder();
         var deliveryPersonId = Guid.NewGuid();
+        order.TransitionTo(OrderStatus.Confirmed);
         order.AssignDeliveryPerson(deliveryPersonId, "space-courier");
 
         Assert.Throws<InvalidOperationException>(
@@ -54,7 +82,7 @@ public sealed class DeliveryOrderTests
 
         Assert.Equal(OrderStatus.Delivered, order.Status);
         Assert.Equal(
-            [OrderStatus.PendingPayment, OrderStatus.Paid, OrderStatus.Shipping, OrderStatus.Delivered],
+            [OrderStatus.PendingPayment, OrderStatus.Paid, OrderStatus.Confirmed, OrderStatus.Shipping, OrderStatus.Delivered],
             order.StatusHistory.Select(entry => entry.Status));
         Assert.Equal(10.25, order.DeliveryLatitude);
         Assert.Equal(20.5, order.DeliveryLongitude);
@@ -69,6 +97,7 @@ public sealed class DeliveryOrderTests
     {
         var order = CreatePaidOrder();
         var deliveryPersonId = Guid.NewGuid();
+        order.TransitionTo(OrderStatus.Confirmed);
         order.AssignDeliveryPerson(deliveryPersonId, "space-courier");
 
         Assert.Throws<ArgumentOutOfRangeException>(

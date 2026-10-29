@@ -209,7 +209,6 @@ services:
       OrderEmail__FromAddress: ${ORDER_EMAIL_FROM_ADDRESS:-}
       OrderEmail__FromName: ${ORDER_EMAIL_FROM_NAME:-CosmicWiki}
       OrderLifecycle__PendingPaymentTimeoutMinutes: ${ORDER_PENDING_PAYMENT_TIMEOUT_MINUTES:-15}
-      OrderLifecycle__AutoConfirmAtUtcHour: ${ORDER_AUTO_CONFIRM_AT_UTC_HOUR:-17}
     depends_on:
       oracle:
         condition: service_healthy

@@ -7,10 +7,15 @@
   <section class="checkout-card cosmic-glass">
     <div class="section-eyebrow font-label-sm">HIỆN VẬT ĐÃ CHỌN</div>
     <div class="checkout-line" *ngFor="let line of cart.lines()">
-      <span>{{ line.product.name }} × {{ line.quantity }}</span>
-      <strong>{{ line.product.salePrice * line.quantity | number:'1.0-0' }} ₫</strong>
+      <img [src]="line.product.images.length > 0 ? line.product.images[0].url : 'assets/images/cosmic-placeholder.svg'" [alt]="line.product.name">
+      <div class="checkout-product">
+        <span>{{ line.product.sku }}</span>
+        <strong>{{ line.product.name }}</strong>
+        <span>{{ line.product.salePrice | currency:'USD' }} × {{ line.quantity }}</span>
+      </div>
+      <strong>{{ line.product.salePrice * line.quantity | currency:'USD' }}</strong>
     </div>
-    <div class="checkout-total"><span>Tổng cộng</span><strong>{{ cart.total | number:'1.0-0' }} ₫</strong></div>
+    <div class="checkout-total"><span>Tổng cộng</span><strong>{{ cart.total | currency:'USD' }}</strong></div>
     <p class="error" *ngIf="error">{{ error }}</p>
     <div class="actions">
       <a routerLink="/cart" class="btn-secondary">

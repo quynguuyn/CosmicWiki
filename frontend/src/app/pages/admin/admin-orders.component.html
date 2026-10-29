@@ -27,8 +27,20 @@
         </div>
         <span class="status" [class]="order.status.toLowerCase()">{{ label(order.status) }}</span>
       </div>
+      <section class="admin-order-items" *ngIf="order.lines?.length">
+        <article class="admin-order-item" *ngFor="let line of order.lines">
+          <img [src]="line.productImageUrl || 'assets/images/cosmic-placeholder.svg'" [alt]="line.productName">
+          <div>
+            <strong>{{ line.productName }}</strong>
+            <span>{{ line.sku }} · {{ line.unitPrice | currency:order.currency }} × {{ line.quantity }}</span>
+          </div>
+          <strong>{{ line.lineTotal | currency:order.currency }}</strong>
+        </article>
+      </section>
       <div class="order-actions">
-        <button *ngIf="order.status === 'PendingPayment' || order.status === 'Paid'"
+        <button *ngIf="order.status === 'Paid'"
+                type="button" (click)="update(order, 'Confirmed')">Xác nhận đơn hàng</button>
+        <button *ngIf="order.status === 'PendingPayment' || order.status === 'Paid' || order.status === 'Confirmed'"
                 type="button" class="danger" (click)="update(order, 'Cancelled')">Hủy đơn</button>
         <button *ngIf="order.status === 'Shipping'" type="button" (click)="update(order, 'Delivered')">Đã giao</button>
         <button *ngIf="order.status === 'Delivered'" type="button" (click)="update(order, 'Returned')">Đã trả</button>

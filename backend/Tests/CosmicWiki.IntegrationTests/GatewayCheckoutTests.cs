@@ -50,6 +50,9 @@ public sealed class GatewayCheckoutTests : IAsyncLifetime
         var first = await SendWebhookAsync(client, checkout, "succeeded");
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
 
+        var paidOrder = await WaitForOrderStatusAsync(client, checkout.OrderId, "Paid");
+        Assert.Equal("Paid", paidOrder.Status);
+
         var duplicate = await SendWebhookAsync(client, checkout, "succeeded", checkout.EventId);
         Assert.Equal(HttpStatusCode.OK, duplicate.StatusCode);
         var duplicateBody = await duplicate.Content.ReadFromJsonAsync<JsonElement>();
@@ -331,7 +334,7 @@ public sealed class GatewayCheckoutTests : IAsyncLifetime
             Content = JsonContent.Create(new
             {
                 customerId = registration.UserId,
-                currency = "VND",
+                currency = "USD",
                 lines = new[] { new { productId = product.Id, quantity = 1 } }
             })
         };
@@ -353,6 +356,30 @@ public sealed class GatewayCheckoutTests : IAsyncLifetime
             order.Currency,
             idempotencyKey,
             $"evt_{Guid.NewGuid():N}");
+    }
+
+    private static async Task<Order> WaitForOrderStatusAsync(
+        HttpClient client,
+        Guid orderId,
+        string expectedStatus)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(20);
+        string? actualStatus = null;
+        while (DateTime.UtcNow < deadline)
+        {
+            var order = await client.GetFromJsonAsync<Order>($"/api/orders/{orderId}");
+            if (order is not null)
+            {
+                actualStatus = order.Status;
+                if (actualStatus == expectedStatus)
+                    return order;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250));
+        }
+
+        throw new TimeoutException(
+            $"Order '{orderId}' stayed at '{actualStatus ?? "unknown"}' instead of '{expectedStatus}'.");
     }
 
     private static async Task<bool> IsGatewayReadyAsync(HttpClient client)

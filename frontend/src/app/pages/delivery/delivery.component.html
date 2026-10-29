@@ -26,6 +26,17 @@
         </span>
       </div>
       <p class="amount">{{ order.totalAmount | currency:order.currency }}</p>
+      <section class="delivery-items" *ngIf="order.lines?.length">
+        <h2>Sản phẩm trong đơn</h2>
+        <article class="delivery-item" *ngFor="let line of order.lines">
+          <img [src]="line.productImageUrl || 'assets/images/cosmic-placeholder.svg'" [alt]="line.productName">
+          <div>
+            <strong>{{ line.productName }}</strong>
+            <span>{{ line.unitPrice | currency:order.currency }} × {{ line.quantity }}</span>
+          </div>
+          <strong>{{ line.lineTotal | currency:order.currency }}</strong>
+        </article>
+      </section>
       <p class="position" *ngIf="order.deliveryPersonName">Phụ trách: {{ order.deliveryPersonName }}</p>
       <p class="position" *ngIf="order.deliveryLatitude !== null && order.deliveryLongitude !== null">
         Vị trí gần nhất: {{ order.deliveryLatitude | number:'1.4-4' }},

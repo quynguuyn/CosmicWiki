@@ -40,3 +40,20 @@
 .actions .material-symbols-outlined { font-size: 16px; }
 .error { color: var(--error); }
 @media (max-width: 600px) { .commerce-page { padding: var(--space-xl) var(--gutter-mobile); } .commerce-hero, .checkout-card { padding: var(--space-lg); } .actions { flex-direction: column; } }
+.checkout-line {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: .9rem 0;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.checkout-line img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: .6rem; }
+.checkout-product { display: grid; gap: .25rem; }
+.checkout-product span { color: var(--on-surface-variant); font-size: .85rem; }
+.checkout-line > strong { color: var(--tertiary); white-space: nowrap; }
+@media (max-width: 480px) {
+  .checkout-line { grid-template-columns: 3.5rem minmax(0, 1fr); gap: .7rem; }
+  .checkout-line img { width: 3.5rem; height: 3.5rem; }
+  .checkout-line > strong { grid-column: 2; }
+}

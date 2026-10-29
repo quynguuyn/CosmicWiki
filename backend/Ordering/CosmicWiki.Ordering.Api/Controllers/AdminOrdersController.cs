@@ -1,9 +1,11 @@
 using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Domain.Enums;
+using CosmicWiki.Ordering.Application.Events;
 using CosmicWiki.Ordering.Infrastructure.Notifications;
 using CosmicWiki.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CosmicWiki.Ordering.Api.Controllers;
 
@@ -13,7 +15,8 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 public sealed class AdminOrdersController(
     IOrderRepository orders,
     IInventoryReservationService inventory,
-    IOrderEmailSender emailSender) : ControllerBase
+    IOrderEmailSender emailSender,
+    IOrderNotificationPublisher notificationPublisher) : ControllerBase
 {
     [HttpGet("today")]
     public async Task<IActionResult> GetToday(CancellationToken cancellationToken)
@@ -78,19 +81,28 @@ public sealed class AdminOrdersController(
         try
         {
             if (!order.TransitionTo(nextStatus))
+            {
+                if (nextStatus == OrderStatus.Cancelled)
+                    await inventory.ReleaseAsync(order.Id, cancellationToken);
                 return Ok(ToResponse(order));
+            }
 
+            await orders.SaveChangesAsync(cancellationToken);
+            await notificationPublisher.PublishStatusChangedAsync(order, cancellationToken);
             if (nextStatus == OrderStatus.Cancelled)
                 await inventory.ReleaseAsync(order.Id, cancellationToken);
-            await orders.SaveChangesAsync(cancellationToken);
             await emailSender.SendOrderStatusChangedAsync(
                 order.Id, order.CustomerEmail, order.TotalAmount, order.Currency,
-                order.Status.ToString(), cancellationToken);
+                order.Status.ToString(), ToEmailLines(order), cancellationToken);
             return Ok(ToResponse(order));
         }
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(new { message = "The order status changed. Refresh and try again." });
         }
     }
 
@@ -104,6 +116,24 @@ public sealed class AdminOrdersController(
         order.TotalAmount,
         order.Currency,
         order.PaidAtUtc,
-        order.CreatedAtUtc
+        order.CreatedAtUtc,
+        lines = order.Lines.Select(line => new
+        {
+            line.ProductId,
+            line.SKU,
+            line.ProductName,
+            line.UnitPrice,
+            line.ProductImageUrl,
+            line.Quantity,
+            lineTotal = line.LineTotal
+        })
     };
+
+    private static IReadOnlyCollection<OrderCreatedLine> ToEmailLines(Domain.Entities.Order order) =>
+        order.Lines.Select(line => new OrderCreatedLine(
+            line.SKU,
+            line.ProductName,
+            line.UnitPrice,
+            line.Quantity,
+            line.LineTotal)).ToArray();
 }

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { OrderingService } from '../../features/ordering/services/ordering.service';
 import { OrderStatus } from '../../features/ordering/models/order.model';
 import { RouterLink } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-orders',
@@ -14,7 +13,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class OrdersComponent implements OnDestroy, OnInit {
   private readonly orderingService = inject(OrderingService);
-  private readonly sanitizer = inject(DomSanitizer);
   orders: OrderStatus[] = [];
   filteredOrders: OrderStatus[] = [];
   activeFilter = 'all';
@@ -23,12 +21,12 @@ export class OrdersComponent implements OnDestroy, OnInit {
   now = Date.now();
   private timer?: ReturnType<typeof setInterval>;
   private refreshTimer?: ReturnType<typeof setInterval>;
-  private readonly mapUrlCache = new Map<string, { coordinates: string; url: SafeResourceUrl }>();
 
   readonly filters = [
     { value: 'all', label: 'Tất cả' },
     { value: 'PendingPayment', label: 'Chờ thanh toán' },
-    { value: 'Paid', label: 'Chờ nhân viên nhận giao' },
+    { value: 'Paid', label: 'Chờ xác nhận' },
+    { value: 'Confirmed', label: 'Chờ nhân viên nhận giao' },
     { value: 'Shipping', label: 'Đang giao hàng' },
     { value: 'Delivered', label: 'Đã giao hàng' },
     { value: 'Returned', label: 'Trả hàng' },
@@ -98,11 +96,11 @@ export class OrdersComponent implements OnDestroy, OnInit {
 
   getStatusLabel(status: string): string {
     return this.filters.find(filter => filter.value === status)?.label
-      ?? (status === 'Paid' ? 'Chờ nhân viên nhận giao' : undefined)
+      ?? (status === 'Paid' ? 'Chờ xác nhận' : undefined)
       ?? (status === 'PaymentFailed' ? 'Thanh toán thất bại' : status);
   }
 
-  mapUrl(order: OrderStatus): SafeResourceUrl | null {
+  mapUrl(order: OrderStatus): string | null {
     if (order.deliveryLatitude == null || order.deliveryLongitude == null) return null;
     const latitude = order.deliveryLatitude;
     const longitude = order.deliveryLongitude;
@@ -110,12 +108,6 @@ export class OrdersComponent implements OnDestroy, OnInit {
       || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
 
     const coordinates = `${latitude},${longitude}`;
-    const cached = this.mapUrlCache.get(order.orderId);
-    if (cached?.coordinates === coordinates) return cached.url;
-    const box = `${longitude - 0.01},${latitude - 0.01},${longitude + 0.01},${latitude + 0.01}`;
-    const url = `https://www.openstreetmap.org/export/embed.html?bbox=${box}&layer=mapnik&marker=${latitude},${longitude}`;
-    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-    this.mapUrlCache.set(order.orderId, { coordinates, url: safeUrl });
-    return safeUrl;
+    return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   }
 }
