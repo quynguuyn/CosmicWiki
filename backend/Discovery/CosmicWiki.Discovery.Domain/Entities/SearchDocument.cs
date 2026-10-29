@@ -18,6 +18,10 @@ public sealed class SearchDocument
 
     public string? ImageUrl { get; private set; }
 
+    public string? Catalog { get; private set; }
+
+    public string? CatalogValue { get; private set; }
+
     public DateTime UpdatedAt { get; private set; }
 
     public static SearchDocument Create(
@@ -26,7 +30,9 @@ public sealed class SearchDocument
         string name,
         string? description,
         string? imageUrl,
-        DateTime updatedAt)
+        DateTime updatedAt,
+        string? catalog = null,
+        string? catalogValue = null)
     {
         return new SearchDocument
         {
@@ -36,11 +42,19 @@ public sealed class SearchDocument
             Name = name,
             Description = description,
             ImageUrl = imageUrl,
+            Catalog = catalog,
+            CatalogValue = catalogValue,
             UpdatedAt = updatedAt
         };
     }
 
-    public void Update(string name, string? description, string? imageUrl, DateTime updatedAt)
+    public void Update(
+        string name,
+        string? description,
+        string? imageUrl,
+        DateTime updatedAt,
+        string? catalog = null,
+        string? catalogValue = null)
     {
         if (updatedAt <= UpdatedAt)
             return;
@@ -48,6 +62,8 @@ public sealed class SearchDocument
         Name = name;
         Description = description;
         ImageUrl = imageUrl;
+        Catalog = catalog ?? Catalog;
+        CatalogValue = catalogValue ?? CatalogValue;
         UpdatedAt = updatedAt;
     }
 }

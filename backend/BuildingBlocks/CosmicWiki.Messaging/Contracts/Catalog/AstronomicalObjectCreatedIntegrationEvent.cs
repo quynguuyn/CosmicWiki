@@ -11,4 +11,6 @@ public sealed record AstronomicalObjectCreatedIntegrationEvent(
     string Kind,
     string Name,
     string? ObjectType,
-    string? ImageUrl) : IIntegrationEvent;
+    string? ImageUrl,
+    string? Catalog = null,
+    string? CatalogValue = null) : IIntegrationEvent;

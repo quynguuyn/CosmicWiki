@@ -19,6 +19,27 @@ public sealed class DeliveryOrderTests
     }
 
     [Fact]
+    public void Order_records_each_distinct_status_transition_once()
+    {
+        var order = CreatePaidOrder();
+
+        order.MarkPaid();
+        order.AssignDeliveryPerson(Guid.NewGuid(), "space-courier");
+        order.TransitionTo(OrderStatus.Delivered);
+        order.TransitionTo(OrderStatus.Returned);
+
+        Assert.Equal(
+            [
+                OrderStatus.PendingPayment,
+                OrderStatus.Paid,
+                OrderStatus.Shipping,
+                OrderStatus.Delivered,
+                OrderStatus.Returned
+            ],
+            order.StatusHistory.Select(entry => entry.Status));
+    }
+
+    [Fact]
     public void Only_assigned_delivery_person_can_update_location_and_complete_order()
     {
         var order = CreatePaidOrder();
@@ -32,6 +53,9 @@ public sealed class DeliveryOrderTests
         order.MarkDeliveredBy(deliveryPersonId);
 
         Assert.Equal(OrderStatus.Delivered, order.Status);
+        Assert.Equal(
+            [OrderStatus.PendingPayment, OrderStatus.Paid, OrderStatus.Shipping, OrderStatus.Delivered],
+            order.StatusHistory.Select(entry => entry.Status));
         Assert.Equal(10.25, order.DeliveryLatitude);
         Assert.Equal(20.5, order.DeliveryLongitude);
         Assert.NotNull(order.DeliveryLocationUpdatedAtUtc);

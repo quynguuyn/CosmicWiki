@@ -57,7 +57,9 @@ public sealed class SearchDocumentRepository
             query = query.Where(x =>
                 x.Name.Contains(search) ||
                 (x.Description != null &&
-                 x.Description.Contains(search)));
+                 x.Description.Contains(search)) ||
+                (x.Catalog != null && x.Catalog.Contains(search)) ||
+                (x.CatalogValue != null && x.CatalogValue.Contains(search)));
         }
 
         if (!string.IsNullOrWhiteSpace(sourceType))

@@ -6,4 +6,6 @@ public sealed record SearchResultResponse(
     string SourceType,
     string Name,
     string? Description,
-    string? ImageUrl);
+    string? ImageUrl,
+    string? Catalog,
+    string? CatalogValue);

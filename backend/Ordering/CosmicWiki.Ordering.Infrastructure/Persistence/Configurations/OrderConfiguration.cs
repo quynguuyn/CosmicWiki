@@ -26,5 +26,9 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(x => new { x.DeliveryPersonId, x.Status });
         builder.HasIndex(x => x.IdempotencyKey).IsUnique();
         builder.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(x => x.StatusHistory)
+            .WithOne()
+            .HasForeignKey(x => x.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -99,7 +99,11 @@ public sealed class CreateStarCommandHandler
             cancellationToken);
 
         _outboxWriter.Add(new StarCreatedIntegrationEvent(
-            Guid.NewGuid(), 1, DateTime.UtcNow, star.Id, star.Id, star.Name, null, null),
+            Guid.NewGuid(), 1, DateTime.UtcNow, star.Id, star.Id,
+            star.Name ?? throw new InvalidOperationException("A star name is required for search indexing."),
+            null, null,
+            primaryIdentifier?.Catalog,
+            primaryIdentifier?.Value),
             KafkaTopics.CatalogStarCreated);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

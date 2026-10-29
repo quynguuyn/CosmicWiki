@@ -1,9 +1,38 @@
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
+
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
+{
+    allowedOrigins = ["http://localhost:4200", "https://localhost:4200"];
+}
+
+if (!builder.Environment.IsDevelopment() &&
+    (allowedOrigins.Length == 0 ||
+     allowedOrigins.Any(origin =>
+     {
+         var normalizedOrigin = origin.TrimEnd('/');
+         return !Uri.TryCreate(normalizedOrigin, UriKind.Absolute, out var uri) ||
+                uri.Scheme != Uri.UriSchemeHttps ||
+                uri.AbsolutePath != "/" ||
+                !string.IsNullOrEmpty(uri.Query) ||
+                !string.IsNullOrEmpty(uri.Fragment);
+     })))
+{
+    throw new InvalidOperationException(
+        "Production CORS must include at least one HTTPS frontend origin without a path.");
+}
 
 builder.Services
     .AddReverseProxy()
     .LoadFromConfig(
         builder.Configuration.GetSection("ReverseProxy"));
+
+builder.Services.AddHealthChecks();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -12,14 +41,13 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:4200")
+    options.AddPolicy(
+        "Frontend",
+        policy => policy
+            .WithOrigins(allowedOrigins.Select(origin => origin.TrimEnd('/')).ToArray())
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
-    });
+            .AllowCredentials());
 });
 
 var app = builder.Build();
@@ -52,4 +80,5 @@ app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
 
+app.MapHealthChecks("/health/live");
 app.Run();

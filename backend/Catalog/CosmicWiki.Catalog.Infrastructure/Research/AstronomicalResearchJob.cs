@@ -188,7 +188,9 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
                                 astronomicalObjectId,
                                 candidate.Name,
                                 null,
-                                imageUrl),
+                                imageUrl,
+                                candidate.Catalog,
+                                candidate.CatalogValue),
                             KafkaTopics.CatalogStarCreated);
                     }
                 }
@@ -204,7 +206,9 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
                             candidate.Kind.ToString(),
                             candidate.Name,
                             candidate.ObjectType,
-                            imageUrl),
+                            imageUrl,
+                            candidate.Catalog,
+                            candidate.CatalogValue),
                         KafkaTopics.CatalogAstronomicalObjectCreated);
                 }
 

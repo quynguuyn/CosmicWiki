@@ -151,7 +151,7 @@ public sealed class GatewayCheckoutTests : IAsyncLifetime
                 })
             .Build();
         consumer.Subscribe("cosmicwiki.payments.status-changed.dlq");
-        consumer.Consume(TimeSpan.FromSeconds(2));
+        WaitForConsumerAssignment(consumer);
 
         using (var producer = new ProducerBuilder<string, string>(
                    new ProducerConfig { BootstrapServers = bootstrapServers }).Build())
@@ -205,7 +205,7 @@ public sealed class GatewayCheckoutTests : IAsyncLifetime
                 })
             .Build();
         consumer.Subscribe("cosmicwiki.payments.status-changed.dlq");
-        consumer.Consume(TimeSpan.FromSeconds(2));
+        WaitForConsumerAssignment(consumer);
 
         using (var producer = new ProducerBuilder<string, string>(
                    new ProducerConfig { BootstrapServers = bootstrapServers }).Build())
@@ -409,6 +409,16 @@ public sealed class GatewayCheckoutTests : IAsyncLifetime
 
     private static string QuoteArgument(string argument) =>
         argument.Contains(' ') ? $"\"{argument.Replace("\"", "\\\"")}\"" : argument;
+
+    private static void WaitForConsumerAssignment(
+        IConsumer<string, string> consumer)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (consumer.Assignment.Count == 0 && DateTime.UtcNow < deadline)
+            consumer.Consume(TimeSpan.FromMilliseconds(250));
+
+        Assert.NotEmpty(consumer.Assignment);
+    }
 
     private static async Task<HttpResponseMessage> PostLoginWithRateLimitRetryAsync(
         HttpClient client,

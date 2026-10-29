@@ -11,6 +11,8 @@ using CosmicWiki.Auth.Infrastructure.Persistence.Seed;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
@@ -19,6 +21,22 @@ var allowedOrigins = builder.Configuration
 if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
 {
     allowedOrigins = ["http://localhost:4200", "https://localhost:4200"];
+}
+
+if (!builder.Environment.IsDevelopment() &&
+    (allowedOrigins.Length == 0 ||
+     allowedOrigins.Any(origin =>
+     {
+         var normalizedOrigin = origin.TrimEnd('/');
+         return !Uri.TryCreate(normalizedOrigin, UriKind.Absolute, out var uri) ||
+                uri.Scheme != Uri.UriSchemeHttps ||
+                uri.AbsolutePath != "/" ||
+                !string.IsNullOrEmpty(uri.Query) ||
+                !string.IsNullOrEmpty(uri.Fragment);
+     })))
+{
+    throw new InvalidOperationException(
+        "Production CORS must include at least one HTTPS frontend origin without a path.");
 }
 
 if (!builder.Environment.IsDevelopment())
@@ -49,6 +67,7 @@ builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
@@ -58,7 +77,7 @@ builder.Services.AddCors(options =>
         {
             if (allowedOrigins.Length > 0)
             {
-                policy.WithOrigins(allowedOrigins)
+                policy.WithOrigins(allowedOrigins.Select(origin => origin.TrimEnd('/')).ToArray())
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -210,5 +229,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health/live");
 
 app.Run();

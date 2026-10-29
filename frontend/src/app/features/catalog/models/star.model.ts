@@ -139,3 +139,15 @@ export interface AstronomicalImage {
   url: string;
   urls: string[];
 }
+
+export interface AstronomicalObject {
+  id: string;
+  name: string | null;
+  kind: string;
+  objectType: string | null;
+  catalog: string | null;
+  catalogValue: string | null;
+  rightAscensionDegrees: number | null;
+  declinationDegrees: number | null;
+  imageUrl: string | null;
+}

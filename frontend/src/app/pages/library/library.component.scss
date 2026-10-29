@@ -896,6 +896,22 @@
     font-size: 13px;
 }
 
+.library-load-state,
+.library-load-error {
+    width: min(1280px, 100%);
+    margin: 0 auto 20px;
+    padding: 14px 18px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: rgba(12, 24, 43, 0.72);
+    color: var(--on-surface-variant);
+}
+
+.library-load-error {
+    border-color: rgba(255, 180, 171, 0.35);
+    color: var(--error);
+}
+
 
 /* =========================================================
    PAGINATION
@@ -1286,6 +1302,60 @@
     color: var(--secondary);
 
     background: var(--surface-low);
+}
+
+.dossier-state {
+    margin: 0;
+    color: var(--on-surface-variant);
+}
+
+.dossier-state--error {
+    color: var(--error);
+}
+
+.related-specimens {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(65, 71, 77, 0.3);
+
+    h4 {
+        margin: 0 0 12px;
+        color: var(--on-surface);
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    p {
+        color: var(--on-surface-variant);
+    }
+}
+
+.related-specimens__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 10px;
+
+    button {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid rgba(65, 71, 77, 0.4);
+        border-radius: 8px;
+        background: var(--surface-low);
+        color: var(--on-surface);
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+            border-color: var(--primary-container);
+        }
+
+        small {
+            color: var(--on-surface-variant);
+        }
+    }
 }
 
 

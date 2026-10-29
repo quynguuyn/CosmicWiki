@@ -5,4 +5,6 @@ export interface SearchResultResponse {
     name: string;
     description: string | null;
     imageUrl: string | null;
+    catalog: string | null;
+    catalogValue: string | null;
 }

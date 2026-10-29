@@ -1,4 +1,7 @@
 <app-header *ngIf="!adminShell()"></app-header>
+<div class="network-status" *ngIf="!online" role="status">
+  Mất kết nối mạng. Một số thao tác có thể chưa được lưu; hãy kết nối lại và thử lại.
+</div>
 <main class="pt-20">
   <router-outlet></router-outlet>
 </main>
