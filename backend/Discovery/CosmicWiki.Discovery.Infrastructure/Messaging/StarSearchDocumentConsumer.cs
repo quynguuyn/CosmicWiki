@@ -79,6 +79,8 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
         string name;
         string? description;
         string? imageUrl;
+        string? catalog = null;
+        string? catalogValue = null;
         DateTime occurredAtUtc;
 
         if (result.Topic == KafkaTopics.CatalogStarCreated)
@@ -93,6 +95,8 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
             name = integrationEvent.Name;
             description = integrationEvent.Description;
             imageUrl = integrationEvent.ImageUrl;
+            catalog = integrationEvent.Catalog;
+            catalogValue = integrationEvent.CatalogValue;
             occurredAtUtc = integrationEvent.OccurredAtUtc;
         }
         else
@@ -118,6 +122,8 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
             name = integrationEvent.Name;
             description = integrationEvent.ObjectType;
             imageUrl = integrationEvent.ImageUrl;
+            catalog = integrationEvent.Catalog;
+            catalogValue = integrationEvent.CatalogValue;
             occurredAtUtc = integrationEvent.OccurredAtUtc;
         }
 
@@ -134,11 +140,19 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
                 name,
                 description,
                 imageUrl,
-                occurredAtUtc));
+                occurredAtUtc,
+                catalog,
+                catalogValue));
         }
         else
         {
-            document.Update(name, description, imageUrl, occurredAtUtc);
+            document.Update(
+                name,
+                description,
+                imageUrl,
+                occurredAtUtc,
+                catalog,
+                catalogValue);
         }
 
         await db.SaveChangesAsync(cancellationToken);

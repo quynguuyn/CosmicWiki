@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.8.17" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
     <ProjectReference Include="..\CosmicWiki.Catalog.Application\CosmicWiki.Catalog.Application.csproj" />

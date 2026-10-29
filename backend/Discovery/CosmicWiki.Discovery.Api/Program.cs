@@ -9,12 +9,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 builder.Services.AddDiscoveryApplication();
 builder.Services.AddDiscoveryInfrastructure(
     builder.Configuration);
 builder.Services.AddKafkaMessaging(builder.Configuration);
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -106,5 +109,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health/live");
 
 app.Run();

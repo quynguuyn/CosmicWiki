@@ -6,6 +6,7 @@ namespace CosmicWiki.Ordering.Domain.Entities;
 public sealed class Order : AggregateRoot<Guid>
 {
     private readonly List<OrderLine> _lines = [];
+    private readonly List<OrderStatusHistoryEntry> _statusHistory = [];
     private Order() : base(Guid.Empty) { }
 
     private Order(Guid id, Guid customerId, string customerEmail, string currency, string idempotencyKey, string requestFingerprint) : base(id)
@@ -17,6 +18,7 @@ public sealed class Order : AggregateRoot<Guid>
         RequestFingerprint = requestFingerprint;
         Status = OrderStatus.PendingPayment;
         CreatedAtUtc = DateTime.UtcNow;
+        RecordStatusChange();
     }
 
     public Guid CustomerId { get; private set; }
@@ -36,6 +38,7 @@ public sealed class Order : AggregateRoot<Guid>
     public double? DeliveryLongitude { get; private set; }
     public DateTime? DeliveryLocationUpdatedAtUtc { get; private set; }
     public IReadOnlyCollection<OrderLine> Lines => _lines.AsReadOnly();
+    public IReadOnlyCollection<OrderStatusHistoryEntry> StatusHistory => _statusHistory.AsReadOnly();
 
     public static Order Create(
         Guid customerId,
@@ -76,14 +79,20 @@ public sealed class Order : AggregateRoot<Guid>
     public void MarkPaid()
     {
         if (Status is OrderStatus.Cancelled) return;
+        if (Status == OrderStatus.Paid) return;
         Status = OrderStatus.Paid;
         PaidAtUtc = DateTime.UtcNow;
+        RecordStatusChange();
     }
 
     public void MarkPaymentFailed()
     {
         if (Status is not OrderStatus.Paid and not OrderStatus.Shipping and not OrderStatus.Cancelled)
+        {
+            if (Status == OrderStatus.PaymentFailed) return;
             Status = OrderStatus.PaymentFailed;
+            RecordStatusChange();
+        }
     }
 
     public bool TransitionTo(OrderStatus nextStatus)
@@ -108,6 +117,7 @@ public sealed class Order : AggregateRoot<Guid>
                 $"Order cannot transition from '{Status}' to '{nextStatus}'.");
 
         Status = nextStatus;
+        RecordStatusChange();
         return true;
     }
 
@@ -150,4 +160,8 @@ public sealed class Order : AggregateRoot<Guid>
         if (deliveryPersonId == Guid.Empty || DeliveryPersonId != deliveryPersonId)
             throw new InvalidOperationException("This delivery is not assigned to the current account.");
     }
+
+    private void RecordStatusChange() =>
+        _statusHistory.Add(
+            OrderStatusHistoryEntry.Create(Id, Status, DateTime.UtcNow));
 }

@@ -6,11 +6,14 @@ using CosmicWiki.Newsletter.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 builder.Services
     .AddNewsletterApplication()
     .AddNewsletterInfrastructure(builder.Configuration);
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddExceptionHandler<NewsletterExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -53,6 +56,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseRateLimiter();
 app.MapControllers();
+app.MapHealthChecks("/health/live");
 app.Run();
 
 public sealed class NewsletterExceptionHandler(

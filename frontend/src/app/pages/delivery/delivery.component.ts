@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DeliveryOrder } from '../../features/ordering/models/order.model';
 import { OrderingApi } from '../../features/ordering/api/ordering.api';
@@ -69,19 +69,45 @@ export class DeliveryComponent implements OnInit, OnDestroy {
       this.error = 'Trình duyệt không hỗ trợ định vị.';
       return;
     }
+    if (!window.isSecureContext) {
+      this.error = 'Chia sẻ vị trí cần kết nối HTTPS bảo mật (hoặc localhost).';
+      return;
+    }
+    if (!navigator.onLine) {
+      this.error = 'Cần có kết nối mạng để chia sẻ vị trí giao hàng.';
+      return;
+    }
 
     this.error = '';
     this.notice = '';
     this.watchId = navigator.geolocation.watchPosition(
       position => this.sendLocation(position.coords.latitude, position.coords.longitude),
-      () => {
-        this.error = 'Không thể lấy vị trí. Hãy cấp quyền định vị và thử lại.';
+      error => {
+        this.error = error.code === error.PERMISSION_DENIED
+          ? 'Quyền định vị bị từ chối. Hãy cấp quyền vị trí trong trình duyệt rồi thử lại.'
+          : error.code === error.TIMEOUT
+            ? 'Không nhận được vị trí GPS kịp thời. Hãy thử lại ở nơi có tín hiệu tốt hơn.'
+            : 'Không thể xác định vị trí hiện tại. Hãy kiểm tra GPS và thử lại.';
         this.stopLocationSharing();
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
     this.sharingLocation = true;
     this.notice = 'Đang chia sẻ vị trí cho các đơn bạn đang giao.';
+  }
+
+  @HostListener('window:offline')
+  handleOffline(): void {
+    if (this.sharingLocation) {
+      this.stopLocationSharing();
+      this.error = 'Mất kết nối mạng. Đã dừng chia sẻ vị trí cho đến khi kết nối lại.';
+    }
+  }
+
+  @HostListener('window:online')
+  handleOnline(): void {
+    this.error = '';
+    this.load();
   }
 
   private sendLocation(latitude: number, longitude: number): void {
