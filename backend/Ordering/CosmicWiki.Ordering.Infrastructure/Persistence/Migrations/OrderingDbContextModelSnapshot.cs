@@ -48,6 +48,11 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("RAW(16)");
 
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DELIVERY_ADDRESS");
+
                     b.Property<double?>("DeliveryLatitude")
                         .HasColumnType("BINARY_DOUBLE")
                         .HasColumnName("DELIVERY_LATITUDE");
@@ -181,6 +186,9 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                     b.HasIndex("CustomerId", "CreatedAtUtc");
 
                     b.HasIndex("CustomerId", "ReadAtUtc");
+
+                    b.HasIndex("CustomerId", "OrderId", "Status")
+                        .IsUnique();
 
                     b.ToTable("ORDER_NOTIFICATIONS", "COSMICWIKI_ORDERING");
                 });

@@ -49,7 +49,8 @@ public sealed class OrdersController(
                 email,
                 request.Currency,
                 idempotencyKey,
-                request.Lines),
+                request.Lines,
+                request.DeliveryAddress),
             cancellationToken);
         return Ok(result);
     }
@@ -78,6 +79,7 @@ public sealed class OrdersController(
             order.Currency,
             order.PaidAtUtc,
             order.DeliveryPersonName,
+            order.DeliveryAddress,
             order.DeliveryLatitude,
             order.DeliveryLongitude,
             order.DeliveryLocationUpdatedAtUtc,
@@ -110,6 +112,7 @@ public sealed class OrdersController(
             o.PaidAtUtc,
             o.CreatedAtUtc,
             o.DeliveryPersonName,
+            o.DeliveryAddress,
             o.DeliveryLatitude,
             o.DeliveryLongitude,
             o.DeliveryLocationUpdatedAtUtc,
@@ -195,6 +198,7 @@ public sealed class OrdersController(
 public sealed record CreateOrderRequest(
     Guid CustomerId,
     string Currency,
-    IReadOnlyCollection<CreateOrderLineRequest> Lines);
+    IReadOnlyCollection<CreateOrderLineRequest> Lines,
+    string? DeliveryAddress = null);
 
 public sealed record UpdateOrderStatusRequest(string Status);

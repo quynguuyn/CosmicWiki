@@ -7,6 +7,7 @@ export interface CreateOrderRequest {
   customerId: string;
   currency: string;
   lines: OrderLineRequest[];
+  deliveryAddress: string;
 }
 
 export interface CreateOrderResult {
@@ -29,6 +30,7 @@ export interface OrderStatus {
   createdAtUtc: string;
   paymentExpiresAtUtc?: string;
   deliveryPersonName?: string | null;
+  deliveryAddress?: string | null;
   deliveryLatitude?: number | null;
   deliveryLongitude?: number | null;
   deliveryLocationUpdatedAtUtc?: string | null;
@@ -59,6 +61,7 @@ export interface DeliveryOrder {
   currency: string;
   createdAtUtc: string;
   deliveryPersonName: string | null;
+  deliveryAddress: string | null;
   deliveryLatitude: number | null;
   deliveryLongitude: number | null;
   deliveryLocationUpdatedAtUtc: string | null;

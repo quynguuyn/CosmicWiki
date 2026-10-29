@@ -26,6 +26,8 @@ button:disabled { cursor:not-allowed; opacity:.5; }
 .delivery-item div { display:grid; gap:.2rem; }
 .delivery-item span { color:var(--on-surface-variant); font-size:.85rem; }
 .position { font-size:.9rem; }
+.map-link { display:inline-flex; margin:.25rem 0 .75rem; color:var(--primary); font-weight:700; text-decoration:none; }
+.map-link:hover { text-decoration:underline; }
 .empty,.loading { padding:2rem; text-align:center; color:var(--on-surface-variant); }
 
 @media (max-width: 480px) {

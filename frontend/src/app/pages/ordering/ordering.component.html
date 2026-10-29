@@ -5,6 +5,12 @@
     <p class="font-body-lg">Đơn hàng được tạo qua Ordering API và bảo vệ bằng Idempotency-Key.</p>
   </section>
   <section class="checkout-card cosmic-glass">
+    <label class="delivery-address">
+      <span class="section-eyebrow font-label-sm">ĐỊA CHỈ NHẬN HÀNG</span>
+      <textarea [(ngModel)]="deliveryAddress" name="deliveryAddress" rows="3" maxlength="500"
+        placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" required></textarea>
+      <small>Địa chỉ này được lưu cùng đơn hàng để người giao hàng tìm tuyến đến bạn.</small>
+    </label>
     <div class="section-eyebrow font-label-sm">HIỆN VẬT ĐÃ CHỌN</div>
     <div class="checkout-line" *ngFor="let line of cart.lines()">
       <img [src]="line.product.images.length > 0 ? line.product.images[0].url : 'assets/images/cosmic-placeholder.svg'" [alt]="line.product.name">

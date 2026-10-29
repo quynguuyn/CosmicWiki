@@ -32,7 +32,7 @@
 
     <div class="order-card" *ngFor="let order of filteredOrders" [ngClass]="order.status.toLowerCase()">
       <div class="order-header">
-        <span class="order-date" *ngIf="order.createdAtUtc">{{ order.createdAtUtc | date:'short' }}</span>
+        <span class="order-date" *ngIf="order.createdAtUtc">{{ order.createdAtUtc | date:'short':'+0700' }}</span>
       </div>
       <div class="order-body">
         <div class="order-total">{{ order.totalAmount | currency:order.currency }}</div>
@@ -65,8 +65,9 @@
       <section class="delivery-tracking" *ngIf="order.status === 'Shipping'">
         <h3>Thông tin giao hàng</h3>
         <p *ngIf="order.deliveryPersonName">Nhân viên giao hàng: {{ order.deliveryPersonName }}</p>
+        <p *ngIf="order.deliveryAddress">Địa chỉ nhận hàng: {{ order.deliveryAddress }}</p>
         <p *ngIf="order.deliveryLocationUpdatedAtUtc">
-          Vị trí cập nhật lúc {{ order.deliveryLocationUpdatedAtUtc | date:'short' }}
+          Vị trí cập nhật lúc {{ order.deliveryLocationUpdatedAtUtc | date:'short':'+0700' }}
         </p>
         <p *ngIf="order.deliveryLatitude != null && order.deliveryLongitude != null">
           Tọa độ: {{ order.deliveryLatitude | number:'1.4-4' }}, {{ order.deliveryLongitude | number:'1.4-4' }}
@@ -76,7 +77,7 @@
         </p>
         <a *ngIf="mapUrl(order) as locationUrl" class="map-link" [href]="locationUrl"
           target="_blank" rel="noopener noreferrer">
-          Mở vị trí trên Google Maps
+          {{ order.deliveryAddress ? 'Mở tuyến giao hàng trên Google Maps' : 'Mở vị trí người giao trên Google Maps' }}
         </a>
       </section>
       <section class="order-history" *ngIf="order.statusHistory?.length">
@@ -87,7 +88,7 @@
               {{ getStatusLabel(change.status) }}
             </span>
             <time [attr.datetime]="change.changedAtUtc">
-              {{ change.changedAtUtc | date:'short' }}
+              {{ change.changedAtUtc | date:'short':'+0700' }}
             </time>
           </li>
         </ol>

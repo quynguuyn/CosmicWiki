@@ -9,13 +9,21 @@ public sealed class Order : AggregateRoot<Guid>
     private readonly List<OrderStatusHistoryEntry> _statusHistory = [];
     private Order() : base(Guid.Empty) { }
 
-    private Order(Guid id, Guid customerId, string customerEmail, string currency, string idempotencyKey, string requestFingerprint) : base(id)
+    private Order(
+        Guid id,
+        Guid customerId,
+        string customerEmail,
+        string currency,
+        string idempotencyKey,
+        string requestFingerprint,
+        string? deliveryAddress) : base(id)
     {
         CustomerId = customerId;
         CustomerEmail = customerEmail;
         Currency = currency;
         IdempotencyKey = idempotencyKey;
         RequestFingerprint = requestFingerprint;
+        DeliveryAddress = deliveryAddress;
         Status = OrderStatus.PendingPayment;
         CreatedAtUtc = DateTime.UtcNow;
         RecordStatusChange();
@@ -26,6 +34,7 @@ public sealed class Order : AggregateRoot<Guid>
     public string Currency { get; private set; } = null!;
     public string IdempotencyKey { get; private set; } = null!;
     public string RequestFingerprint { get; private set; } = null!;
+    public string? DeliveryAddress { get; private set; }
     public OrderStatus Status { get; private set; }
     public decimal TotalAmount { get; private set; }
     public string? PaymentIntentId { get; private set; }
@@ -46,7 +55,8 @@ public sealed class Order : AggregateRoot<Guid>
         string currency,
         string idempotencyKey,
         string requestFingerprint,
-        IEnumerable<OrderLine> lines)
+        IEnumerable<OrderLine> lines,
+        string? deliveryAddress = null)
     {
         if (customerId == Guid.Empty) throw new ArgumentException("Customer ID is required.", nameof(customerId));
         ArgumentException.ThrowIfNullOrWhiteSpace(customerEmail);
@@ -59,8 +69,16 @@ public sealed class Order : AggregateRoot<Guid>
             throw new ArgumentException("Currency contains invalid characters.", nameof(currency));
         if (idempotencyKey.Length > 200 || idempotencyKey.Any(char.IsControl) || idempotencyKey != idempotencyKey.Trim())
             throw new ArgumentException("Idempotency key must be 1-200 characters without surrounding whitespace or control characters.", nameof(idempotencyKey));
-        var order = new Order(Guid.NewGuid(), customerId, customerEmail.Trim(), currency.Trim().ToUpperInvariant(),
-            idempotencyKey.Trim(), requestFingerprint.Trim());
+        if (deliveryAddress?.Length > 500)
+            throw new ArgumentException("Delivery address cannot exceed 500 characters.", nameof(deliveryAddress));
+        var order = new Order(
+            Guid.NewGuid(),
+            customerId,
+            customerEmail.Trim(),
+            currency.Trim().ToUpperInvariant(),
+            idempotencyKey.Trim(),
+            requestFingerprint.Trim(),
+            string.IsNullOrWhiteSpace(deliveryAddress) ? null : deliveryAddress.Trim());
         order._lines.AddRange(lines ?? throw new ArgumentNullException(nameof(lines)));
         if (order._lines.Count is < 1 or > 100) throw new ArgumentException("Order must contain between 1 and 100 lines.", nameof(lines));
         if (order._lines.Select(x => x.ProductId).Distinct().Count() != order._lines.Count)

@@ -67,6 +67,21 @@ public sealed class DeliveryOrderTests
     }
 
     [Fact]
+    public void Order_preserves_a_trimmed_delivery_address_snapshot()
+    {
+        var order = Order.Create(
+            Guid.NewGuid(),
+            "customer@example.com",
+            "USD",
+            Guid.NewGuid().ToString("N"),
+            Guid.NewGuid().ToString("N"),
+            [OrderLine.Create(Guid.NewGuid(), "SKU-1", "Star map", 100, 1)],
+            "  123 Observatory Road, Springfield  ");
+
+        Assert.Equal("123 Observatory Road, Springfield", order.DeliveryAddress);
+    }
+
+    [Fact]
     public void Only_assigned_delivery_person_can_update_location_and_complete_order()
     {
         var order = CreatePaidOrder();

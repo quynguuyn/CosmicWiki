@@ -23,7 +23,8 @@
         <div>
           <span class="order-id">{{ order.orderId | slice:0:8 }}...</span>
           <h2>{{ order.customerEmail || 'Chưa có email' }}</h2>
-          <p>{{ order.createdAtUtc | date:'medium' }} · {{ order.totalAmount | currency:order.currency }}</p>
+          <p>{{ order.createdAtUtc | date:'medium':'+0700' }} · {{ order.totalAmount | currency:order.currency }}</p>
+          <p *ngIf="order.deliveryAddress">Địa chỉ giao hàng: {{ order.deliveryAddress }}</p>
         </div>
         <span class="status" [class]="order.status.toLowerCase()">{{ label(order.status) }}</span>
       </div>

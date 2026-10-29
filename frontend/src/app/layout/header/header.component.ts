@@ -80,7 +80,9 @@ export class HeaderComponent {
   }
 
   toggleNotifications(): void {
-    this.notificationsOpen.update(open => !open);
+    const opening = !this.notificationsOpen();
+    this.notificationsOpen.set(opening);
+    if (opening) this.notifications.refresh();
   }
 
   openNotification(notification: UserNotification): void {

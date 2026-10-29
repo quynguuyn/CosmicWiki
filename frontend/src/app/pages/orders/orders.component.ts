@@ -107,7 +107,16 @@ export class OrdersComponent implements OnDestroy, OnInit {
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
       || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
 
-    const coordinates = `${latitude},${longitude}`;
+    if (order.deliveryAddress) {
+      const params = new URLSearchParams({
+        api: '1',
+        origin: `${latitude},${longitude}`,
+        destination: order.deliveryAddress,
+        travelmode: 'driving'
+      });
+      return `https://www.google.com/maps/dir/?${params.toString()}`;
+    }
+
     return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   }
 }
