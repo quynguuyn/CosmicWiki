@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../features/auth/services/auth.service';
+import { NotificationService } from '../../features/notifications/notification.service';
+import { UserNotification } from '../../features/notifications/notification.model';
 
 interface NavLink {
   label: string;
@@ -21,10 +23,12 @@ interface NavLink {
 export class HeaderComponent {
   private readonly cart = inject(CartService);
   readonly auth = inject(AuthService);
+  readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
   cartCount = computed(() => this.cart.count);
   isAuthenticated = computed(() => this.auth.authenticated());
   userMenuOpen = signal(false);
+  notificationsOpen = signal(false);
   mobileMenuOpen = signal(false);
   scrolled = signal(false);
   searchTerm = '';
@@ -69,7 +73,22 @@ export class HeaderComponent {
         !event.target.closest('.user-menu-wrapper')) {
       this.userMenuOpen.set(false);
     }
+    if (!(event.target instanceof Element) ||
+        !event.target.closest('.notification-wrapper')) {
+      this.notificationsOpen.set(false);
+    }
+  }
 
+  toggleNotifications(): void {
+    const opening = !this.notificationsOpen();
+    this.notificationsOpen.set(opening);
+    if (opening) this.notifications.refresh();
+  }
+
+  openNotification(notification: UserNotification): void {
+    this.notifications.markRead(notification);
+    this.notificationsOpen.set(false);
+    this.router.navigate(['/orders']);
   }
 
   logout(): void {

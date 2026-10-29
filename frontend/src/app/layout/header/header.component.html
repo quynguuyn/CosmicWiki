@@ -26,6 +26,42 @@
         <input [(ngModel)]="searchTerm" name="searchTerm" placeholder="Tìm kiếm..." aria-label="Tìm kiếm trong thư viện">
       </form>
 
+      @if (isAuthenticated()) {
+      <div class="notification-wrapper">
+        <button class="icon-btn notification-toggle" type="button" aria-label="Thông báo"
+          [attr.aria-expanded]="notificationsOpen()" (click)="toggleNotifications()">
+          <span class="material-symbols-outlined">notifications</span>
+          @if (notifications.unreadCount() > 0) {
+          <span class="notification-badge">{{ notifications.unreadCount() > 99 ? '99+' : notifications.unreadCount() }}</span>
+          }
+        </button>
+        @if (notificationsOpen()) {
+        <section class="notification-panel cosmic-glass" aria-label="Thông báo">
+          <header class="notification-panel-header">
+            <strong>Thông báo</strong>
+            @if (notifications.unreadCount() > 0) {
+            <button type="button" (click)="notifications.markAllRead()">Đánh dấu đã đọc</button>
+            }
+          </header>
+          @if (notifications.error()) {
+          <p class="notification-error" role="alert">{{ notifications.error() }}</p>
+          }
+          @if (notifications.items().length === 0) {
+          <p class="notification-empty">Bạn chưa có thông báo nào.</p>
+          }
+          @for (notification of notifications.items(); track notification.id) {
+          <button type="button" class="notification-item" [class.unread]="!notification.isRead"
+            (click)="openNotification(notification)">
+            <strong>{{ notification.title }}</strong>
+            <span>{{ notification.message }}</span>
+            <time [attr.datetime]="notification.createdAtUtc">{{ notification.createdAtUtc | date:'short':'+0700' }}</time>
+          </button>
+          }
+        </section>
+        }
+      </div>
+      }
+
       <div class="cart-wrapper">
         <a class="icon-btn" routerLink="/cart" title="Giỏ lưu niệm không gian">
           <span class="material-symbols-outlined">shopping_bag</span>

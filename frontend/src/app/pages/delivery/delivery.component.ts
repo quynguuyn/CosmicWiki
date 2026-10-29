@@ -59,6 +59,19 @@ export class DeliveryComponent implements OnInit, OnDestroy {
     this.runForOrder(order.orderId, this.api.markDeliveryComplete(order.orderId), 'Đơn hàng đã được xác nhận giao thành công.');
   }
 
+  directionsUrl(order: DeliveryOrder): string | null {
+    if (!order.deliveryAddress || order.deliveryLatitude == null || order.deliveryLongitude == null)
+      return null;
+
+    const params = new URLSearchParams({
+      api: '1',
+      origin: `${order.deliveryLatitude},${order.deliveryLongitude}`,
+      destination: order.deliveryAddress,
+      travelmode: 'driving'
+    });
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
   toggleLocationSharing(): void {
     if (this.sharingLocation) {
       this.stopLocationSharing();

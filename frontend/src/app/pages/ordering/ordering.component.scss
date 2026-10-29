@@ -3,6 +3,10 @@
 .commerce-hero { margin-bottom: var(--space-xl); } .commerce-hero h1 { margin: var(--space-md) 0; } .commerce-hero p { color: var(--on-surface-variant); }
 .section-eyebrow { color: var(--tertiary); display: flex; gap: var(--space-xs); align-items: center; }
 .checkout-card { max-width: 48rem; margin: auto; } .checkout-line, .checkout-total { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid var(--outline-variant); }
+.delivery-address { display: grid; gap: .5rem; margin-bottom: var(--space-xl); }
+.delivery-address textarea { width: 100%; resize: vertical; padding: .8rem 1rem; border: 1px solid var(--outline-variant); border-radius: .75rem; background: var(--surface-container-low); color: var(--on-surface); font: inherit; }
+.delivery-address textarea:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
+.delivery-address small { color: var(--on-surface-variant); }
 .checkout-total { font-size: 1.25rem; border: 0; } .checkout-total strong { color: var(--tertiary); }
 .actions { display: flex; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-xl); }
 .actions a, .actions button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); text-decoration: none; }
@@ -40,3 +44,20 @@
 .actions .material-symbols-outlined { font-size: 16px; }
 .error { color: var(--error); }
 @media (max-width: 600px) { .commerce-page { padding: var(--space-xl) var(--gutter-mobile); } .commerce-hero, .checkout-card { padding: var(--space-lg); } .actions { flex-direction: column; } }
+.checkout-line {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: .9rem 0;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.checkout-line img { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: .6rem; }
+.checkout-product { display: grid; gap: .25rem; }
+.checkout-product span { color: var(--on-surface-variant); font-size: .85rem; }
+.checkout-line > strong { color: var(--tertiary); white-space: nowrap; }
+@media (max-width: 480px) {
+  .checkout-line { grid-template-columns: 3.5rem minmax(0, 1fr); gap: .7rem; }
+  .checkout-line img { width: 3.5rem; height: 3.5rem; }
+  .checkout-line > strong { grid-column: 2; }
+}

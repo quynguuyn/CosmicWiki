@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CosmicWiki.Ordering.Application\CosmicWiki.Ordering.Application.csproj" />
     <ProjectReference Include="..\CosmicWiki.Ordering.Domain\CosmicWiki.Ordering.Domain.csproj" />
     <ProjectReference Include="..\..\Payments\CosmicWiki.Payments.Application\CosmicWiki.Payments.Application.csproj" />

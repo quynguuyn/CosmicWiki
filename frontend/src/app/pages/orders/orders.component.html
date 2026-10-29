@@ -32,7 +32,7 @@
 
     <div class="order-card" *ngFor="let order of filteredOrders" [ngClass]="order.status.toLowerCase()">
       <div class="order-header">
-        <span class="order-date" *ngIf="order.createdAtUtc">{{ order.createdAtUtc | date:'short' }}</span>
+        <span class="order-date" *ngIf="order.createdAtUtc">{{ order.createdAtUtc | date:'short':'+0700' }}</span>
       </div>
       <div class="order-body">
         <div class="order-total">{{ order.totalAmount | currency:order.currency }}</div>
@@ -42,9 +42,21 @@
           </span>
         </div>
       </div>
+      <section class="order-items" *ngIf="order.lines?.length">
+        <h3>Sản phẩm trong đơn</h3>
+        <article class="order-item" *ngFor="let line of order.lines">
+          <img [src]="line.productImageUrl || 'assets/images/cosmic-placeholder.svg'" [alt]="line.productName">
+          <div class="order-item-details">
+            <span>{{ line.sku }}</span>
+            <strong>{{ line.productName }}</strong>
+            <span>{{ line.unitPrice | currency:order.currency }} × {{ line.quantity }}</span>
+          </div>
+          <strong class="order-item-total">{{ line.lineTotal | currency:order.currency }}</strong>
+        </article>
+      </section>
       <div class="order-footer" *ngIf="order.status === 'PendingPayment' && order.clientSecret">
         <span class="payment-countdown">
-          {{ remainingSeconds(order) > 0 ? 'Tự hủy sau ' + remaining(order) : 'Đang hủy đơn...' }}
+          {{ remainingSeconds(order) > 0 ? 'Tự hủy sau ' + remaining(order) : 'Thanh toán đã hết hạn; đang chờ hệ thống đồng bộ trạng thái.' }}
         </span>
         <a *ngIf="remainingSeconds(order) > 0" [routerLink]="['/payment']"
            [state]="{ order: { orderId: order.orderId, totalAmount: order.totalAmount, currency: order.currency, paymentIntentId: order.paymentIntentId, clientSecret: order.clientSecret } }"
@@ -53,14 +65,20 @@
       <section class="delivery-tracking" *ngIf="order.status === 'Shipping'">
         <h3>Thông tin giao hàng</h3>
         <p *ngIf="order.deliveryPersonName">Nhân viên giao hàng: {{ order.deliveryPersonName }}</p>
+        <p *ngIf="order.deliveryAddress">Địa chỉ nhận hàng: {{ order.deliveryAddress }}</p>
         <p *ngIf="order.deliveryLocationUpdatedAtUtc">
-          Vị trí cập nhật lúc {{ order.deliveryLocationUpdatedAtUtc | date:'short' }}
+          Vị trí cập nhật lúc {{ order.deliveryLocationUpdatedAtUtc | date:'short':'+0700' }}
+        </p>
+        <p *ngIf="order.deliveryLatitude != null && order.deliveryLongitude != null">
+          Tọa độ: {{ order.deliveryLatitude | number:'1.4-4' }}, {{ order.deliveryLongitude | number:'1.4-4' }}
         </p>
         <p *ngIf="order.deliveryLatitude == null || order.deliveryLongitude == null">
           Nhân viên giao hàng chưa chia sẻ vị trí. Bản đồ sẽ cập nhật khi có tín hiệu GPS.
         </p>
-        <iframe *ngIf="mapUrl(order)" [src]="mapUrl(order)" title="Vị trí đơn hàng trên bản đồ"
-          loading="lazy" referrerpolicy="no-referrer"></iframe>
+        <a *ngIf="mapUrl(order) as locationUrl" class="map-link" [href]="locationUrl"
+          target="_blank" rel="noopener noreferrer">
+          {{ order.deliveryAddress ? 'Mở tuyến giao hàng trên Google Maps' : 'Mở vị trí người giao trên Google Maps' }}
+        </a>
       </section>
       <section class="order-history" *ngIf="order.statusHistory?.length">
         <h3>Tiến trình đơn hàng</h3>
@@ -70,7 +88,7 @@
               {{ getStatusLabel(change.status) }}
             </span>
             <time [attr.datetime]="change.changedAtUtc">
-              {{ change.changedAtUtc | date:'short' }}
+              {{ change.changedAtUtc | date:'short':'+0700' }}
             </time>
           </li>
         </ol>

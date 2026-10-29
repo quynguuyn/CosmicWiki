@@ -63,6 +63,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseWebSockets();
 app.MapReverseProxy();
 
 // Configure the HTTP request pipeline.

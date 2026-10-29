@@ -8,7 +8,8 @@ public sealed record CreateOrderCommand(
     string CustomerEmail,
     string Currency,
     string IdempotencyKey,
-    IReadOnlyCollection<CreateOrderLineRequest> Lines) : IRequest<CreateOrderResult>;
+    IReadOnlyCollection<CreateOrderLineRequest> Lines,
+    string? DeliveryAddress = null) : IRequest<CreateOrderResult>;
 public sealed record CreateOrderResult(
     Guid OrderId,
     string PaymentIntentId,

@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.Configure<OrderEmailOptions>(
             configuration.GetSection(OrderEmailOptions.SectionName));
         services.AddSingleton<IOrderEmailSender, SmtpOrderEmailSender>();
+        services.AddScoped<IOrderNotificationPublisher, OrderNotificationPublisher>();
         return services;
     }
 }

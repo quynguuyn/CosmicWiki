@@ -19,21 +19,39 @@
       <div class="card-heading">
         <div>
           <p class="order-code">Đơn #{{ order.orderId | slice:0:8 }}</p>
-          <p>{{ order.createdAtUtc | date:'medium' }}</p>
+          <p>{{ order.createdAtUtc | date:'medium':'+0700' }}</p>
         </div>
         <span class="status" [class.available]="order.availableToClaim">
           {{ order.availableToClaim ? 'Chờ nhận giao' : 'Đang giao' }}
         </span>
       </div>
       <p class="amount">{{ order.totalAmount | currency:order.currency }}</p>
+      <section class="delivery-items" *ngIf="order.lines?.length">
+        <h2>Sản phẩm trong đơn</h2>
+        <article class="delivery-item" *ngFor="let line of order.lines">
+          <img [src]="line.productImageUrl || 'assets/images/cosmic-placeholder.svg'" [alt]="line.productName">
+          <div>
+            <strong>{{ line.productName }}</strong>
+            <span>{{ line.unitPrice | currency:order.currency }} × {{ line.quantity }}</span>
+          </div>
+          <strong>{{ line.lineTotal | currency:order.currency }}</strong>
+        </article>
+      </section>
       <p class="position" *ngIf="order.deliveryPersonName">Phụ trách: {{ order.deliveryPersonName }}</p>
+      <p class="position" *ngIf="order.deliveryAddress">
+        Địa chỉ giao: {{ order.deliveryAddress }}
+      </p>
       <p class="position" *ngIf="order.deliveryLatitude !== null && order.deliveryLongitude !== null">
         Vị trí gần nhất: {{ order.deliveryLatitude | number:'1.4-4' }},
         {{ order.deliveryLongitude | number:'1.4-4' }}
         <span *ngIf="order.deliveryLocationUpdatedAtUtc">
-          · {{ order.deliveryLocationUpdatedAtUtc | date:'shortTime' }}
+          · {{ order.deliveryLocationUpdatedAtUtc | date:'shortTime':'+0700' }}
         </span>
       </p>
+      <a *ngIf="directionsUrl(order) as routeUrl" class="map-link" [href]="routeUrl"
+        target="_blank" rel="noopener noreferrer">
+        Xem tuyến từ vị trí hiện tại đến khách hàng
+      </a>
       <div class="actions">
         <button *ngIf="order.availableToClaim" type="button" (click)="claim(order)">
           Nhận giao đơn này

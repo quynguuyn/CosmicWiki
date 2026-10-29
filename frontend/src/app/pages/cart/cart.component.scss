@@ -9,6 +9,7 @@
 .cart-line:last-child { border-bottom: 0; }
 .cart-line img { width: 5rem; height: 5rem; object-fit: cover; border-radius: var(--radius); }
 .cart-line-content h2 { margin: .25rem 0; }
+.cart-line-content p { margin: .3rem 0; color: var(--on-surface-variant); }
 .cart-line-content strong, .total strong { color: var(--tertiary); }
 .quantity { display: flex; gap: .75rem; align-items: center; }
 .quantity button, .remove { background: transparent; border: 1px solid var(--outline-variant); color: var(--on-surface); border-radius: var(--radius); padding: .35rem .6rem; cursor: pointer; }

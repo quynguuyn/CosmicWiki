@@ -6,9 +6,11 @@ using CosmicWiki.Ordering.Api.Authorization;
 using CosmicWiki.Ordering.Api.Health;
 using CosmicWiki.Ordering.Api.Internal;
 using CosmicWiki.Ordering.Api.RateLimiting;
+using CosmicWiki.Ordering.Api.Serialization;
 using CosmicWiki.Ordering.Application;
 using CosmicWiki.Ordering.Infrastructure;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
+using CosmicWiki.Ordering.Infrastructure.Notifications;
 using CosmicWiki.Caching;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -41,7 +43,11 @@ builder.Services.AddHealthChecks()
     .AddCheck<OrderingDatabaseHealthCheck>("ordering-database")
     .AddCheck<KafkaHealthCheck>("kafka");
 builder.Services.AddOrderingAuthorization();
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter()));
+builder.Services.AddSignalR();
 builder.Services.AddInternalRateLimiting();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -75,6 +81,17 @@ builder.Services
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    context.HttpContext.Request.Path.StartsWithSegments("/api/notifications/hub"))
+                    context.Token = accessToken;
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.Configure<InternalOrderingOptions>(
@@ -104,6 +121,7 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<OrderNotificationsHub>("/api/notifications/hub");
 app.MapHealthChecks("/health");
 app.MapHealthChecks(
     "/health/live",

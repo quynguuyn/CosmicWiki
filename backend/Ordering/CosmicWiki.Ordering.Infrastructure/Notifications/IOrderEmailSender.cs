@@ -14,5 +14,6 @@ public interface IOrderEmailSender
         decimal totalAmount,
         string currency,
         string status,
+        IReadOnlyCollection<OrderCreatedLine> lines,
         CancellationToken cancellationToken);
 }

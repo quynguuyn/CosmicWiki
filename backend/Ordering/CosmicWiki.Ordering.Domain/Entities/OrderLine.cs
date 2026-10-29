@@ -4,13 +4,14 @@ public sealed class OrderLine
 {
     private OrderLine() { }
 
-    private OrderLine(Guid id, Guid productId, string sku, string name, decimal unitPrice, int quantity)
+    private OrderLine(Guid id, Guid productId, string sku, string name, decimal unitPrice, string? imageUrl, int quantity)
     {
         Id = id;
         ProductId = productId;
         SKU = sku;
         ProductName = name;
         UnitPrice = unitPrice;
+        ProductImageUrl = imageUrl;
         Quantity = quantity;
     }
 
@@ -20,10 +21,11 @@ public sealed class OrderLine
     public string SKU { get; private set; } = null!;
     public string ProductName { get; private set; } = null!;
     public decimal UnitPrice { get; private set; }
+    public string? ProductImageUrl { get; private set; }
     public int Quantity { get; private set; }
     public decimal LineTotal => UnitPrice * Quantity;
 
-    public static OrderLine Create(Guid productId, string sku, string name, decimal unitPrice, int quantity)
+    public static OrderLine Create(Guid productId, string sku, string name, decimal unitPrice, int quantity, string? imageUrl = null)
     {
         if (productId == Guid.Empty) throw new ArgumentException("Product ID is required.", nameof(productId));
         ArgumentException.ThrowIfNullOrWhiteSpace(sku);
@@ -35,6 +37,7 @@ public sealed class OrderLine
         if (unitPrice < 0) throw new ArgumentOutOfRangeException(nameof(unitPrice));
         if (quantity <= 0) throw new ArgumentOutOfRangeException(nameof(quantity));
         if (quantity > 10000) throw new ArgumentOutOfRangeException(nameof(quantity));
-        return new OrderLine(Guid.NewGuid(), productId, sku.Trim(), name.Trim(), unitPrice, quantity);
+        if (imageUrl?.Length > 2000) throw new ArgumentException("Image URL cannot exceed 2000 characters.", nameof(imageUrl));
+        return new OrderLine(Guid.NewGuid(), productId, sku.Trim(), name.Trim(), unitPrice, imageUrl?.Trim(), quantity);
     }
 }

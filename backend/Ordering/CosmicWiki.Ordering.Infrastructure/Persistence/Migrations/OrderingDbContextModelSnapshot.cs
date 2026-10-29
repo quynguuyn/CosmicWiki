@@ -48,6 +48,11 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("RAW(16)");
 
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DELIVERY_ADDRESS");
+
                     b.Property<double?>("DeliveryLatitude")
                         .HasColumnType("BINARY_DOUBLE")
                         .HasColumnName("DELIVERY_LATITUDE");
@@ -121,6 +126,10 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("NVARCHAR2(300)");
 
+                    b.Property<string>("ProductImageUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("NVARCHAR2(2000)");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("NUMBER(10)");
 
@@ -140,10 +149,53 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                     b.ToTable("ORDER_LINES", "COSMICWIKI_ORDERING");
                 });
 
+            modelBuilder.Entity("CosmicWiki.Ordering.Domain.Entities.OrderNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("RAW(16)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("RAW(16)");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("NVARCHAR2(32)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "CreatedAtUtc");
+
+                    b.HasIndex("CustomerId", "ReadAtUtc");
+
+                    b.HasIndex("CustomerId", "OrderId", "Status")
+                        .IsUnique();
+
+                    b.ToTable("ORDER_NOTIFICATIONS", "COSMICWIKI_ORDERING");
+                });
+
             modelBuilder.Entity("CosmicWiki.Ordering.Domain.Entities.OrderStatusHistoryEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("RAW(16)");
 
                     b.Property<DateTime>("ChangedAtUtc")
