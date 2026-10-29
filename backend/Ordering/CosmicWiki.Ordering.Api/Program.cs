@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 if (!builder.Environment.IsDevelopment())
 {
@@ -22,7 +24,8 @@ if (!builder.Environment.IsDevelopment())
     var kafkaProtocol = builder.Configuration["Kafka:SecurityProtocol"];
 
     if (string.IsNullOrWhiteSpace(serviceKey) ||
-        serviceKey == "[SECRET_FROM_ENV]" ||
+        serviceKey.Length < 32 ||
+        serviceKey is "[SECRET_FROM_ENV]" or "local-ordering-key" ||
         string.Equals(kafkaProtocol, "Plaintext", StringComparison.OrdinalIgnoreCase))
     {
         throw new InvalidOperationException(
@@ -102,4 +105,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.MapHealthChecks(
+    "/health/live",
+    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 app.Run();

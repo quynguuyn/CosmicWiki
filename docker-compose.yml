@@ -70,6 +70,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:4200}
       ConnectionStrings__AuthDatabase: User Id=COSMICWIKI_AUTH;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
       Auth__SeedUser__Username: ${AUTH_SEED_USER_USERNAME:-}
@@ -192,7 +193,7 @@ services:
       Kafka__BootstrapServers: kafka:29092
       InternalOrdering__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
       PaymentProvider__Mode: ${PAYMENT_PROVIDER_MODE:-disabled}
-      PaymentProvider__SecretKey: sk_test_51UHN9aKCQRD3Zcj5kKXQ6w9lCg9H6o9oYWtAxwk3ymb9XCj9TQaCLrm0M40bptgiSlm6Va68ketLrr2j1Pwe7K3Z008HnAJHMu
+      PaymentProvider__SecretKey: ${STRIPE_SECRET_KEY:-}
       PaymentProvider__ApiBaseUrl: https://api.stripe.com
       ConnectionStrings__OrderingDatabase: User Id=COSMICWIKI_ORDERING;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       ConnectionStrings__PaymentsDatabase: User Id=COSMICWIKI_PAYMENTS;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
@@ -282,6 +283,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:4200}
       ReverseProxy__Clusters__auth-cluster__Destinations__auth-api__Address: http://auth:8080/
       ReverseProxy__Clusters__catalog-cluster__Destinations__catalog-api__Address: http://catalog:8080/
       ReverseProxy__Clusters__product-cluster__Destinations__product-api__Address: http://product:8080/

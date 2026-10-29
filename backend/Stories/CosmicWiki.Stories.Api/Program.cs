@@ -9,10 +9,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 builder.Services.AddStoriesApplication();
 builder.Services.AddStoriesInfrastructure(builder.Configuration);
 builder.Services.AddCosmicWikiCaching(builder.Configuration);
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -64,4 +67,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
+app.MapHealthChecks("/health/live");
 app.Run();

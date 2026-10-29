@@ -56,7 +56,9 @@ public sealed class SearchQueryHandler
                     x.SourceType,
                     x.Name,
                     x.Description,
-                    x.ImageUrl))
+                    x.ImageUrl,
+                    x.Catalog,
+                    x.CatalogValue))
             .ToList();
 
         return new PagedResult<SearchResultResponse>(

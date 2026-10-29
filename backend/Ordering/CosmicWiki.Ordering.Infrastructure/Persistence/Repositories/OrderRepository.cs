@@ -26,10 +26,13 @@ public sealed class OrderRepository(
         dbContext.Orders.Include(x => x.Lines).SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
 
     public Task<Order?> GetAsync(Guid id, CancellationToken cancellationToken) =>
-        dbContext.Orders.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        dbContext.Orders
+            .Include(x => x.StatusHistory)
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
     public async Task<IReadOnlyCollection<Order>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellationToken) =>
         await dbContext.Orders
+            .Include(x => x.StatusHistory)
             .Where(x => x.CustomerId == customerId)
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync(cancellationToken);

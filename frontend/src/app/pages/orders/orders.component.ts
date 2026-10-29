@@ -19,6 +19,7 @@ export class OrdersComponent implements OnDestroy, OnInit {
   filteredOrders: OrderStatus[] = [];
   activeFilter = 'all';
   loading = true;
+  loadError = '';
   now = Date.now();
   private timer?: ReturnType<typeof setInterval>;
   private refreshTimer?: ReturnType<typeof setInterval>;
@@ -48,6 +49,8 @@ export class OrdersComponent implements OnDestroy, OnInit {
   }
 
   private loadOrders(): void {
+    this.loading = true;
+    this.loadError = '';
     this.orderingService.getOrders().subscribe({
       next: (orders) => {
         this.orders = orders;
@@ -56,6 +59,7 @@ export class OrdersComponent implements OnDestroy, OnInit {
       },
       error: () => {
         this.loading = false;
+        this.loadError = 'Không thể tải lịch sử đơn hàng. Kiểm tra kết nối rồi thử lại.';
       }
     });
   }
@@ -80,6 +84,10 @@ export class OrdersComponent implements OnDestroy, OnInit {
   setFilter(filter: string): void {
     this.activeFilter = filter;
     this.applyFilter();
+  }
+
+  reload(): void {
+    this.loadOrders();
   }
 
   private applyFilter(): void {

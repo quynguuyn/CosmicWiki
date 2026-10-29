@@ -140,6 +140,28 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                     b.ToTable("ORDER_LINES", "COSMICWIKI_ORDERING");
                 });
 
+            modelBuilder.Entity("CosmicWiki.Ordering.Domain.Entities.OrderStatusHistoryEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("RAW(16)");
+
+                    b.Property<DateTime>("ChangedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("RAW(16)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId", "ChangedAtUtc");
+
+                    b.ToTable("ORDER_STATUS_HISTORY", "COSMICWIKI_ORDERING");
+                });
+
             modelBuilder.Entity("CosmicWiki.Ordering.Infrastructure.Persistence.InboxMessage", b =>
                 {
                     b.Property<Guid>("EventId")
@@ -212,9 +234,20 @@ namespace CosmicWiki.Ordering.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CosmicWiki.Ordering.Domain.Entities.OrderStatusHistoryEntry", b =>
+                {
+                    b.HasOne("CosmicWiki.Ordering.Domain.Entities.Order", null)
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CosmicWiki.Ordering.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Lines");
+
+                    b.Navigation("StatusHistory");
                 });
 #pragma warning restore 612, 618
         }
