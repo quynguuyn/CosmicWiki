@@ -4,6 +4,7 @@ using CosmicWiki.Messaging;
 using CosmicWiki.Messaging.Abstractions;
 using CosmicWiki.Messaging.Contracts.Payment;
 using CosmicWiki.Messaging.Kafka;
+using CosmicWiki.Ordering.Application.Events;
 using CosmicWiki.Payments.Application.Abstractions;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
 using CosmicWiki.Ordering.Infrastructure.Notifications;
@@ -99,6 +100,7 @@ public sealed class PaymentStatusChangedConsumer(
                         await db.SaveChangesAsync(stoppingToken);
                         await transaction.CommitAsync(stoppingToken);
                         var order = await db.Orders
+                            .Include(x => x.Lines)
                             .AsNoTracking()
                             .SingleAsync(x => x.Id == integrationEvent.OrderId, stoppingToken);
                         var emailSender = scope.ServiceProvider.GetRequiredService<IOrderEmailSender>();
@@ -110,6 +112,12 @@ public sealed class PaymentStatusChangedConsumer(
                             integrationEvent.Status.Equals("succeeded", StringComparison.OrdinalIgnoreCase)
                                 ? "Paid"
                                 : "PaymentFailed",
+                            order.Lines.Select(line => new OrderCreatedLine(
+                                line.SKU,
+                                line.ProductName,
+                                line.UnitPrice,
+                                line.Quantity,
+                                line.LineTotal)).ToArray(),
                             stoppingToken);
                         consumer.Commit(result);
                         Processed.Add(1);

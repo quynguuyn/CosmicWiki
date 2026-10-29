@@ -14,6 +14,6 @@ export class CartComponent {
   readonly cart = inject(CartService);
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   }
 }

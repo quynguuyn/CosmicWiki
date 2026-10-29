@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
+import { OrderingService } from '../../features/ordering/services/ordering.service';
 
 import { PaymentSuccessComponent } from './payment-success.component';
 
@@ -8,7 +11,14 @@ describe('PaymentSuccessComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PaymentSuccessComponent]
+      imports: [PaymentSuccessComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: { get: () => null } } }
+        },
+        { provide: OrderingService, useValue: { getOrder: () => of({ status: 'Paid' }) } }
+      ]
     })
     .compileComponents();
 

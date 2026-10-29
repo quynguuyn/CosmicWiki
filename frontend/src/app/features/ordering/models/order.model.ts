@@ -33,6 +33,17 @@ export interface OrderStatus {
   deliveryLongitude?: number | null;
   deliveryLocationUpdatedAtUtc?: string | null;
   statusHistory?: OrderStatusHistoryEntry[];
+  lines?: OrderLineStatus[];
+}
+
+export interface OrderLineStatus {
+  productId: string;
+  sku: string;
+  productName: string;
+  unitPrice: number;
+  productImageUrl: string | null;
+  quantity: number;
+  lineTotal: number;
 }
 
 export interface OrderStatusHistoryEntry {
@@ -51,6 +62,7 @@ export interface DeliveryOrder {
   deliveryLatitude: number | null;
   deliveryLongitude: number | null;
   deliveryLocationUpdatedAtUtc: string | null;
+  lines?: OrderLineStatus[];
 }
 
 export interface AdminOrder extends OrderStatus {

@@ -25,7 +25,8 @@ export class AdminOrdersComponent implements OnInit {
   readonly filters = [
     { value: 'all', label: 'Tất cả' },
     { value: 'PendingPayment', label: 'Chờ thanh toán' },
-    { value: 'Paid', label: 'Chờ nhân viên nhận giao' },
+    { value: 'Paid', label: 'Chờ xác nhận' },
+    { value: 'Confirmed', label: 'Chờ nhân viên nhận giao' },
     { value: 'Shipping', label: 'Đang giao' },
     { value: 'Delivered', label: 'Đã giao' },
     { value: 'Cancelled', label: 'Đã hủy' }
@@ -75,7 +76,10 @@ export class AdminOrdersComponent implements OnInit {
           this.load();
         }
       },
-      error: () => this.error = 'Không thể cập nhật trạng thái đơn hàng.'
+      error: () => {
+        this.error = 'Trạng thái đơn hàng đã thay đổi hoặc không thể cập nhật. Danh sách đã được làm mới.';
+        this.load();
+      }
     });
   }
 

@@ -162,6 +162,7 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
   statusChart = [
     { label: 'Chờ thanh toán', status: 'PendingPayment', count: 0, percent: 0 },
     { label: 'Đã thanh toán', status: 'Paid', count: 0, percent: 0 },
+    { label: 'Đã xác nhận, chờ giao', status: 'Confirmed', count: 0, percent: 0 },
     { label: 'Đang giao hàng', status: 'Shipping', count: 0, percent: 0 },
     { label: 'Đã giao hàng', status: 'Delivered', count: 0, percent: 0 }
   ];
@@ -169,7 +170,7 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
     this.http.get<any[]>(`${this.base}/api/admin/orders/today`).subscribe({
       next: orders => {
         this.ordersCount = orders.length;
-        this.paidCount = orders.filter(order => ['Paid', 'Shipping', 'Delivered'].includes(order.status)).length;
+        this.paidCount = orders.filter(order => ['Paid', 'Confirmed', 'Shipping', 'Delivered'].includes(order.status)).length;
         this.revenue = orders.filter(order => order.status !== 'Cancelled').reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
         this.statusChart = this.statusChart.map(item => ({
           ...item,

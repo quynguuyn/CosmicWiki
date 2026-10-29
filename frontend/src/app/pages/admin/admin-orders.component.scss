@@ -11,6 +11,11 @@ h1 { margin: .5rem 0; } .admin-orders-header p:last-child { color: var(--on-surf
 .admin-order-list { display: grid; gap: 1rem; } .admin-order-card { border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 1.25rem; }
 .order-main { display: flex; justify-content: space-between; gap: 1rem; } .order-id { color: var(--tertiary); font-family: monospace; }
 .order-main h2 { margin: .4rem 0; font-size: 1rem; } .order-main p { margin: 0; color: var(--on-surface-variant); }
+.admin-order-items { margin-top: 1rem; }
+.admin-order-item { display:grid; grid-template-columns:3rem minmax(0, 1fr) auto; gap:.75rem; align-items:center; padding:.6rem 0; border-top:1px solid var(--glass-border); }
+.admin-order-item img { width:3rem; height:3rem; object-fit:cover; border-radius:.4rem; }
+.admin-order-item div { display:grid; gap:.2rem; }
+.admin-order-item span { color:var(--on-surface-variant); font-size:.85rem; }
 .status { align-self: start; border-radius: 999px; padding: .4rem .7rem; background: rgba(114,160,193,.2); }
 .order-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; } .order-actions .primary { background: var(--primary); color: var(--on-primary); } .order-actions .danger { color: #ffb4ab; }
 .feedback { color: #ffb4ab; text-align: center; } .loading, .empty { text-align: center; color: var(--on-surface-variant); }

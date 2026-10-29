@@ -132,6 +132,10 @@
     border-left: 4px solid #48bb78;
   }
 
+  &.confirmed {
+    border-left: 4px solid #48bb78;
+  }
+
   &.shipping {
     border-left: 4px solid #8eb9d6;
   }
@@ -182,6 +186,11 @@
   font-weight: 600;
 
   &.paid {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+  }
+
+  &.confirmed {
     background: rgba(72, 187, 120, 0.2);
     color: #48bb78;
   }
@@ -285,13 +294,30 @@
   color: rgba(184, 212, 232, .72);
 }
 
-.delivery-tracking iframe {
-  display: block;
-  width: 100%;
-  min-height: 280px;
-  border: 0;
-  border-radius: 8px;
+.order-items { margin-top: 1.25rem; }
+.order-items h3 { margin: 0 0 .65rem; font-size: 1rem; }
+.order-item {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+  gap: .8rem;
+  align-items: center;
+  padding: .7rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
+.order-item img { width: 3.75rem; height: 3.75rem; object-fit: cover; border-radius: 8px; }
+.order-item-details { display: grid; gap: .2rem; }
+.order-item-details > span { color: #a0aec0; font-size: .85rem; }
+.order-item-total { color: #e5c281; white-space: nowrap; }
+.map-link {
+  display: inline-flex;
+  margin-top: .5rem;
+  padding: .6rem .85rem;
+  border: 1px solid rgba(142, 185, 214, .35);
+  border-radius: 8px;
+  color: #b8d4e8;
+  text-decoration: none;
+}
+.map-link:hover { background: rgba(142, 185, 214, .12); }
 
 @media (max-width: 600px) {
   .orders-container {
@@ -330,7 +356,4 @@
     text-align: left;
   }
 
-  .delivery-tracking iframe {
-    min-height: 220px;
-  }
 }

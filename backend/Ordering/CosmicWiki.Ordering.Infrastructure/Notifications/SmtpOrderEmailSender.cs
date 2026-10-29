@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using CosmicWiki.Ordering.Application.Events;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -65,6 +66,7 @@ public sealed class SmtpOrderEmailSender(
         decimal totalAmount,
         string currency,
         string status,
+        IReadOnlyCollection<OrderCreatedLine> lines,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(customerEmail))
@@ -80,7 +82,7 @@ public sealed class SmtpOrderEmailSender(
         {
             From = new MailAddress(_options.FromAddress, _options.FromName),
             Subject = $"CosmicWiki cập nhật trạng thái đơn hàng #{orderId.ToString()[..8]}",
-            Body = BuildStatusHtml(orderId, totalAmount, currency, status),
+            Body = BuildStatusHtml(orderId, totalAmount, currency, status, lines),
             IsBodyHtml = true,
             SubjectEncoding = Encoding.UTF8,
             BodyEncoding = Encoding.UTF8
@@ -111,6 +113,7 @@ public sealed class SmtpOrderEmailSender(
         var shortId = orderId[..8].ToUpperInvariant();
         var amount = notification.TotalAmount.ToString("N2");
         var currency = notification.Currency.ToUpperInvariant();
+        var lineItems = BuildLineItemsHtml(notification.Lines ?? [], currency);
 
         return $$"""
             <!doctype html>
@@ -130,7 +133,8 @@ public sealed class SmtpOrderEmailSender(
                       <div style="margin-top:16px;color:#8eb9d6;font-size:12px;">TỔNG GIÁ TRỊ</div>
                       <div style="margin-top:6px;color:#e5c281;font-size:20px;font-weight:bold;">{{amount}} {{currency}}</div>
                     </div>
-                    <p style="color:#b8d4e8;line-height:1.7;">Trạng thái hiện tại: <strong style="color:#e5c281;">Chờ thanh toán</strong>. Bạn có thể tiếp tục thanh toán từ trang đơn hàng trong ứng dụng.</p>
+                      {{lineItems}}
+                      <p style="color:#b8d4e8;line-height:1.7;">Trạng thái hiện tại: <strong style="color:#e5c281;">Chờ thanh toán</strong>. Bạn có thể tiếp tục thanh toán từ trang đơn hàng trong ứng dụng.</p>
                   </div>
                   <div style="padding:20px 32px;border-top:1px solid #294154;color:#7898ae;font-size:12px;line-height:1.6;">Email này được gửi tự động từ CosmicWiki. Vui lòng không trả lời trực tiếp.</div>
                 </div>
@@ -140,11 +144,17 @@ public sealed class SmtpOrderEmailSender(
             """;
     }
 
-    private static string BuildStatusHtml(Guid orderId, decimal totalAmount, string currency, string status)
+    private static string BuildStatusHtml(
+        Guid orderId,
+        decimal totalAmount,
+        string currency,
+        string status,
+        IReadOnlyCollection<OrderCreatedLine> lines)
     {
         var label = status switch
         {
-            "Paid" => "Đã thanh toán",
+            "Paid" => "Đã thanh toán, chờ xác nhận",
+            "Confirmed" => "Đơn hàng đã được xác nhận",
             "PaymentFailed" => "Thanh toán thất bại",
             "Shipping" => "Đang giao hàng",
             "Delivered" => "Đã giao hàng",
@@ -152,6 +162,7 @@ public sealed class SmtpOrderEmailSender(
             "Cancelled" => "Đã hủy",
             _ => status
         };
+        var lineItems = BuildLineItemsHtml(lines, currency);
         return $$"""
             <!doctype html>
             <html lang="vi">
@@ -170,12 +181,42 @@ public sealed class SmtpOrderEmailSender(
                       <div style="margin-top:16px;color:#8eb9d6;font-size:12px;">TỔNG GIÁ TRỊ</div>
                       <div style="margin-top:6px;color:#e5c281;font-size:20px;font-weight:bold;">{{totalAmount:N2}} {{currency.ToUpperInvariant()}}</div>
                     </div>
+                    {{lineItems}}
                   </div>
                   <div style="padding:20px 32px;border-top:1px solid #294154;color:#7898ae;font-size:12px;">Email tự động từ CosmicWiki.</div>
                 </div>
               </div>
             </body>
             </html>
+            """;
+    }
+
+    private static string BuildLineItemsHtml(IEnumerable<OrderCreatedLine> lines, string currency)
+    {
+        var rows = string.Join(
+            string.Empty,
+            lines.Select(line => $$"""
+                <tr>
+                  <td style="padding:10px 8px;border-bottom:1px solid #294154;color:#d9e3f7;">
+                    <strong>{{WebUtility.HtmlEncode(line.ProductName)}}</strong>
+                    <div style="margin-top:4px;color:#7898ae;font-size:12px;">SKU: {{WebUtility.HtmlEncode(line.SKU)}}</div>
+                  </td>
+                  <td style="padding:10px 8px;border-bottom:1px solid #294154;text-align:center;color:#d9e3f7;">{{line.Quantity}}</td>
+                  <td style="padding:10px 8px;border-bottom:1px solid #294154;text-align:right;color:#d9e3f7;">{{line.UnitPrice:N2}} {{WebUtility.HtmlEncode(currency)}}</td>
+                  <td style="padding:10px 8px;border-bottom:1px solid #294154;text-align:right;color:#e5c281;">{{line.LineTotal:N2}} {{WebUtility.HtmlEncode(currency)}}</td>
+                </tr>
+                """));
+        return $$"""
+            <div style="margin:24px 0;">
+              <h2 style="color:#f3e9d2;font-size:16px;">Sản phẩm trong đơn</h2>
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead><tr style="color:#8eb9d6;text-align:left;">
+                  <th style="padding:8px;">Sản phẩm</th><th style="padding:8px;text-align:center;">SL</th>
+                  <th style="padding:8px;text-align:right;">Đơn giá</th><th style="padding:8px;text-align:right;">Thành tiền</th>
+                </tr></thead>
+                <tbody>{{rows}}</tbody>
+              </table>
+            </div>
             """;
     }
 }

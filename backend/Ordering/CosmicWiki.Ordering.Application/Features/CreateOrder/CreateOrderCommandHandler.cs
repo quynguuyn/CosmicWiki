@@ -71,7 +71,8 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
             x.Product.SKU,
             x.Product.Name,
             x.Product.UnitPrice,
-            x.Request.Quantity));
+            x.Request.Quantity,
+            x.Product.ImageUrl));
         var order = Order.Create(request.CustomerId, request.CustomerEmail, request.Currency, request.IdempotencyKey, requestFingerprint, lines);
         var reserved = await _inventory.ReserveAsync(
             order.Id,
@@ -88,13 +89,19 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
             _orders.Add(order);
             _outbox.Add(new OrderCreatedIntegrationEvent(
                 Guid.NewGuid(),
-                1,
+                2,
                 DateTime.UtcNow,
                 order.Id,
                 order.CustomerId,
                 request.CustomerEmail,
                 order.TotalAmount,
-                order.Currency), "cosmicwiki.ordering");
+                order.Currency,
+                order.Lines.Select(line => new OrderCreatedLine(
+                    line.SKU,
+                    line.ProductName,
+                    line.UnitPrice,
+                    line.Quantity,
+                    line.LineTotal)).ToArray()), "cosmicwiki.ordering");
             await _orders.SaveChangesAsync(cancellationToken);
             return new(
                 order.Id,

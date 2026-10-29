@@ -17,7 +17,8 @@
         <div class="cart-line-content">
           <span class="font-label-sm">{{ line.product.sku }}</span>
           <h2 class="font-title-md">{{ line.product.name }}</h2>
-          <strong>{{ formatCurrency(line.product.salePrice) }}</strong>
+          <p>Đơn giá: <strong>{{ formatCurrency(line.product.salePrice) }}</strong></p>
+          <p>Thành tiền: <strong>{{ formatCurrency(line.product.salePrice * line.quantity) }}</strong></p>
         </div>
         <div class="quantity">
           <button (click)="cart.setQuantity(line.product.id, line.quantity - 1)">−</button>

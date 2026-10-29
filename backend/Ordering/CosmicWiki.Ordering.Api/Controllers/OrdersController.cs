@@ -1,4 +1,5 @@
 using CosmicWiki.Ordering.Application.Features.CreateOrder;
+using CosmicWiki.Ordering.Application.Events;
 using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Domain.Enums;
 using CosmicWiki.Ordering.Infrastructure.Notifications;
@@ -8,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace CosmicWiki.Ordering.Api.Controllers;
@@ -18,6 +20,8 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 public sealed class OrdersController(
     ISender sender,
     IOrderRepository orders,
+    IInventoryReservationService inventory,
+    IOrderNotificationPublisher notificationPublisher,
     IOptions<OrderLifecycleOptions> lifecycleOptions) : ControllerBase
 {
     [HttpPost]
@@ -77,6 +81,7 @@ public sealed class OrdersController(
             order.DeliveryLatitude,
             order.DeliveryLongitude,
             order.DeliveryLocationUpdatedAtUtc,
+            lines = order.Lines.Select(ToLineResponse),
             statusHistory = order.StatusHistory
                 .OrderBy(x => x.ChangedAtUtc)
                 .ThenBy(x => x.Id)
@@ -108,6 +113,7 @@ public sealed class OrdersController(
             o.DeliveryLatitude,
             o.DeliveryLongitude,
             o.DeliveryLocationUpdatedAtUtc,
+            lines = o.Lines.Select(ToLineResponse),
             statusHistory = o.StatusHistory
                 .OrderBy(x => x.ChangedAtUtc)
                 .ThenBy(x => x.Id)
@@ -115,6 +121,25 @@ public sealed class OrdersController(
             paymentExpiresAtUtc = o.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
         }));
     }
+
+    private static object ToLineResponse(Domain.Entities.OrderLine line) => new
+    {
+        line.ProductId,
+        line.SKU,
+        line.ProductName,
+        line.UnitPrice,
+        line.ProductImageUrl,
+        line.Quantity,
+        lineTotal = line.LineTotal
+    };
+
+    private static IReadOnlyCollection<OrderCreatedLine> ToEmailLines(Domain.Entities.Order order) =>
+        order.Lines.Select(line => new OrderCreatedLine(
+            line.SKU,
+            line.ProductName,
+            line.UnitPrice,
+            line.Quantity,
+            line.LineTotal)).ToArray();
 
     [HttpPatch("{orderId:guid}/status")]
     [Authorize(Policy = Permissions.ShippingWrite)]
@@ -136,21 +161,33 @@ public sealed class OrdersController(
         try
         {
             if (!order.TransitionTo(nextStatus))
+            {
+                if (nextStatus == OrderStatus.Cancelled)
+                    await inventory.ReleaseAsync(order.Id, cancellationToken);
                 return Ok(new { orderId = order.Id, status = order.Status.ToString() });
+            }
 
             await orders.SaveChangesAsync(cancellationToken);
+            await notificationPublisher.PublishStatusChangedAsync(order, cancellationToken);
+            if (nextStatus == OrderStatus.Cancelled)
+                await inventory.ReleaseAsync(order.Id, cancellationToken);
             await emailSender.SendOrderStatusChangedAsync(
                 order.Id,
                 order.CustomerEmail,
                 order.TotalAmount,
                 order.Currency,
                 order.Status.ToString(),
+                ToEmailLines(order),
                 cancellationToken);
             return Ok(new { orderId = order.Id, status = order.Status.ToString() });
         }
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(new { message = "The order status changed. Refresh and try again." });
         }
     }
 }

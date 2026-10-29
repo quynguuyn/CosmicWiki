@@ -9,7 +9,7 @@
       <p *ngIf="order.status === 'PendingPayment'">
         Đang chờ Stripe xác nhận thanh toán. Trang sẽ tự động cập nhật khi webhook được xử lý.
       </p>
-      <p *ngIf="['Paid', 'Shipping'].includes(order.status)">Thanh toán Stripe đã được xác nhận thành công.</p>
+      <p *ngIf="['Paid', 'Confirmed', 'Shipping'].includes(order.status)">Thanh toán Stripe đã được xác nhận thành công.</p>
       <p *ngIf="order.status === 'PaymentFailed'">Thanh toán chưa thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
       <div class="payment-details">
         <div><span>Trạng thái</span><strong class="status">{{ order.status }}</strong></div>

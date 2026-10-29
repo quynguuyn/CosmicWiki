@@ -79,7 +79,7 @@ public sealed class Order : AggregateRoot<Guid>
     public void MarkPaid()
     {
         if (Status is OrderStatus.Cancelled) return;
-        if (Status == OrderStatus.Paid) return;
+        if (Status is OrderStatus.Paid or OrderStatus.Confirmed or OrderStatus.Shipping) return;
         Status = OrderStatus.Paid;
         PaidAtUtc = DateTime.UtcNow;
         RecordStatusChange();
@@ -87,7 +87,8 @@ public sealed class Order : AggregateRoot<Guid>
 
     public void MarkPaymentFailed()
     {
-        if (Status is not OrderStatus.Paid and not OrderStatus.Shipping and not OrderStatus.Cancelled)
+        if (Status is not OrderStatus.Paid and not OrderStatus.Confirmed
+            and not OrderStatus.Shipping and not OrderStatus.Cancelled)
         {
             if (Status == OrderStatus.PaymentFailed) return;
             Status = OrderStatus.PaymentFailed;
@@ -102,12 +103,14 @@ public sealed class Order : AggregateRoot<Guid>
 
         var valid = (Status, nextStatus) switch
         {
-            (OrderStatus.Paid, OrderStatus.Shipping) => true,
+            (OrderStatus.Paid, OrderStatus.Confirmed) => true,
+            (OrderStatus.Confirmed, OrderStatus.Shipping) => true,
             (OrderStatus.Shipping, OrderStatus.Delivered) => true,
             (OrderStatus.Delivered, OrderStatus.Returned) => true,
             (OrderStatus.PendingPayment, OrderStatus.Cancelled) => true,
             (OrderStatus.PaymentFailed, OrderStatus.Cancelled) => true,
             (OrderStatus.Paid, OrderStatus.Cancelled) => true,
+            (OrderStatus.Confirmed, OrderStatus.Cancelled) => true,
             (OrderStatus.Shipping, OrderStatus.Cancelled) => true,
             _ => false
         };
@@ -125,8 +128,8 @@ public sealed class Order : AggregateRoot<Guid>
     {
         if (deliveryPersonId == Guid.Empty)
             throw new ArgumentException("Delivery person ID is required.", nameof(deliveryPersonId));
-        if (Status != OrderStatus.Paid || DeliveryPersonId is not null)
-            throw new InvalidOperationException("Only an unassigned paid order can be claimed for delivery.");
+        if (Status != OrderStatus.Confirmed || DeliveryPersonId is not null)
+            throw new InvalidOperationException("Only an unassigned confirmed order can be claimed for delivery.");
         ArgumentException.ThrowIfNullOrWhiteSpace(deliveryPersonName);
 
         DeliveryPersonId = deliveryPersonId;
