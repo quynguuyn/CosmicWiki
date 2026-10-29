@@ -28,7 +28,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/user/user.component').then(m => m.UserComponent)
   },
   {
+    path: 'admin/orders',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin/admin-orders.component').then(m => m.AdminOrdersComponent)
+  },
+  {
     path: 'admin',
+    pathMatch: 'full',
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent)
   },
@@ -36,11 +42,6 @@ export const routes: Routes = [
     path: 'delivery',
     canActivate: [deliveryGuard],
     loadComponent: () => import('./pages/delivery/delivery.component').then(m => m.DeliveryComponent)
-  },
-  {
-    path: 'admin/orders',
-    canActivate: [adminGuard],
-    loadComponent: () => import('./pages/admin/admin-orders.component').then(m => m.AdminOrdersComponent)
   },
   {
     path: 'admin/inventory',

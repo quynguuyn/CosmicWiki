@@ -13,6 +13,7 @@ public sealed class OrderLineConfiguration : IEntityTypeConfiguration<OrderLine>
         builder.Property(x => x.SKU).HasMaxLength(100).IsRequired();
         builder.Property(x => x.ProductName).HasMaxLength(300).IsRequired();
         builder.Property(x => x.UnitPrice).HasPrecision(18, 2).IsRequired();
+        builder.Property(x => x.ProductImageUrl).HasMaxLength(2000);
         builder.Ignore(x => x.LineTotal);
     }
 }

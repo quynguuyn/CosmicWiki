@@ -24,43 +24,16 @@ public sealed class OrderLifecycleProcessor(
             {
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
-                var inventory = scope.ServiceProvider.GetRequiredService<IInventoryReservationService>();
-                var email = scope.ServiceProvider.GetRequiredService<IOrderEmailSender>();
                 var now = DateTime.UtcNow;
                 var timeout = now.AddMinutes(-Math.Max(1, options.Value.PendingPaymentTimeoutMinutes));
-                var expired = await db.Orders
+                var expiredOrderIds = await db.Orders
+                    .AsNoTracking()
                     .Where(x => x.Status == OrderStatus.PendingPayment && x.CreatedAtUtc <= timeout)
+                    .Select(x => x.Id)
                     .ToListAsync(stoppingToken);
 
-                foreach (var order in expired)
-                {
-                    order.TransitionTo(OrderStatus.Cancelled);
-                    await inventory.ReleaseAsync(order.Id, stoppingToken);
-                }
-
-                var cutoff = new DateTime(
-                    now.Year, now.Month, now.Day,
-                    Math.Clamp(options.Value.AutoConfirmAtUtcHour, 0, 23), 0, 0,
-                    DateTimeKind.Utc);
-                var toShip = new List<Domain.Entities.Order>();
-                if (now >= cutoff)
-                {
-                    toShip.AddRange(await db.Orders
-                        .Where(x => x.Status == OrderStatus.Paid && x.CreatedAtUtc < cutoff)
-                        .ToListAsync(stoppingToken));
-                    foreach (var order in toShip)
-                        order.TransitionTo(OrderStatus.Shipping);
-                }
-
-                var changed = expired.Count > 0 || toShip.Count > 0;
-                if (!changed)
-                    continue;
-
-                await db.SaveChangesAsync(stoppingToken);
-                foreach (var order in expired.Concat(toShip))
-                    await email.SendOrderStatusChangedAsync(
-                        order.Id, order.CustomerEmail, order.TotalAmount, order.Currency,
-                        order.Status.ToString(), stoppingToken);
+                foreach (var orderId in expiredOrderIds)
+                    await CancelExpiredOrderAsync(orderId, timeout, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -71,5 +44,51 @@ public sealed class OrderLifecycleProcessor(
                 logger.LogError(exception, "Failed to process automatic order lifecycle transitions.");
             }
         }
+    }
+
+    private async Task CancelExpiredOrderAsync(
+        Guid orderId,
+        DateTime timeout,
+        CancellationToken cancellationToken)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var orders = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+        var order = await orders.GetAsync(orderId, cancellationToken);
+        if (order is null ||
+            order.Status != OrderStatus.PendingPayment ||
+            order.CreatedAtUtc > timeout ||
+            !order.TransitionTo(OrderStatus.Cancelled))
+            return;
+
+        try
+        {
+            await orders.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            logger.LogInformation(
+                "Skipped expiration for order {OrderId} because its status changed concurrently.",
+                orderId);
+            return;
+        }
+
+        await scope.ServiceProvider.GetRequiredService<IInventoryReservationService>()
+            .ReleaseAsync(order.Id, cancellationToken);
+        await scope.ServiceProvider.GetRequiredService<CosmicWiki.Ordering.Application.Abstractions.IOrderNotificationPublisher>()
+            .PublishStatusChangedAsync(order, cancellationToken);
+        await scope.ServiceProvider.GetRequiredService<IOrderEmailSender>()
+            .SendOrderStatusChangedAsync(
+                order.Id,
+                order.CustomerEmail,
+                order.TotalAmount,
+                order.Currency,
+                order.Status.ToString(),
+                order.Lines.Select(line => new CosmicWiki.Ordering.Application.Events.OrderCreatedLine(
+                    line.SKU,
+                    line.ProductName,
+                    line.UnitPrice,
+                    line.Quantity,
+                    line.LineTotal)).ToArray(),
+                cancellationToken);
     }
 }

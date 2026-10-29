@@ -14,6 +14,7 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.CustomerEmail).HasMaxLength(320);
         builder.Property(x => x.IdempotencyKey).HasMaxLength(200).IsRequired();
         builder.Property(x => x.RequestFingerprint).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.DeliveryAddress).HasColumnName("DELIVERY_ADDRESS").HasMaxLength(500);
         builder.Property(x => x.Status).HasConversion<int>().IsRequired().IsConcurrencyToken();
         builder.Property(x => x.TotalAmount).HasPrecision(18, 2).IsRequired();
         builder.Property(x => x.PaymentIntentId).HasMaxLength(200);

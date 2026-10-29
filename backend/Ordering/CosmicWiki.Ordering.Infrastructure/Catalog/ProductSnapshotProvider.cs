@@ -20,9 +20,14 @@ public sealed class ProductSnapshotProvider(IConfiguration configuration)
 
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT "ID", "SKU", "NAME", "SALE_PRICE", "STOCK_QUANTITY", "STATUS"
-            FROM "COSMICWIKI_PRODUCT"."PRODUCTS"
-            WHERE "ID" = :productId
+            SELECT p."ID", p."SKU", p."NAME", p."SALE_PRICE", p."STOCK_QUANTITY", p."STATUS",
+                   (SELECT pi."URL"
+                    FROM "COSMICWIKI_PRODUCT"."PRODUCT_IMAGES" pi
+                    WHERE pi."PRODUCT_ID" = p."ID"
+                    ORDER BY pi."DISPLAY_ORDER"
+                    FETCH FIRST 1 ROWS ONLY) AS "IMAGE_URL"
+            FROM "COSMICWIKI_PRODUCT"."PRODUCTS" p
+            WHERE p."ID" = :productId
             """;
         command.Parameters.Add("productId", OracleDbType.Raw, productId.ToByteArray(),
             System.Data.ParameterDirection.Input);
@@ -36,6 +41,7 @@ public sealed class ProductSnapshotProvider(IConfiguration configuration)
             reader.GetString(1),
             reader.GetString(2),
             reader.GetDecimal(3),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
             reader.GetInt32(4),
             reader.GetInt32(5) == 2);
     }

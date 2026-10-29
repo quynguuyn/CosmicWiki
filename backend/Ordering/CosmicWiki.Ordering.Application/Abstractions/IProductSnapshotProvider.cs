@@ -12,5 +12,6 @@ public sealed record ProductSnapshot(
     string SKU,
     string Name,
     decimal UnitPrice,
+    string? ImageUrl,
     int AvailableStock,
     bool IsActive);

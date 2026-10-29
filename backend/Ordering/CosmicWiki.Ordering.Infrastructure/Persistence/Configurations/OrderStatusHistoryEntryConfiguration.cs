@@ -11,6 +11,7 @@ public sealed class OrderStatusHistoryEntryConfiguration
     {
         builder.ToTable("ORDER_STATUS_HISTORY");
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Status)
             .HasConversion<int>()
             .IsRequired();
