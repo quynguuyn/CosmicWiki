@@ -3,6 +3,10 @@
 .commerce-hero { margin-bottom: var(--space-xl); } .commerce-hero h1 { margin: var(--space-md) 0; } .commerce-hero p { color: var(--on-surface-variant); }
 .section-eyebrow { color: var(--tertiary); display: flex; gap: var(--space-xs); align-items: center; }
 .checkout-card { max-width: 48rem; margin: auto; } .checkout-line, .checkout-total { display: flex; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid var(--outline-variant); }
+.delivery-address { display: grid; gap: .5rem; margin-bottom: var(--space-xl); }
+.delivery-address textarea { width: 100%; resize: vertical; padding: .8rem 1rem; border: 1px solid var(--outline-variant); border-radius: .75rem; background: var(--surface-container-low); color: var(--on-surface); font: inherit; }
+.delivery-address textarea:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
+.delivery-address small { color: var(--on-surface-variant); }
 .checkout-total { font-size: 1.25rem; border: 0; } .checkout-total strong { color: var(--tertiary); }
 .actions { display: flex; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-xl); }
 .actions a, .actions button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); text-decoration: none; }

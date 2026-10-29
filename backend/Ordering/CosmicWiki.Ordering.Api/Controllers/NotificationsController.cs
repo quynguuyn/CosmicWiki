@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using CosmicWiki.Ordering.Domain.Entities;
+using CosmicWiki.Ordering.Domain.Enums;
 using CosmicWiki.Ordering.Infrastructure.Notifications;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +19,8 @@ public sealed class NotificationsController(OrderingDbContext db) : ControllerBa
     {
         if (!TryGetCustomerId(out var customerId))
             return Forbid();
+
+        await BackfillFromOrderHistoryAsync(customerId, cancellationToken);
 
         var notifications = await db.OrderNotifications
             .AsNoTracking()
@@ -72,4 +75,47 @@ public sealed class NotificationsController(OrderingDbContext db) : ControllerBa
     private bool TryGetCustomerId(out Guid customerId) =>
         Guid.TryParse(User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value, out customerId)
         && customerId != Guid.Empty;
+
+    private async Task BackfillFromOrderHistoryAsync(Guid customerId, CancellationToken cancellationToken)
+    {
+        var recentOrderIds = await db.Orders
+            .AsNoTracking()
+            .Where(order => order.CustomerId == customerId)
+            .OrderByDescending(order => order.CreatedAtUtc)
+            .Select(order => order.Id)
+            .Take(30)
+            .ToListAsync(cancellationToken);
+        var changes = await db.OrderStatusHistory
+            .AsNoTracking()
+            .Where(history => recentOrderIds.Contains(history.OrderId))
+            .Select(history => new { history.OrderId, history.Status, history.ChangedAtUtc })
+            .ToListAsync(cancellationToken);
+
+        var existing = await db.OrderNotifications
+            .Where(item => item.CustomerId == customerId)
+            .Select(item => new { item.OrderId, item.Status })
+            .ToListAsync(cancellationToken);
+        var existingKeys = existing
+            .Select(item => (item.OrderId, item.Status))
+            .ToHashSet();
+
+        foreach (var change in changes)
+        {
+            var status = change.Status.ToString();
+            if (!existingKeys.Add((change.OrderId, status)))
+                continue;
+
+            var (title, message) = OrderNotificationPublisher.ContentFor(change.OrderId, change.Status);
+            db.OrderNotifications.Add(OrderNotification.Create(
+                customerId,
+                change.OrderId,
+                title,
+                message,
+                status,
+                change.ChangedAtUtc));
+        }
+
+        if (db.ChangeTracker.HasChanges())
+            await db.SaveChangesAsync(cancellationToken);
+    }
 }

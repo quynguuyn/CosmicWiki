@@ -54,7 +54,7 @@
             (click)="openNotification(notification)">
             <strong>{{ notification.title }}</strong>
             <span>{{ notification.message }}</span>
-            <time [attr.datetime]="notification.createdAtUtc">{{ notification.createdAtUtc | date:'short' }}</time>
+            <time [attr.datetime]="notification.createdAtUtc">{{ notification.createdAtUtc | date:'short':'+0700' }}</time>
           </button>
           }
         </section>

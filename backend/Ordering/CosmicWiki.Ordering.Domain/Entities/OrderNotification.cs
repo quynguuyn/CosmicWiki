@@ -4,7 +4,14 @@ public sealed class OrderNotification
 {
     private OrderNotification() { }
 
-    private OrderNotification(Guid id, Guid customerId, Guid orderId, string title, string message, string status)
+    private OrderNotification(
+        Guid id,
+        Guid customerId,
+        Guid orderId,
+        string title,
+        string message,
+        string status,
+        DateTime createdAtUtc)
     {
         Id = id;
         CustomerId = customerId;
@@ -12,7 +19,7 @@ public sealed class OrderNotification
         Title = title;
         Message = message;
         Status = status;
-        CreatedAtUtc = DateTime.UtcNow;
+        CreatedAtUtc = createdAtUtc;
     }
 
     public Guid Id { get; private set; }
@@ -30,14 +37,22 @@ public sealed class OrderNotification
         Guid orderId,
         string title,
         string message,
-        string status)
+        string status,
+        DateTime? createdAtUtc = null)
     {
         if (customerId == Guid.Empty) throw new ArgumentException("Customer ID is required.", nameof(customerId));
         if (orderId == Guid.Empty) throw new ArgumentException("Order ID is required.", nameof(orderId));
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(message);
         ArgumentException.ThrowIfNullOrWhiteSpace(status);
-        return new OrderNotification(Guid.NewGuid(), customerId, orderId, title.Trim(), message.Trim(), status.Trim());
+        return new OrderNotification(
+            Guid.NewGuid(),
+            customerId,
+            orderId,
+            title.Trim(),
+            message.Trim(),
+            status.Trim(),
+            createdAtUtc ?? DateTime.UtcNow);
     }
 
     public void MarkRead()

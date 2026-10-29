@@ -41,6 +41,10 @@ export class NotificationService {
     });
   }
 
+  refresh(): void {
+    if (this.auth.authenticated()) this.load();
+  }
+
   markAllRead(): void {
     this.http.post<void>('/api/notifications/read-all', {}).subscribe({
       next: () => {

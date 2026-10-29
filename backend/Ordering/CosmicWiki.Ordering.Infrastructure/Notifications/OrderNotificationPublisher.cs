@@ -15,17 +15,7 @@ public sealed class OrderNotificationPublisher(
 {
     public async Task PublishStatusChangedAsync(Order order, CancellationToken cancellationToken)
     {
-        var (title, message) = order.Status switch
-        {
-            OrderStatus.Paid => ("Đã nhận thanh toán", $"Đơn hàng #{ShortId(order.Id)} đã thanh toán và đang chờ xác nhận."),
-            OrderStatus.Confirmed => ("Đơn hàng đã xác nhận", $"Đơn hàng #{ShortId(order.Id)} đã được xác nhận và đang chờ nhân viên nhận giao."),
-            OrderStatus.Shipping => ("Đơn hàng đang giao", $"Đơn hàng #{ShortId(order.Id)} đang được giao đến bạn."),
-            OrderStatus.Delivered => ("Đơn hàng đã giao", $"Đơn hàng #{ShortId(order.Id)} đã được giao thành công."),
-            OrderStatus.Returned => ("Đơn hàng đã trả", $"Đơn hàng #{ShortId(order.Id)} đã được chuyển sang trạng thái trả hàng."),
-            OrderStatus.Cancelled => ("Đơn hàng đã hủy", $"Đơn hàng #{ShortId(order.Id)} đã bị hủy."),
-            OrderStatus.PaymentFailed => ("Thanh toán thất bại", $"Thanh toán cho đơn hàng #{ShortId(order.Id)} không thành công."),
-            _ => throw new InvalidOperationException($"Notifications are not supported for order status '{order.Status}'.")
-        };
+        var (title, message) = ContentFor(order.Id, order.Status);
 
         var notification = OrderNotification.Create(
             order.CustomerId,
@@ -50,6 +40,20 @@ public sealed class OrderNotificationPublisher(
                 order.Id);
         }
     }
+
+    public static (string Title, string Message) ContentFor(Guid orderId, OrderStatus status) =>
+        status switch
+        {
+            OrderStatus.PendingPayment => ("Đơn hàng đã tạo", $"Đơn hàng #{ShortId(orderId)} đang chờ thanh toán."),
+            OrderStatus.Paid => ("Đã nhận thanh toán", $"Đơn hàng #{ShortId(orderId)} đã thanh toán và đang chờ xác nhận."),
+            OrderStatus.Confirmed => ("Đơn hàng đã xác nhận", $"Đơn hàng #{ShortId(orderId)} đã được xác nhận và đang chờ nhân viên nhận giao."),
+            OrderStatus.Shipping => ("Đơn hàng đang giao", $"Đơn hàng #{ShortId(orderId)} đang được giao đến bạn."),
+            OrderStatus.Delivered => ("Đơn hàng đã giao", $"Đơn hàng #{ShortId(orderId)} đã được giao thành công."),
+            OrderStatus.Returned => ("Đơn hàng đã trả", $"Đơn hàng #{ShortId(orderId)} đã được chuyển sang trạng thái trả hàng."),
+            OrderStatus.Cancelled => ("Đơn hàng đã hủy", $"Đơn hàng #{ShortId(orderId)} đã bị hủy."),
+            OrderStatus.PaymentFailed => ("Thanh toán thất bại", $"Thanh toán cho đơn hàng #{ShortId(orderId)} không thành công."),
+            _ => throw new InvalidOperationException($"Notifications are not supported for order status '{status}'.")
+        };
 
     public static object ToResponse(OrderNotification notification) => new
     {

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../features/auth/services/auth.service';
@@ -8,7 +9,7 @@ import { OrderingService } from '../../features/ordering/services/ordering.servi
 @Component({
   selector: 'app-ordering',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './ordering.component.html',
   styleUrl: './ordering.component.scss'
 })
@@ -19,6 +20,7 @@ export class OrderingComponent {
   private readonly router = inject(Router);
   isSubmitting = false;
   error = '';
+  deliveryAddress = '';
 
   submit(): void {
     const customerId = this.auth.getCustomerId();
@@ -26,11 +28,16 @@ export class OrderingComponent {
       this.error = 'Vui lòng đăng nhập và chọn ít nhất một hiện vật.';
       return;
     }
+    if (this.deliveryAddress.trim().length < 8) {
+      this.error = 'Vui lòng nhập địa chỉ giao hàng đầy đủ (ít nhất 8 ký tự).';
+      return;
+    }
     this.isSubmitting = true;
     this.error = '';
     this.orders.createOrder({
       customerId,
       currency: 'USD',
+      deliveryAddress: this.deliveryAddress.trim(),
       lines: this.cart.lines().map(line => ({ productId: line.product.id, quantity: line.quantity }))
     }).subscribe({
       next: order => {

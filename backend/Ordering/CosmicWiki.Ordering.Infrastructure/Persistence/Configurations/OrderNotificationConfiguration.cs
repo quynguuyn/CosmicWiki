@@ -17,5 +17,7 @@ public sealed class OrderNotificationConfiguration : IEntityTypeConfiguration<Or
         builder.Ignore(x => x.IsRead);
         builder.HasIndex(x => new { x.CustomerId, x.CreatedAtUtc });
         builder.HasIndex(x => new { x.CustomerId, x.ReadAtUtc });
+        builder.HasIndex(x => new { x.CustomerId, x.OrderId, x.Status }).IsUnique();
+        builder.HasIndex(x => new { x.CustomerId, x.OrderId, x.Status }).IsUnique();
     }
 }

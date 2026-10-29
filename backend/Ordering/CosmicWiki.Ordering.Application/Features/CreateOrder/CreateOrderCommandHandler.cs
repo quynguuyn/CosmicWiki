@@ -73,7 +73,14 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
             x.Product.UnitPrice,
             x.Request.Quantity,
             x.Product.ImageUrl));
-        var order = Order.Create(request.CustomerId, request.CustomerEmail, request.Currency, request.IdempotencyKey, requestFingerprint, lines);
+        var order = Order.Create(
+            request.CustomerId,
+            request.CustomerEmail,
+            request.Currency,
+            request.IdempotencyKey,
+            requestFingerprint,
+            lines,
+            request.DeliveryAddress);
         var reserved = await _inventory.ReserveAsync(
             order.Id,
             order.Lines.Select(x => new InventoryReservationLine(x.ProductId, x.Quantity)).ToArray(),
@@ -135,6 +142,9 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
             request.Currency.Length != 3 ||
             request.Currency.Any(c => !char.IsAsciiLetter(c)))
             throw new ArgumentException("Currency must be a three-letter ISO code.", nameof(request));
+        if (request.DeliveryAddress?.Length > 500 ||
+            (request.DeliveryAddress is not null && string.IsNullOrWhiteSpace(request.DeliveryAddress)))
+            throw new ArgumentException("A valid delivery address of up to 500 characters is required.", nameof(request));
 
         if (request.IdempotencyKey is null ||
             request.IdempotencyKey.Length is < 1 or > 200 ||
@@ -149,6 +159,7 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
         {
             request.CustomerId,
             Currency = request.Currency.Trim().ToUpperInvariant(),
+            DeliveryAddress = request.DeliveryAddress?.Trim(),
             Lines = request.Lines.Select(x => new
             {
                 x.ProductId,

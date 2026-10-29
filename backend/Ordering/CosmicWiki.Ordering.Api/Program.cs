@@ -6,6 +6,7 @@ using CosmicWiki.Ordering.Api.Authorization;
 using CosmicWiki.Ordering.Api.Health;
 using CosmicWiki.Ordering.Api.Internal;
 using CosmicWiki.Ordering.Api.RateLimiting;
+using CosmicWiki.Ordering.Api.Serialization;
 using CosmicWiki.Ordering.Application;
 using CosmicWiki.Ordering.Infrastructure;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
@@ -42,7 +43,10 @@ builder.Services.AddHealthChecks()
     .AddCheck<OrderingDatabaseHealthCheck>("ordering-database")
     .AddCheck<KafkaHealthCheck>("kafka");
 builder.Services.AddOrderingAuthorization();
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter()));
 builder.Services.AddSignalR();
 builder.Services.AddInternalRateLimiting();
 builder.Services.AddEndpointsApiExplorer();

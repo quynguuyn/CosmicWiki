@@ -117,6 +117,7 @@ public sealed class AdminOrdersController(
         order.Currency,
         order.PaidAtUtc,
         order.CreatedAtUtc,
+        order.DeliveryAddress,
         lines = order.Lines.Select(line => new
         {
             line.ProductId,
