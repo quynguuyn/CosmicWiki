@@ -5,6 +5,7 @@ using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Caching;
 using CosmicWiki.Catalog.Api.Authorization;
 using CosmicWiki.Catalog.Application;
+using CosmicWiki.Catalog.Infrastructure.Research;
 using CosmicWiki.Messaging.Kafka;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
@@ -12,6 +13,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 builder.Services.AddCatalogApplication();
 builder.Services.AddCatalogInfrastructure(builder.Configuration);
@@ -26,8 +29,11 @@ builder.Services.AddHangfire(
             builder.Configuration["Hangfire:RedisConnection"]
             ?? "redis:6379");
     });
-builder.Services.AddHangfireServer();
-
+builder.Services.AddHangfireServer(options =>
+{
+    options.Queues = ["research", "default"];
+});
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -105,10 +111,11 @@ using (var scope = app.Services.CreateScope())
     var recurringJobManager =
         scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
 
-    recurringJobManager.AddOrUpdate<CosmicWiki.Catalog.Application.Research.IAstronomicalResearchJob>(
+    recurringJobManager.AddOrUpdate<QueuedAstronomicalResearchJob>(
         "astronomical-research",
         job => job.RunAsync(CancellationToken.None),
-        Cron.Daily(2));
+        Cron.Daily(2),
+        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -128,5 +135,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health/live");
 
 app.Run();

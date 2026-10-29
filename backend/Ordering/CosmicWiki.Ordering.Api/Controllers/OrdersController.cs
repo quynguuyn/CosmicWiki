@@ -77,6 +77,10 @@ public sealed class OrdersController(
             order.DeliveryLatitude,
             order.DeliveryLongitude,
             order.DeliveryLocationUpdatedAtUtc,
+            statusHistory = order.StatusHistory
+                .OrderBy(x => x.ChangedAtUtc)
+                .ThenBy(x => x.Id)
+                .Select(x => new { status = x.Status.ToString(), x.ChangedAtUtc }),
             paymentExpiresAtUtc = order.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
         });
     }
@@ -104,6 +108,10 @@ public sealed class OrdersController(
             o.DeliveryLatitude,
             o.DeliveryLongitude,
             o.DeliveryLocationUpdatedAtUtc,
+            statusHistory = o.StatusHistory
+                .OrderBy(x => x.ChangedAtUtc)
+                .ThenBy(x => x.Id)
+                .Select(x => new { status = x.Status.ToString(), x.ChangedAtUtc }),
             paymentExpiresAtUtc = o.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
         }));
     }

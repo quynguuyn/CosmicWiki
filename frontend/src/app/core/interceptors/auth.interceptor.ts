@@ -7,7 +7,7 @@ import { AuthService } from '../../features/auth/services/auth.service';
 import { AuthSessionService } from '../../features/auth/services/auth-session.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-    const apiUrl = new URL(API_CONFIG.baseUrl);
+    const apiUrl = new URL(API_CONFIG.baseUrl || window.location.origin);
     const requestUrl = new URL(req.url, apiUrl);
 
     if (requestUrl.origin !== apiUrl.origin) {

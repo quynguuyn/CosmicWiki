@@ -20,7 +20,12 @@
       <p>Đang tải dữ liệu...</p>
     </div>
 
-    <div class="no-orders" *ngIf="!loading && filteredOrders.length === 0">
+    <div class="load-error" *ngIf="!loading && loadError" role="alert">
+      <p>{{ loadError }}</p>
+      <button type="button" class="btn btn-outline" (click)="reload()">Thử lại</button>
+    </div>
+
+    <div class="no-orders" *ngIf="!loading && !loadError && filteredOrders.length === 0">
       <p>Bạn chưa có đơn hàng nào.</p>
       <a routerLink="/store" class="btn btn-primary">Đến cửa hàng</a>
     </div>
@@ -56,6 +61,19 @@
         </p>
         <iframe *ngIf="mapUrl(order)" [src]="mapUrl(order)" title="Vị trí đơn hàng trên bản đồ"
           loading="lazy" referrerpolicy="no-referrer"></iframe>
+      </section>
+      <section class="order-history" *ngIf="order.statusHistory?.length">
+        <h3>Tiến trình đơn hàng</h3>
+        <ol>
+          <li *ngFor="let change of order.statusHistory">
+            <span class="badge" [ngClass]="change.status.toLowerCase()">
+              {{ getStatusLabel(change.status) }}
+            </span>
+            <time [attr.datetime]="change.changedAtUtc">
+              {{ change.changedAtUtc | date:'short' }}
+            </time>
+          </li>
+        </ol>
       </section>
     </div>
   </div>

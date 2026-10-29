@@ -10,5 +10,7 @@ public sealed record StarCreatedIntegrationEvent(
     Guid StarId,
     string Name,
     string? Description,
-    string? ImageUrl
+    string? ImageUrl,
+    string? Catalog = null,
+    string? CatalogValue = null
 ) : IIntegrationEvent;

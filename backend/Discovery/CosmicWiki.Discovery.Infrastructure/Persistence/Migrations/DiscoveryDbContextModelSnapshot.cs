@@ -30,6 +30,16 @@ namespace CosmicWiki.Discovery.Infrastructure.Persistence.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("ID");
 
+                    b.Property<string>("Catalog")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CATALOG");
+
+                    b.Property<string>("CatalogValue")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("CATALOG_VALUE");
+
                     b.Property<string>("Description")
                         .HasMaxLength(4000)
                         .HasColumnType("NCLOB")
@@ -61,6 +71,8 @@ namespace CosmicWiki.Discovery.Infrastructure.Persistence.Migrations
                         .HasColumnName("UPDATED_AT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CatalogValue");
 
                     b.HasIndex("Name");
 

@@ -39,6 +39,14 @@ public sealed class SearchDocumentConfiguration
             .HasColumnName("IMAGE_URL")
             .HasMaxLength(2000);
 
+        builder.Property(x => x.Catalog)
+            .HasColumnName("CATALOG")
+            .HasMaxLength(100);
+
+        builder.Property(x => x.CatalogValue)
+            .HasColumnName("CATALOG_VALUE")
+            .HasMaxLength(200);
+
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("UPDATED_AT")
             .IsRequired();
@@ -49,5 +57,7 @@ public sealed class SearchDocumentConfiguration
         builder.HasIndex(x => x.SourceType);
 
         builder.HasIndex(x => x.Name);
+
+        builder.HasIndex(x => x.CatalogValue);
     }
 }

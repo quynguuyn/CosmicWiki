@@ -32,6 +32,12 @@ export interface OrderStatus {
   deliveryLatitude?: number | null;
   deliveryLongitude?: number | null;
   deliveryLocationUpdatedAtUtc?: string | null;
+  statusHistory?: OrderStatusHistoryEntry[];
+}
+
+export interface OrderStatusHistoryEntry {
+  status: string;
+  changedAtUtc: string;
 }
 
 export interface DeliveryOrder {

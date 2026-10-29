@@ -11,6 +11,8 @@ using CosmicWiki.Payments.Infrastructure;
 using CosmicWiki.Payments.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 if (!builder.Environment.IsDevelopment())
 {
@@ -24,11 +26,14 @@ if (!builder.Environment.IsDevelopment())
         false);
 
     if (string.IsNullOrWhiteSpace(webhookSecret) ||
-        webhookSecret == "[SECRET_FROM_ENV]" ||
+        webhookSecret.Length < 32 ||
+        webhookSecret is "[SECRET_FROM_ENV]" or "local-payment-secret" ||
         string.IsNullOrWhiteSpace(stripeSecret) ||
+        stripeSecret.Length < 32 ||
         stripeSecret == "[SECRET_FROM_ENV]" ||
         string.IsNullOrWhiteSpace(orderingKey) ||
-        orderingKey == "[SECRET_FROM_ENV]" ||
+        orderingKey.Length < 32 ||
+        orderingKey is "[SECRET_FROM_ENV]" or "local-ordering-key" ||
         !Uri.TryCreate(orderingUrl, UriKind.Absolute, out var uri) ||
         uri.Scheme != Uri.UriSchemeHttps ||
         allowHttp)
@@ -81,4 +86,10 @@ app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.MapHealthChecks(
+    "/health/live",
+    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 app.Run();

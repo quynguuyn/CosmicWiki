@@ -112,7 +112,7 @@
                 </span>
 
                 <input #searchInput type="text" class="library-search"
-                    placeholder="Tìm theo mã biên mục (M31, NGC 1976, Kepler, Barnard 33)..." [value]="searchQuery"
+                    placeholder="Tìm tên, mô tả hoặc mã biên mục (M31, NGC 1976, Kepler)..." [value]="searchQuery"
                     (input)="onSearch($event)" />
 
                 <div class="search-shortcut">
@@ -167,6 +167,12 @@
         </div>
     </section>
 
+    <div class="library-load-state" *ngIf="loading" role="status">
+        Đang tìm kiếm trong kho dữ liệu thiên văn...
+    </div>
+    <div class="library-load-error" *ngIf="contentError && !loading" role="alert">
+        {{ contentError }}
+    </div>
 
     <!-- CELESTIAL SPECIMENS -->
     <section class="specimen-grid" [class.specimen-grid--list]="viewMode === 'list'">
@@ -233,7 +239,7 @@
 
 
     <!-- EMPTY STATE -->
-    <div *ngIf="filteredSpecimens.length === 0" class="empty-state glass-card">
+    <div *ngIf="!loading && !contentError && filteredSpecimens.length === 0" class="empty-state glass-card">
         <span class="material-symbols-outlined">
             search_off
         </span>
@@ -351,8 +357,30 @@
 
                     <div class="data-row"><span>Loại thực thể:</span><strong>{{ selectedSpecimen?.categories?.[0] }}</strong></div>
                     <div class="data-row"><span>Nguồn:</span><strong>Discovery search index</strong></div>
+                    <div class="data-row" *ngIf="selectedAstronomicalObject?.catalog">
+                        <span>Danh mục:</span><strong>{{ selectedAstronomicalObject?.catalog }}</strong>
+                    </div>
+                    <div class="data-row" *ngIf="selectedAstronomicalObject?.catalogValue">
+                        <span>Mã định danh:</span><strong>{{ selectedAstronomicalObject?.catalogValue }}</strong>
+                    </div>
+                    <div class="data-row" *ngIf="selectedAstronomicalObject?.objectType">
+                        <span>Phân loại:</span><strong>{{ selectedAstronomicalObject?.objectType }}</strong>
+                    </div>
+                    <div class="data-row" *ngIf="selectedAstronomicalObject?.rightAscensionDegrees !== null && selectedAstronomicalObject?.rightAscensionDegrees !== undefined">
+                        <span>Xích kinh (RA):</span><strong>{{ selectedAstronomicalObject?.rightAscensionDegrees }}°</strong>
+                    </div>
+                    <div class="data-row" *ngIf="selectedAstronomicalObject?.declinationDegrees !== null && selectedAstronomicalObject?.declinationDegrees !== undefined">
+                        <span>Xích vĩ (Dec):</span><strong>{{ selectedAstronomicalObject?.declinationDegrees }}°</strong>
+                    </div>
 
                 </div>
+
+                <p class="dossier-state" *ngIf="detailLoading" role="status">
+                    Đang tải hồ sơ thiên thể từ Catalog...
+                </p>
+                <p class="dossier-state dossier-state--error" *ngIf="detailError" role="alert">
+                    {{ detailError }}
+                </p>
 
                 <div class="curator-note body-sm">
 
@@ -367,6 +395,18 @@
             </div>
 
         </div>
+
+        <section class="related-specimens" *ngIf="relatedSpecimens.length || relatedError">
+            <h4>Khám phá thêm cùng loại</h4>
+            <p *ngIf="relatedError" role="status">{{ relatedError }}</p>
+            <div class="related-specimens__list">
+                <button type="button" *ngFor="let related of relatedSpecimens"
+                    (click)="openDossier(related)">
+                    <span>{{ related.name }}</span>
+                    <small>{{ related.badge }}</small>
+                </button>
+            </div>
+        </section>
 
 
         <!-- MODAL FOOTER -->
