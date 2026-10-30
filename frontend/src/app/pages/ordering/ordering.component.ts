@@ -24,7 +24,8 @@ export class OrderingComponent {
 
   submit(): void {
     const customerId = this.auth.getCustomerId();
-    if (!customerId || this.cart.lines().length === 0 || this.isSubmitting) {
+    const selectedLines = this.cart.selectedLines();
+    if (!customerId || selectedLines.length === 0 || this.isSubmitting) {
       this.error = 'Vui lòng đăng nhập và chọn ít nhất một hiện vật.';
       return;
     }
@@ -38,10 +39,10 @@ export class OrderingComponent {
       customerId,
       currency: 'USD',
       deliveryAddress: this.deliveryAddress.trim(),
-      lines: this.cart.lines().map(line => ({ productId: line.product.id, quantity: line.quantity }))
+      lines: selectedLines.map(line => ({ productId: line.product.id, quantity: line.quantity }))
     }).subscribe({
       next: order => {
-        this.cart.clear();
+        this.cart.removeProducts(selectedLines.map(line => line.product.id));
         this.router.navigate(['/payment'], { state: { order } });
       },
       error: () => { this.error = 'Không thể tạo đơn hàng. Vui lòng kiểm tra tồn kho và thử lại.'; this.isSubmitting = false; }
