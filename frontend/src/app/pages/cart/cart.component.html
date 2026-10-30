@@ -12,7 +12,22 @@
         <h2 class="font-headline-sm">Giỏ hiện vật đang trống</h2>
         <a routerLink="/store" class="btn-primary">Khám phá cửa hàng</a>
       </div>
+      <div class="cart-selection-toolbar" *ngIf="cart.lines().length > 0">
+        <label>
+          <input type="checkbox" [checked]="allItemsSelected" [indeterminate]="someItemsSelected"
+            (change)="toggleSelectAll($event)" aria-label="Chọn tất cả sản phẩm trong giỏ">
+          <span>Chọn tất cả ({{ cart.lines().length }})</span>
+        </label>
+        <button type="button" class="clear-selected" (click)="cart.removeSelected()"
+          [disabled]="cart.selectedCount === 0">
+          Xóa đã chọn
+        </button>
+      </div>
       <article class="cart-line" *ngFor="let line of cart.lines()">
+        <input type="checkbox" class="cart-line-checkbox"
+          [checked]="cart.isSelected(line.product.id)"
+          (change)="toggleItemSelection(line.product.id, $event)"
+          [attr.aria-label]="'Chọn ' + line.product.name">
         <img [src]="line.product.images.length > 0 ? line.product.images[0].url : 'assets/images/cosmic-placeholder.svg'" [alt]="line.product.name">
         <div class="cart-line-content">
           <span class="font-label-sm">{{ line.product.sku }}</span>
@@ -33,10 +48,12 @@
 
     <aside class="summary cosmic-glass">
       <div class="section-eyebrow font-label-sm">TÓM TẮT ĐƠN HÀNG</div>
-      <div class="summary-row"><span>Số hiện vật</span><strong>{{ cart.count }}</strong></div>
-      <div class="summary-row total"><span>Tạm tính</span><strong>{{ formatCurrency(cart.total) }}</strong></div>
+      <div class="summary-row"><span>Đã chọn</span><strong>{{ cart.selectedCount }}</strong></div>
+      <div class="summary-row total"><span>Tạm tính đã chọn</span><strong>{{ formatCurrency(cart.selectedTotal) }}</strong></div>
       <div class="summary-actions">
-        <a routerLink="/ordering" class="btn-primary full" [class.disabled]="cart.lines().length === 0">
+        <a [routerLink]="cart.selectedCount > 0 ? '/ordering' : null"
+          class="btn-primary full" [class.disabled]="cart.selectedCount === 0"
+          [attr.aria-disabled]="cart.selectedCount === 0">
           <span class="material-symbols-outlined">arrow_forward</span>
           Tiếp tục lập đơn
         </a>

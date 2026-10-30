@@ -388,7 +388,8 @@
 
 
 <!-- ==================== CART DRAWER ==================== -->
-<aside class="cart-drawer" [class.open]="isCartOpen">
+<aside class="cart-drawer" [class.open]="isCartOpen" role="dialog" aria-modal="true"
+  aria-label="Giỏ hiện vật" [attr.aria-hidden]="!isCartOpen">
 
   <div class="cart-header">
 
@@ -408,7 +409,7 @@
 
     </div>
 
-    <button type="button" class="drawer-close" (click)="closeCart()">
+    <button type="button" class="drawer-close" aria-label="Đóng giỏ hàng" (click)="closeCart()">
       <span class="material-symbols-outlined">
         close
       </span>
@@ -420,7 +421,25 @@
   <!-- Cart Items -->
   <div class="cart-items">
 
-    <div *ngFor="let item of cart; let i = index" class="cart-item cosmic-glass">
+    <div class="cart-selection-toolbar" *ngIf="cart.length > 0">
+      <label class="cart-select-all">
+        <input type="checkbox" [checked]="allCartItemsSelected" [indeterminate]="someCartItemsSelected"
+          (change)="toggleSelectAllCartItems($event)" aria-label="Chọn tất cả sản phẩm trong giỏ">
+        <span>Chọn tất cả ({{ cart.length }})</span>
+      </label>
+      <button type="button" class="clear-selected" (click)="clearSelectedCartItems()"
+        [disabled]="selectedCartCount === 0">
+        Xóa đã chọn
+      </button>
+    </div>
+
+    <div *ngFor="let item of cart; let i = index" class="cart-item cosmic-glass"
+      [class.cart-item-unselected]="!isCartItemSelected(item.productId)">
+
+      <input class="cart-item-checkbox" type="checkbox"
+        [checked]="isCartItemSelected(item.productId)"
+        (change)="toggleCartItemSelection(item.productId, $event)"
+        [attr.aria-label]="'Chọn ' + item.title">
 
       <img [src]="item.image" [alt]="item.title">
 
@@ -430,21 +449,27 @@
           {{ item.title }}
         </h4>
 
+        <p class="cart-item-unit-price">Đơn giá: {{ formatCurrency(item.price) }}</p>
+
         <div class="cart-item-bottom">
 
-          <strong>
-            {{ formatCurrency(item.price) }}
-          </strong>
+          <strong>{{ formatCurrency(item.price * item.qty) }}</strong>
 
-          <span>
-            Số lượng: {{ item.qty }}
-          </span>
+          <div class="cart-quantity">
+            <button type="button" (click)="changeCartItemQuantity(item.productId, item.qty - 1)"
+              [attr.aria-label]="'Giảm số lượng ' + item.title">−</button>
+            <span>{{ item.qty }}</span>
+            <button type="button" (click)="changeCartItemQuantity(item.productId, item.qty + 1)"
+              [disabled]="item.qty >= item.stockQuantity"
+              [attr.aria-label]="'Tăng số lượng ' + item.title">+</button>
+          </div>
 
         </div>
 
       </div>
 
-      <button type="button" class="remove-item" title="Xóa" (click)="removeFromCart(i)">
+      <button type="button" class="remove-item" [attr.aria-label]="'Xóa ' + item.title"
+        (click)="removeFromCart(i)">
         <span class="material-symbols-outlined">
           delete
         </span>
@@ -473,7 +498,7 @@
     <div class="subtotal">
 
       <span>
-        Tổng giá trị lưu trữ:
+        Tổng giá trị đã chọn:
       </span>
 
       <strong>
@@ -483,72 +508,21 @@
     </div>
 
 
-    <form #checkoutForm="ngForm" (ngSubmit)="submitCheckout()" class="checkout-form">
-
-      <div class="form-field">
-
-        <label>
-          Họ tên Nhà nghiên cứu / Khách phục vụ *
-        </label>
-
-        <input type="text" name="customerName" [(ngModel)]="customerName" required placeholder="GS. Nguyễn Văn An">
-
-      </div>
-
-
-      <div class="form-field">
-
-        <label>
-          Email gửi Hồ sơ Định danh Hiện vật *
-        </label>
-
-        <input type="email" name="customerEmail" [(ngModel)]="customerEmail" required
-          placeholder="an.nguyen@observatory.vn">
-
-      </div>
-
-
-      <div class="form-field">
-
-        <label>
-          Địa chỉ Giao nhận Niêm phong Chuyên biệt *
-        </label>
-
-        <input type="text" name="customerAddress" [(ngModel)]="customerAddress" required
-          placeholder="Tòa nhà Viện Hàn Lâm, Hà Nội">
-
-      </div>
-
-
-      <button type="submit" class="checkout-button" [disabled]="
-          checkoutForm.invalid ||
-          cart.length === 0 ||
-          isCheckoutLoading
-        ">
-
-        <span *ngIf="!isCheckoutLoading">
-          Xác nhận Lưu trữ & Thanh toán
-        </span>
-
-        <span *ngIf="isCheckoutLoading" class="loading-state">
-          <span class="spinner"></span>
-          Đang niêm phong & xác thực hồ sơ...
-        </span>
-
+    <div class="checkout-actions">
+      <p *ngIf="selectedCartCount === 0 && cart.length > 0" class="selection-hint">
+        Chọn sản phẩm để tiếp tục lập đơn hàng.
+      </p>
+      <button type="button" class="checkout-button" (click)="submitCheckout()"
+        [disabled]="selectedCartCount === 0">
+        Lập đơn từ {{ selectedCartCount }} món đã chọn
       </button>
 
-
       <p class="secure-note">
-
-        <span class="material-symbols-outlined">
-          lock
-        </span>
-
-        Giao dịch được mã hóa lượng tử & bảo vệ bởi Bảo Tàng
-
+        <span class="material-symbols-outlined">local_shipping</span>
+        Địa chỉ giao hàng sẽ được nhập ở bước lập đơn hàng.
       </p>
 
-    </form>
+    </div>
 
   </div>
 

@@ -6,7 +6,6 @@ import { timer, switchMap, takeWhile } from 'rxjs';
 import { loadStripe, Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js';
 import { OrderingService } from '../../features/ordering/services/ordering.service';
 import { CreateOrderResult, OrderStatus } from '../../features/ordering/models/order.model';
-import { CartService } from '../../core/services/cart.service';
 import { API_CONFIG } from '../../core/config/api.config';
 
 @Component({
@@ -19,7 +18,6 @@ import { API_CONFIG } from '../../core/config/api.config';
 export class PaymentComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly orders = inject(OrderingService);
-  private readonly cart = inject(CartService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   order: CreateOrderResult | OrderStatus | null = null;
@@ -76,10 +74,8 @@ export class PaymentComponent implements OnInit {
     if (result.error) {
       this.paymentError = result.error.message ?? 'Không thể xác nhận thanh toán.';
     } else if (result.paymentIntent?.status === 'succeeded') {
-      this.cart.clear();
       window.location.href = this.paymentSuccessUrl('succeeded');
     } else if (result.paymentIntent?.status === 'processing') {
-      this.cart.clear();
       window.location.href = this.paymentSuccessUrl('processing');
     } else {
       this.paymentError = 'Stripe chưa xác nhận thanh toán. Vui lòng kiểm tra lại trạng thái đơn hàng.';
