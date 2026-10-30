@@ -13,6 +13,22 @@ import { CartService } from '../../core/services/cart.service';
 export class CartComponent {
   readonly cart = inject(CartService);
 
+  get allItemsSelected(): boolean {
+    return this.cart.areAllSelected();
+  }
+
+  get someItemsSelected(): boolean {
+    return this.cart.selectedProductIds().length > 0 && !this.allItemsSelected;
+  }
+
+  toggleSelectAll(event: Event): void {
+    this.cart.selectAll((event.target as HTMLInputElement).checked);
+  }
+
+  toggleItemSelection(productId: string, event: Event): void {
+    this.cart.setSelected(productId, (event.target as HTMLInputElement).checked);
+  }
+
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   }

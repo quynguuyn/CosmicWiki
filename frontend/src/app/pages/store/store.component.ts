@@ -1,6 +1,5 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { Product, ProductCategory } from '../../features/product/models/product.model';
@@ -32,6 +31,7 @@ interface CartItem {
   price: number;
   image: string;
   qty: number;
+  stockQuantity: number;
 }
 
 @Component({
@@ -39,7 +39,6 @@ interface CartItem {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     PaginationComponent
   ],
   templateUrl: './store.component.html',
@@ -77,11 +76,6 @@ export class StoreComponent {
   isQuickViewOpen = false;
   isCartOpen = false;
   isSuccessOpen = false;
-  isCheckoutLoading = false;
-
-  customerName = '';
-  customerEmail = '';
-  customerAddress = '';
 
   constructor() {
     this.route.queryParamMap.subscribe(params => {
@@ -152,8 +146,11 @@ export class StoreComponent {
       productId: line.product.id,
       title: line.product.name,
       price: line.product.salePrice,
-      image: line.product.images[0]?.url ?? this.products[0]?.image ?? '',
-      qty: line.quantity
+      image: line.product.images[0]?.url
+        ?? line.product.urls?.[0]
+        ?? 'assets/images/cosmic-placeholder.svg',
+      qty: line.quantity,
+      stockQuantity: line.product.stockQuantity
     }));
   }
 
@@ -198,10 +195,39 @@ export class StoreComponent {
   }
 
   get cartSubtotal(): number {
-    return this.cart.reduce(
-      (sum, item) => sum + item.price * item.qty,
-      0
-    );
+    return this.cartService.selectedTotal;
+  }
+
+  get selectedCartCount(): number {
+    return this.cartService.selectedCount;
+  }
+
+  get allCartItemsSelected(): boolean {
+    return this.cartService.areAllSelected();
+  }
+
+  get someCartItemsSelected(): boolean {
+    return this.cartService.selectedProductIds().length > 0 && !this.allCartItemsSelected;
+  }
+
+  toggleSelectAllCartItems(event: Event): void {
+    this.cartService.selectAll((event.target as HTMLInputElement).checked);
+  }
+
+  toggleCartItemSelection(productId: string, event: Event): void {
+    this.cartService.setSelected(productId, (event.target as HTMLInputElement).checked);
+  }
+
+  isCartItemSelected(productId: string): boolean {
+    return this.cartService.isSelected(productId);
+  }
+
+  clearSelectedCartItems(): void {
+    this.cartService.removeSelected();
+  }
+
+  changeCartItemQuantity(productId: string, quantity: number): void {
+    this.cartService.setQuantity(productId, quantity);
   }
 
   get categoryCount(): number {
@@ -303,7 +329,7 @@ export class StoreComponent {
   }
 
   submitCheckout(): void {
-    if (this.cart.length === 0) {
+    if (this.cartService.selectedLines().length === 0) {
       return;
     }
 
