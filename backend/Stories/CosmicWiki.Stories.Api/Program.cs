@@ -23,7 +23,8 @@ builder.Services.AddHangfire(configuration =>
 {
     configuration.UseSimpleAssemblyNameTypeSerializer();
     configuration.UseRecommendedSerializerSettings();
-    configuration.UseRedisStorage(builder.Configuration["Hangfire:RedisConnection"] ?? "redis:6379");
+    configuration.UseRedisStorage(
+        builder.Configuration["Hangfire:RedisConnection"] ?? "redis:6379");
 });
 builder.Services.AddHangfireServer(options => options.Queues = ["stories", "default"]);
 builder.Services.AddHealthChecks();
@@ -68,12 +69,17 @@ using (var scope = app.Services.CreateScope())
 
 using (var scope = app.Services.CreateScope())
 {
-    var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<NasaApodOptions>>().Value;
+    var options = scope.ServiceProvider
+        .GetRequiredService<Microsoft.Extensions.Options.IOptions<NasaApodOptions>>()
+        .Value;
     if (options.Enabled)
     {
-        scope.ServiceProvider.GetRequiredService<IRecurringJobManager>().AddOrUpdate<NasaApodStoryJob>(
-            "nasa-apod-stories", job => job.RunAsync(CancellationToken.None), Cron.Daily(3),
-            new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+        scope.ServiceProvider.GetRequiredService<IRecurringJobManager>()
+            .AddOrUpdate<NasaApodStoryJob>(
+                "nasa-apod-stories",
+                job => job.RunAsync(CancellationToken.None),
+                Cron.Daily(3),
+                new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
         scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>()
             .Enqueue<NasaApodStoryJob>(job => job.RunAsync(CancellationToken.None));
     }

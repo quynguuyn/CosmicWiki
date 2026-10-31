@@ -1,7 +1,8 @@
-.admin-orders-page { min-height: calc(100vh - 5rem); padding: 7rem var(--gutter-desktop) 4rem; background: radial-gradient(circle at 20% 10%, rgba(114,160,193,.18), transparent 38%); }
+.admin-orders-page { min-height: calc(100vh - 5rem); padding: 1rem var(--gutter-desktop) 4rem; background: radial-gradient(circle at 20% 10%, rgba(114,160,193,.18), transparent 38%); }
+.admin-orders-content { width: min(100%, var(--container-max)); margin-inline: auto; }
 .back-link { color: var(--tertiary); text-decoration: none; }
-.admin-orders-header, .admin-order-list, .admin-filters { width: min(100%, var(--container-max)); margin-inline: auto; }
-.admin-orders-header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-top: 2rem; }
+.admin-orders-header, .admin-order-list, .admin-filters { width: 100%; margin-inline: auto; }
+.admin-orders-header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-top: 1.25rem; }
 .eyebrow { color: var(--tertiary); letter-spacing: .16em; font-size: var(--text-label-sm); }
 h1 { margin: .5rem 0; } .admin-orders-header p:last-child { color: var(--on-surface-variant); }
 .refresh-button, .order-actions button { border: 1px solid var(--glass-border); border-radius: var(--radius-md); background: var(--glass-surface); color: var(--on-surface); padding: .65rem 1rem; cursor: pointer; }
@@ -20,4 +21,4 @@ h1 { margin: .5rem 0; } .admin-orders-header p:last-child { color: var(--on-surf
 .order-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; } .order-actions .primary { background: var(--primary); color: var(--on-primary); } .order-actions .danger { color: #ffb4ab; }
 .feedback { color: #ffb4ab; text-align: center; } .loading, .empty { text-align: center; color: var(--on-surface-variant); }
 .admin-pagination { margin: 1.25rem auto; color: var(--on-surface-variant); }
-@media (max-width: 700px) { .admin-orders-page { padding: 6rem var(--gutter-mobile) 3rem; } .admin-orders-header, .order-main { align-items: start; flex-direction: column; } }
+@media (max-width: 700px) { .admin-orders-page { padding: 1rem var(--gutter-mobile) 3rem; } .admin-orders-header, .order-main { align-items: start; flex-direction: column; } }

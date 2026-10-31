@@ -157,7 +157,7 @@ services:
       Caching__Redis__ConnectionString: redis:6379
       Hangfire__RedisConnection: redis:6379
       NasaApod__ApiKey: ${NASA_APOD_API_KEY:-}
-      NasaApod__Enabled: "true"
+      NasaApod__Enabled: "${NASA_APOD_ENABLED:-true}"
     depends_on:
       oracle:
         condition: service_healthy
