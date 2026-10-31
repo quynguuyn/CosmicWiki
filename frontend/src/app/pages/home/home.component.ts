@@ -6,6 +6,8 @@ import { ProductService } from '../../features/product/services/product.service'
 import { Product } from '../../features/product/models/product.model';
 import { CartService } from '../../core/services/cart.service';
 import { NewsletterService } from '../../features/newsletter/services/newsletter.service';
+import { StoriesService } from '../../features/stories/services/stories.service';
+import { Story } from '../../features/stories/models/story.model';
 
 interface Chapter {
   id: number;
@@ -58,6 +60,7 @@ export class HomeComponent {
   private readonly productsApi = inject(ProductService);
   private readonly cart = inject(CartService);
   private readonly newsletter = inject(NewsletterService);
+  private readonly storiesApi = inject(StoriesService);
   private readonly router = inject(Router);
   newsletterSubmitted = false;
   newsletterError = '';
@@ -78,6 +81,7 @@ export class HomeComponent {
     });
   }
   chapters: Chapter[] = [];
+  latestStory?: Story;
 
   archiveItems: ArchiveItem[] = [];
 
@@ -107,7 +111,8 @@ export class HomeComponent {
   }
 
   private loadDatabaseContent(): void {
-    this.discovery.search(undefined, undefined, 1, 20).subscribe({
+    // Discovery is returned newest-first by the index; this section intentionally shows five newest records.
+    this.discovery.search(undefined, undefined, 1, 5).subscribe({
       next: result => {
         if (result.items.length === 0) {
           return;
@@ -124,7 +129,7 @@ export class HomeComponent {
           imageAlt: item.name
         }));
 
-        this.chapters = result.items.slice(0, 5).map((item, index) => ({
+        this.chapters = result.items.map((item, index) => ({
           id: index + 1,
           emoji: '✦',
           label: item.sourceType,
@@ -156,6 +161,11 @@ export class HomeComponent {
         }));
       },
       error: error => console.error('Home product error:', error)
+    });
+
+    this.storiesApi.getStories(undefined, undefined, 'newest').subscribe({
+      next: result => this.latestStory = result.items[0],
+      error: error => console.error('Home stories error:', error)
     });
   }
 

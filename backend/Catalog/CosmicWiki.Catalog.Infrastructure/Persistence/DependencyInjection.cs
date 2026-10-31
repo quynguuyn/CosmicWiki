@@ -35,7 +35,14 @@ public static class DependencyInjection
         services.Configure<AstronomicalResearchOptions>(
             configuration.GetSection("AstronomicalResearch"));
         services.AddHttpClient<IAstronomicalResearchProvider, SimBadAstronomicalResearchProvider>(
-            client => client.Timeout = TimeSpan.FromSeconds(30));
+            (serviceProvider, client) =>
+            {
+                var options = serviceProvider
+                    .GetRequiredService<Microsoft.Extensions.Options.IOptions<AstronomicalResearchOptions>>()
+                    .Value;
+                client.Timeout = TimeSpan.FromSeconds(
+                    Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
+            });
         services.AddScoped<IAstronomicalResearchJob, AstronomicalResearchJob>();
         services.AddScoped<IAstronomicalResearchAdminOperations, AstronomicalResearchAdminOperations>();
         services.AddScoped<IHangfireDashboardOperations, HangfireDashboardOperations>();

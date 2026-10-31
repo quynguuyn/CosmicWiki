@@ -1,16 +1,21 @@
 <main class="admin-crud-page">
   <a routerLink="/admin" class="back-link">← Admin Dashboard</a>
-  <header><p class="eyebrow">COSMICWIKI · ACCESS CONTROL</p><h1>Tài khoản</h1><p>Tạo tài khoản thông thường trước, sau đó chọn bộ lọc User và cấp role Delivery để mở luồng giao hàng.</p><a routerLink="/register">Tạo tài khoản mới</a></header>
+  <header><p class="eyebrow">COSMICWIKI · ACCESS CONTROL</p><h1>Tài khoản & phân quyền</h1><p>Chọn tài khoản ở bảng, sau đó quản lý vai trò và quyền của từng vai trò tại khung bên dưới.</p><a routerLink="/register">Tạo tài khoản mới</a></header>
   <nav class="tabs"><button *ngFor="let filter of roleFilters" [class.active]="roleFilter === filter" (click)="setRoleFilter(filter)">{{ filter || 'Nhân viên' }}</button></nav>
   <p class="feedback" *ngIf="error">{{ error }}</p>
   <section class="account-layout">
     <div>
       <p class="loading" *ngIf="loading">Đang tải tài khoản...</p>
-      <div class="table-wrap cosmic-glass" *ngIf="!loading"><table><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tạo</th><th></th></tr></thead><tbody><tr *ngFor="let account of accounts"><td><b>{{ account.username }}</b><small>{{ account.email }}</small></td><td><span *ngFor="let role of account.roles" class="tag">{{ role }}</span></td><td>{{ account.status }}</td><td>{{ account.createdAt | date:'short' }}</td><td><button (click)="selected = account">Phân quyền</button></td></tr></tbody></table><p class="empty" *ngIf="accounts.length === 0">Không có tài khoản phù hợp.</p></div>
+      <div class="table-wrap cosmic-glass" *ngIf="!loading"><table><thead><tr><th>Tài khoản</th><th>Vai trò hiện có</th><th>Trạng thái</th><th>Ngày tạo</th><th></th></tr></thead><tbody><tr *ngFor="let account of accounts" [class.selected-row]="selected?.userId === account.userId"><td><b>{{ account.username }}</b><small>{{ account.email }}</small></td><td><span *ngFor="let role of account.roles" class="tag">{{ role }}</span><small *ngIf="!account.roles.length">Chưa gán</small></td><td>{{ account.status }}</td><td>{{ account.createdAt | date:'short' }}</td><td><button (click)="selectAccount(account)">Quản lý</button></td></tr></tbody></table><p class="empty" *ngIf="accounts.length === 0">Không có tài khoản phù hợp.</p></div>
       <app-pagination class="admin-pagination" ariaLabel="Phân trang tài khoản" *ngIf="!loading && totalPages > 1"
         [page]="page" [totalPages]="totalPages" [totalCount]="totalCount" itemLabel="tài khoản"
         (pageChange)="goToPage($event)"></app-pagination>
     </div>
-    <aside class="editor cosmic-glass" *ngIf="selected"><h2>{{ selected.username }}</h2><p>{{ selected.email }}</p><label>Thêm vai trò</label><select [(ngModel)]="selectedRole"><option value="">Chọn role</option><option *ngFor="let role of roles" [value]="role.roleId">{{ role.name }}</option></select><button class="primary" (click)="assignRole()">Gán role</button><hr><h3>Permission của role</h3><select [(ngModel)]="selectedPermission"><option value="">Chọn permission</option><option *ngFor="let permission of permissions" [value]="permission.permissionId">{{ permission.code }}</option></select><button class="primary" (click)="assignPermission()">Gán permission</button><div class="permission-list"><span *ngFor="let permission of rolePermissions" class="tag">{{ permission.code }}</span></div></aside>
+    <aside class="editor cosmic-glass" *ngIf="selected">
+      <div class="editor-heading"><h2>{{ selected.username }}</h2><p>{{ selected.email }}</p></div>
+      <section class="access-section"><h3>Vai trò đang gán</h3><div class="role-chips"><span *ngFor="let roleName of selected.roles" class="tag">{{ roleName }} <button type="button" (click)="removeRoleByName(roleName)" [disabled]="saving" aria-label="Gỡ vai trò">×</button></span><small *ngIf="!selected.roles.length">Chưa có vai trò ngoài quyền mặc định.</small></div></section>
+      <section class="access-section"><label for="add-role">Gán vai trò mới</label><div class="control-row"><select id="add-role" [(ngModel)]="selectedRole"><option value="">Chọn vai trò</option><option *ngFor="let role of availableRoles()" [value]="role.roleId">{{ role.name }}</option></select><button class="primary" (click)="assignRole()" [disabled]="!selectedRole || saving">Gán</button></div></section>
+      <section class="access-section"><label for="role-permission">Quyền của vai trò</label><select id="role-permission" [(ngModel)]="selectedPermissionRole" (ngModelChange)="loadPermissions()"><option value="">Chọn vai trò để xem quyền</option><option *ngFor="let role of roles" [value]="role.roleId">{{ role.name }}</option></select><div class="permission-list" *ngIf="selectedPermissionRole"><span *ngFor="let permission of rolePermissions" class="tag">{{ permission.code }}</span><small *ngIf="rolePermissions.length === 0">Vai trò này chưa có quyền riêng.</small></div></section>
+    </aside>
   </section>
 </main>

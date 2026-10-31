@@ -8,7 +8,7 @@ public sealed class GetAstronomicalResearchStatusHandler(IAstronomicalResearchAd
     public Task<AstronomicalResearchJobStatus> Handle(
         GetAstronomicalResearchStatusQuery request,
         CancellationToken cancellationToken) =>
-        Task.FromResult(operations.GetAstronomicalResearchStatus());
+        operations.GetAstronomicalResearchStatusAsync(cancellationToken);
 }
 
 public sealed class EnqueueAstronomicalResearchHandler(IAstronomicalResearchAdminOperations operations)

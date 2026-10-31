@@ -24,7 +24,7 @@ public sealed class AstronomicalImagesController : ControllerBase
     }
     
     [HttpGet]
-    [Authorize(Policy = Permissions.CatalogRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> Get(
         Guid astronomicalObjectId,
         CancellationToken cancellationToken)
@@ -38,7 +38,7 @@ public sealed class AstronomicalImagesController : ControllerBase
     }
 
     [HttpGet("{imageId:guid}")]
-    [Authorize(Policy = Permissions.CatalogRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(
         Guid astronomicalObjectId,
         Guid imageId,

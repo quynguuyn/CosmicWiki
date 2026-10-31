@@ -24,7 +24,7 @@ public sealed class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         CancellationToken cancellationToken)
     {
@@ -36,7 +36,7 @@ public sealed class CategoriesController : ControllerBase
     }
 
     [HttpGet("page")]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetPage(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -50,7 +50,7 @@ public sealed class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)

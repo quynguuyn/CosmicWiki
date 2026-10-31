@@ -80,9 +80,10 @@ public sealed class AdminAccountRepository(AuthDbContext db)
 
         return await db.RolePermissions.Where(link => link.RoleId == roleId)
             .Join(db.Permissions, link => link.PermissionId, permission => permission.Id,
-                (_, permission) => new PermissionProjection(
-                    permission.Id, permission.Code, permission.Name, permission.Description))
+                (_, permission) => permission)
             .OrderBy(permission => permission.Code)
+            .Select(permission => new PermissionProjection(
+                permission.Id, permission.Code, permission.Name, permission.Description))
             .ToListAsync(cancellationToken);
     }
 

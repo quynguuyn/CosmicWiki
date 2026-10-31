@@ -4,9 +4,23 @@ using Hangfire;
 namespace CosmicWiki.Catalog.Infrastructure.Research;
 
 public sealed class QueuedAstronomicalResearchJob(
-    IAstronomicalResearchJob researchJob)
+    IAstronomicalResearchJob researchJob,
+    IAstronomicalResearchProvider provider,
+    IBackgroundJobClient backgroundJobClient)
 {
     [Queue("research")]
-    public Task RunAsync(CancellationToken cancellationToken) =>
-        researchJob.RunAsync(cancellationToken);
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var source = await provider.GetStatusAsync(cancellationToken);
+        if (!source.IsReachable)
+        {
+            backgroundJobClient.Schedule<QueuedAstronomicalResearchJob>(
+                job => job.RunAsync(CancellationToken.None),
+                TimeSpan.FromMinutes(5));
+            throw new HttpRequestException(source.Message ?? "SIMBAD is unavailable.");
+        }
+
+        await researchJob.RunAsync(cancellationToken);
+    }
 }
