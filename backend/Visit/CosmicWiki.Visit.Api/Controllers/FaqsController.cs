@@ -11,14 +11,14 @@ namespace CosmicWiki.Visit.Api.Controllers;
 public sealed class FaqsController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Policy = Permissions.VisitRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromQuery] GetFaqsQuery query,
         CancellationToken cancellationToken) =>
         Ok(await sender.Send(query, cancellationToken));
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = Permissions.VisitRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetFaqByIdQuery(id), cancellationToken);

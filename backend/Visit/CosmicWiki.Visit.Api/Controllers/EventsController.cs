@@ -11,14 +11,14 @@ namespace CosmicWiki.Visit.Api.Controllers;
 public sealed class EventsController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Policy = Permissions.VisitRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromQuery] GetEventsQuery query,
         CancellationToken cancellationToken) =>
         Ok(await sender.Send(query, cancellationToken));
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = Permissions.VisitRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetEventByIdQuery(id), cancellationToken);

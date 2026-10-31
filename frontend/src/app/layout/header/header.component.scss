@@ -24,7 +24,7 @@
 .header-inner {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0 var(--gutter-desktop);
+  padding: 1rem var(--gutter-desktop);
   height: 5rem;
   display: flex;
   align-items: center;
@@ -32,7 +32,7 @@
   width: 100%;
 
   @media (max-width: 768px) {
-    padding: 0 var(--gutter-mobile);
+    padding: 1rem var(--gutter-mobile);
   }
 }
 

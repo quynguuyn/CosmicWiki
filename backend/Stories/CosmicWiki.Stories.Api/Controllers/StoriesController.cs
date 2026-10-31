@@ -19,7 +19,7 @@ namespace CosmicWiki.Stories.Api.Controllers;
 public sealed class StoriesController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Policy = Permissions.StoryRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search = null,
         [FromQuery] string? category = null,
@@ -35,7 +35,7 @@ public sealed class StoriesController(ISender sender) : ControllerBase
     }
 
     [HttpGet("categories")]
-    [Authorize(Policy = Permissions.StoryRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetStoryCategoriesQuery(), cancellationToken);
@@ -43,7 +43,7 @@ public sealed class StoriesController(ISender sender) : ControllerBase
     }
 
     [HttpGet("slug/{slug}")]
-    [Authorize(Policy = Permissions.StoryRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetBySlug(string slug, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetStoryBySlugQuery(slug), cancellationToken);
@@ -51,7 +51,7 @@ public sealed class StoriesController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = Permissions.StoryRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetStoryByIdQuery(id), cancellationToken);

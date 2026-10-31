@@ -2,7 +2,8 @@ namespace CosmicWiki.Catalog.Application.Features.AdminJobs;
 
 public interface IAstronomicalResearchAdminOperations
 {
-    AstronomicalResearchJobStatus GetAstronomicalResearchStatus();
+    Task<AstronomicalResearchJobStatus> GetAstronomicalResearchStatusAsync(
+        CancellationToken cancellationToken);
     string EnqueueAstronomicalResearch();
     Task<AstronomicalResearchRunStatus?> GetAstronomicalResearchRunAsync(
         string jobId,

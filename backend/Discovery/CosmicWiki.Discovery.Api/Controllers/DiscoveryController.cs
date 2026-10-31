@@ -19,7 +19,7 @@ public sealed class DiscoveryController : ControllerBase
     }
 
     [HttpGet("search")]
-    [Authorize(Policy = Permissions.DiscoveryRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> Search(
         [FromQuery] string? search,
         [FromQuery] string? sourceType,

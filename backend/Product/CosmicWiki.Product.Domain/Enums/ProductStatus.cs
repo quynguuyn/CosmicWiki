@@ -4,5 +4,7 @@ public enum ProductStatus
 {
     Draft = 1,
     Active = 2,
-    Inactive = 3
+    Published = Active,
+    Inactive = 3,
+    Archived = Inactive
 }

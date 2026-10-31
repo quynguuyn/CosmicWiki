@@ -63,12 +63,16 @@
           <span class="material-symbols-outlined">timeline</span>
           Hành trình không gian
         </div>
-        <h2 class="section-title font-headline-md">Năm Chương Sử Thi Của Vũ Trụ</h2>
+        <h2 class="section-title font-headline-md">Sử Thi Của Vũ Trụ</h2>
       </div>
       <p class="section-desc font-body-sm">
         Trình tự tiến hóa từ trường hấp dẫn sơ khai đến kỳ quan kiến tạo vạn vật được lưu trữ theo quy chuẩn giám tuyển
         thiên văn.
       </p>
+      <a routerLink="/library" class="btn-outline font-label-md">
+        <span>Xem toàn bộ</span>
+        <span class="material-symbols-outlined">north_east</span>
+      </a>
     </div>
 
     <div class="chapters-grid">
@@ -210,7 +214,7 @@
 
   <!-- ===== EDITORIAL FEATURE SECTION ===== -->
   <section class="section-container border-section" id="chronicles">
-    <div class="editorial-feature cosmic-glass">
+    <div class="editorial-feature cosmic-glass" *ngIf="latestStory as story">
       <!-- Decorative rings -->
       <div class="deco-ring deco-ring-1"></div>
       <div class="deco-ring deco-ring-2"></div>
@@ -222,31 +226,28 @@
             Chuyên khảo Viễn vọng • Biên niên sử CosmicWiki
           </div>
           <h2 class="editorial-headline font-headline-md">
-            Tiếng vọng từ thời điểm 380,000 năm sau Big Bang: Bức xạ tàn dư hé lộ điều gì?
+            {{ story.title }}
           </h2>
           <p class="font-body-md editorial-body">
-            Trước thời điểm tái kết hợp, vũ trụ là một màn sương mù plasma mờ đục chứa các hạt proton và electron tự do
-            giam hãm photon. Khi nhiệt độ hạ xuống 3,000 Kelvin, những tia sáng tự do đầu tiên bắt đầu cuộc hành trình
-            vô tận kéo dài 13.8 tỷ năm...
+            {{ story.description }}
           </p>
           <div class="author-row font-body-sm">
-            <div class="author-avatar">DT</div>
-            <span>GS. David Trần (Ban Nghiên cứu Viễn vọng)</span>
+            <div class="author-avatar">{{ story.author.slice(0, 2).toUpperCase() }}</div>
+            <span>{{ story.author }}</span>
             <span class="sep">•</span>
-            <span>12 phút đọc</span>
+            <span>{{ story.readTimeMinutes }} phút đọc</span>
             <span class="sep">•</span>
-            <span>CW-ESSAY-849</span>
+            <span>{{ story.code }}</span>
           </div>
-          <a routerLink="/stories" class="btn-outline font-label-md editorial-cta">
+          <a routerLink="/stories" [queryParams]="{ story: story.slug }" class="btn-outline font-label-md editorial-cta">
             <span>Đọc toàn văn nghiên cứu</span>
             <span class="material-symbols-outlined">menu_book</span>
           </a>
         </div>
 
         <div class="editorial-image cosmic-glass">
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ7vCDj8E_KsE0Bn4FhvVf5-l5Pba7bhRzWPUv5WRNyOBOOCGc_MUdHhwFXRpKHiqmwPJXx98F0vSeSFfIFOVMWF1R2j3j1r_LJsT4tMd4ZSNgZTMa0sAGcXHMxLbOJGj3C4mmLHJpAYt0w2D-5tEtlDd_BFXM5VixSX5L9Nn1sxWQP0TH7m2A-C0K_PcLqxwxS2G3Q_a8c-XZ6p5Uo02KhGOjDnU8g_J33TlmKvKEkIDHnkq5dHX8BH_JkKpIi3j72g_gCYWGA"
-            alt="Cosmic Microwave Background radiation map" class="editorial-img" loading="lazy">
+          <img [src]="story.imageUrl || 'assets/images/cosmic-placeholder.svg'"
+            [alt]="story.imageAlt || story.title" class="editorial-img" loading="lazy">
         </div>
       </div>
     </div>

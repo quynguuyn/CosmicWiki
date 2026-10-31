@@ -37,7 +37,8 @@ public sealed class SearchDocumentRepository
 
         return await query
             .AsNoTracking()
-            .OrderBy(x => x.Name)
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenBy(x => x.Name)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken);

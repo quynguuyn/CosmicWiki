@@ -12,6 +12,8 @@ public sealed class AstronomicalResearchOptions
     public int PageSize { get; set; } = 500;
 
     public int MaxPagesPerRun { get; set; } = 20;
+
+    public int RequestTimeoutSeconds { get; set; } = 20;
 }
 
 public sealed record AstronomicalResearchCandidate(

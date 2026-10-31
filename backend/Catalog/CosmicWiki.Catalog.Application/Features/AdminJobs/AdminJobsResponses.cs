@@ -10,7 +10,10 @@ public sealed record AstronomicalResearchJobStatus(
     int PageSize,
     int MaxPagesPerRun,
     int MaxRecordsPerRun,
-    string Source);
+    string Source,
+    bool SourceReachable,
+    string? SourceStatus,
+    DateTime SourceCheckedAtUtc);
 
 public sealed record AstronomicalResearchRunStatus(
     string JobId,
