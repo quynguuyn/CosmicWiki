@@ -297,8 +297,8 @@ public sealed class HangfireDashboardOperations(
         new(
             id,
             state,
-            job.Type.FullName ?? job.Type.Name,
-            job.Method.Name,
+            job?.Type?.FullName ?? job?.Type?.Name ?? "Unknown type",
+            job?.Method?.Name ?? "Unknown method",
             queue,
             timestamp,
             retryCount,

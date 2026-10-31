@@ -116,9 +116,6 @@ using (var scope = app.Services.CreateScope())
         job => job.RunAsync(CancellationToken.None),
         Cron.Daily(2),
         new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
-
-    // Remove the persisted job that references the retired Stories.Infrastructure assembly.
-    recurringJobManager.RemoveIfExists("nasa-apod-stories");
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();

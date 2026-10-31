@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Api.Common\CosmicWiki.Api.Common.csproj" />
     <ProjectReference Include="..\CosmicWiki.Catalog.Application\CosmicWiki.Catalog.Application.csproj" />
     <ProjectReference Include="..\CosmicWiki.Catalog.Infrastructure\CosmicWiki.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Stories\CosmicWiki.Stories.Infrastructure\CosmicWiki.Stories.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
