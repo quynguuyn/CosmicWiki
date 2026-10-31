@@ -57,8 +57,10 @@
   color: var(--primary);
   box-shadow: 0 0 12px rgba(114, 160, 193, 0.35);
 
-  .material-symbols-outlined {
-    font-size: 20px;
+  img {
+    width: 1.75rem;
+    height: 1.75rem;
+    object-fit: contain;
   }
 }
 
