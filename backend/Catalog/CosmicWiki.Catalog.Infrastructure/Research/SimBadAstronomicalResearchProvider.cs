@@ -21,6 +21,33 @@ public sealed class SimBadAstronomicalResearchProvider : IAstronomicalResearchPr
         _logger = logger;
     }
 
+    public async Task<AstronomicalResearchSourceStatus> GetStatusAsync(
+        CancellationToken cancellationToken = default)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(5));
+        try
+        {
+            var query = Uri.EscapeDataString("SELECT TOP 1 main_id FROM basic");
+            var endpoint = $"{_options.Endpoint}?request=doQuery&lang=adql&format=csv&query={query}";
+            using var response = await _httpClient.GetAsync(endpoint, timeout.Token);
+            var content = await response.Content.ReadAsStringAsync(timeout.Token);
+            var reachable = response.IsSuccessStatusCode && !content.TrimStart().StartsWith('<');
+            return new AstronomicalResearchSourceStatus(
+                reachable,
+                reachable ? null : $"SIMBAD returned HTTP {(int)response.StatusCode}.",
+                DateTime.UtcNow);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new AstronomicalResearchSourceStatus(false, "SIMBAD did not respond within 5 seconds.", DateTime.UtcNow);
+        }
+        catch (HttpRequestException exception)
+        {
+            return new AstronomicalResearchSourceStatus(false, exception.Message, DateTime.UtcNow);
+        }
+    }
+
     public async Task<AstronomicalResearchPage> FindCandidatesAsync(
         string? afterMainId,
         int pageSize,

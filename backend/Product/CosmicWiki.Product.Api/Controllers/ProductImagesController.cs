@@ -24,7 +24,7 @@ public sealed class ProductImagesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         Guid productId,
         CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ public sealed class ProductImagesController : ControllerBase
     }
 
     [HttpGet("{imageId:guid}")]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(
         Guid productId,
         Guid imageId,

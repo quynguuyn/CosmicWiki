@@ -13,12 +13,15 @@ public sealed class AstronomicalResearchAdminOperations(
     IBackgroundJobClient backgroundJobClient,
     JobStorage jobStorage,
     IOptions<AstronomicalResearchOptions> researchOptions,
+    IAstronomicalResearchProvider provider,
     ICacheStore cacheStore,
     ILogger<AstronomicalResearchAdminOperations> logger) : IAstronomicalResearchAdminOperations
 {
-    public AstronomicalResearchJobStatus GetAstronomicalResearchStatus()
+    public async Task<AstronomicalResearchJobStatus> GetAstronomicalResearchStatusAsync(
+        CancellationToken cancellationToken)
     {
         var options = researchOptions.Value;
+        var source = await provider.GetStatusAsync(cancellationToken);
         return new AstronomicalResearchJobStatus(
             "astronomical-research",
             "Nghiên cứu thiên văn",
@@ -28,7 +31,10 @@ public sealed class AstronomicalResearchAdminOperations(
             options.MaxPagesPerRun,
             Math.Clamp(options.PageSize, 1, 500) *
                 Math.Clamp(options.MaxPagesPerRun, 1, 100),
-            "SIMBAD");
+            "SIMBAD",
+            source.IsReachable,
+            source.Message,
+            source.CheckedAtUtc);
     }
 
     public string EnqueueAstronomicalResearch() =>

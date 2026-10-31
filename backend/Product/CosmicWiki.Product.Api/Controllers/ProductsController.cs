@@ -24,7 +24,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -40,7 +40,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Policy = Permissions.ProductRead)]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)

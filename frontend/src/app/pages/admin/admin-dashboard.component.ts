@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../core/config/api.config';
 import { PaginationComponent } from '../../core/components/pagination/pagination.component';
+import { ConfirmDialogComponent } from '../../core/components/confirm-dialog/confirm-dialog.component';
 
 type HangfireJobState =
   | 'enqueued'
@@ -81,7 +82,7 @@ interface HangfireActivityPoint {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, PaginationComponent],
+  imports: [CommonModule, RouterLink, PaginationComponent, ConfirmDialogComponent],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss'
 })
@@ -97,9 +98,13 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
     schedule: 'Đang tải...',
     pageSize: 0,
     maxRecordsPerRun: 0,
-    source: 'SIMBAD'
+    source: 'SIMBAD',
+    sourceReachable: false,
+    sourceStatus: '',
+    sourceCheckedAtUtc: ''
   };
   researchJobRunning = false;
+  recallingSimbad = false;
   researchJobMessage = 'Đang tải trạng thái Hangfire...';
   private researchPoll?: ReturnType<typeof setInterval>;
   hangfireTab: 'overview' | 'jobs' | 'retries' | 'recurring' | 'servers' = 'overview';
@@ -139,6 +144,7 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
   hangfireActionMessage = '';
   hangfireActionError = '';
   hangfireActionInProgress = false;
+  pendingHangfireDelete?: { kind: 'job' | 'recurring'; id: string };
   selectedHangfireState: HangfireJobState = 'enqueued';
   selectedHangfireJob?: HangfireJobDetails;
   private pendingHangfireJobId?: string;
@@ -478,7 +484,10 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
   }
 
   deleteRecurringJob(jobId: string): void {
-    if (!window.confirm(`Xóa recurring job ${jobId}?`)) return;
+    this.pendingHangfireDelete = { kind: 'recurring', id: jobId };
+  }
+
+  private performDeleteRecurringJob(jobId: string): void {
     this.startHangfireAction('Đang xóa recurring job...');
     this.http.delete(`${this.base}/api/admin/jobs/hangfire/recurring/${encodeURIComponent(jobId)}`).subscribe({
       next: () => {
@@ -508,6 +517,11 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
     });
   }
 
+  canTriggerRecurring(job: HangfireRecurringJob): boolean {
+    return job.id !== 'astronomical-research' ||
+      (this.researchJob.enabled && this.researchJob.sourceReachable);
+  }
+
   requeueHangfireJob(jobId: string): void {
     this.startHangfireAction('Đang đưa job trở lại hàng đợi...');
     this.http.post(`${this.base}/api/admin/jobs/hangfire/jobs/${encodeURIComponent(jobId)}/requeue`, {}).subscribe({
@@ -520,7 +534,18 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
   }
 
   deleteHangfireJob(jobId: string): void {
-    if (!window.confirm(`Xóa Hangfire job ${jobId}?`)) return;
+    this.pendingHangfireDelete = { kind: 'job', id: jobId };
+  }
+
+  confirmHangfireDelete(): void {
+    const pending = this.pendingHangfireDelete;
+    this.pendingHangfireDelete = undefined;
+    if (!pending) return;
+    if (pending.kind === 'recurring') this.performDeleteRecurringJob(pending.id);
+    else this.performDeleteHangfireJob(pending.id);
+  }
+
+  private performDeleteHangfireJob(jobId: string): void {
     this.startHangfireAction('Đang xóa job...');
     this.http.delete(`${this.base}/api/admin/jobs/hangfire/jobs/${encodeURIComponent(jobId)}`).subscribe({
       next: () => {
@@ -561,12 +586,17 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
       maxPagesPerRun: number;
       maxRecordsPerRun: number;
       source: string;
+      sourceReachable: boolean;
+      sourceStatus: string | null;
+      sourceCheckedAtUtc: string;
     }>(`${this.base}/api/admin/jobs/astronomical-research`).subscribe({
       next: job => {
-        this.researchJob = job;
-        this.researchJobMessage = job.enabled
-          ? 'Sẵn sàng chạy thủ công hoặc theo lịch.'
-          : 'Job đang bị tắt trong cấu hình backend.';
+        this.researchJob = { ...job, sourceStatus: job.sourceStatus ?? '' };
+        this.researchJobMessage = !job.enabled
+          ? 'Job đang bị tắt trong cấu hình backend.'
+          : job.sourceReachable
+            ? 'SIMBAD đang sẵn sàng; có thể chạy thủ công hoặc theo lịch.'
+            : `SIMBAD chưa truy cập được. ${job.sourceStatus ?? 'Đang chờ kiểm tra lại.'}`;
       },
       error: () => {
         this.researchJobMessage = 'Không thể tải trạng thái Hangfire.';
@@ -574,8 +604,30 @@ export class AdminDashboardComponent implements OnDestroy, OnInit {
     });
   }
 
+  recallSimbad(): void {
+    this.recallingSimbad = true;
+    this.researchJobMessage = 'Đang kiểm tra kết nối SIMBAD...';
+    this.http.get<{
+      name: string; enabled: boolean; schedule: string; pageSize: number;
+      maxPagesPerRun: number; maxRecordsPerRun: number; source: string;
+      sourceReachable: boolean; sourceStatus: string | null; sourceCheckedAtUtc: string;
+    }>(`${this.base}/api/admin/jobs/astronomical-research`).subscribe({
+      next: job => {
+        this.researchJob = { ...job, sourceStatus: job.sourceStatus ?? '' };
+        this.recallingSimbad = false;
+        this.researchJobMessage = job.sourceReachable
+          ? 'SIMBAD đã phản hồi; có thể trigger recurring job.'
+          : `SIMBAD chưa phản hồi. ${job.sourceStatus ?? ''}`;
+      },
+      error: () => {
+        this.recallingSimbad = false;
+        this.researchJobMessage = 'Không thể kiểm tra kết nối SIMBAD.';
+      }
+    });
+  }
+
   runResearchJob(): void {
-    if (this.researchJobRunning || !this.researchJob.enabled) {
+    if (this.researchJobRunning || !this.researchJob.enabled || !this.researchJob.sourceReachable) {
       return;
     }
 

@@ -13,8 +13,9 @@
       <input [(ngModel)]="productForm.salePrice" name="salePrice" type="number" placeholder="Giá bán" required>
       <input [(ngModel)]="productForm.stockQuantity" name="stockQuantity" type="number" placeholder="Tồn kho" required>
       <select [(ngModel)]="productForm.categoryId" name="categoryId" required><option value="">Chọn danh mục</option><option *ngFor="let category of allCategories" [value]="category.id">{{ category.name }}</option></select>
-      <select [(ngModel)]="productForm.status" name="status"><option value="Draft">Nháp</option><option value="Published">Đang bán</option><option value="Archived">Lưu trữ</option></select>
+      <select [(ngModel)]="productForm.status" name="status"><option [ngValue]="1">Nháp</option><option [ngValue]="2">Đang bán</option><option [ngValue]="3">Ngừng bán</option></select>
       <textarea [(ngModel)]="productForm.description" name="description" placeholder="Mô tả"></textarea>
+      <textarea [(ngModel)]="productForm.imageUrls" name="imageUrls" placeholder="URL ảnh sản phẩm (mỗi dòng một URL)"></textarea>
       <div><button class="primary" type="submit">{{ editingProduct ? 'Lưu thay đổi' : 'Tạo sản phẩm' }}</button><button type="button" (click)="resetProduct()">Xóa form</button></div>
     </form>
     <div class="search-bar cosmic-glass"><input [(ngModel)]="productSearch" (ngModelChange)="onProductSearchChanged()" name="productSearch" placeholder="Tìm theo SKU, tên hoặc slug"><span>{{ totalCount }} sản phẩm</span></div>
@@ -34,3 +35,6 @@
       (pageChange)="goToCategoryPage($event)"></app-pagination>
   </section>
 </main>
+<app-confirm-dialog *ngIf="pendingDelete"
+  [message]="'Bạn có chắc muốn xóa ' + pendingDelete.item.name + '? Thao tác này không thể hoàn tác.'"
+  (confirmed)="confirmDelete()" (cancel)="pendingDelete = undefined"></app-confirm-dialog>

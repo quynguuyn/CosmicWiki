@@ -18,32 +18,6 @@
       <b>{{ item.count }}</b>
     </div>
   </section>
-  <section class="admin-jobs cosmic-glass">
-    <h2>Jobs hệ thống</h2>
-    <p><span class="job-dot"></span> Tự hủy đơn chưa thanh toán: mỗi phút, quá 15 phút</p>
-    <p><span class="job-dot"></span> Tự xác nhận đơn đã thanh toán: theo giờ cutoff cấu hình backend</p>
-    <p class="muted">Index tìm kiếm sản phẩm và star được cập nhật qua Kafka.</p>
-    <div class="hangfire-job">
-      <div class="hangfire-job__heading">
-        <div>
-          <span class="job-status" [class.job-status--off]="!researchJob.enabled"></span>
-          <strong>{{ researchJob.name }}</strong>
-        </div>
-        <span class="job-badge">{{ researchJob.enabled ? 'Đang bật' : 'Đang tắt' }}</span>
-      </div>
-      <div class="hangfire-job__details">
-        <span>Nguồn: {{ researchJob.source }}</span>
-        <span>Lịch: {{ researchJob.schedule }}</span>
-        <span>Tối đa mỗi lần: {{ researchJob.maxRecordsPerRun }} bản ghi</span>
-      </div>
-      <div class="hangfire-job__actions">
-        <span class="muted">{{ researchJobMessage }}</span>
-        <button type="button" class="run-job-button" [disabled]="researchJobRunning || !researchJob.enabled" (click)="runResearchJob()">
-          {{ researchJobRunning ? 'Đang xếp hàng...' : 'Chạy ngay' }}
-        </button>
-      </div>
-    </div>
-  </section>
   <section class="admin-jobs hangfire-console cosmic-glass">
     <header class="hangfire-console__header">
       <div>
@@ -91,11 +65,13 @@
       <button type="button" [class.active]="hangfireTab === 'servers'" (click)="setHangfireTab('servers')">
         <span class="material-symbols-outlined">dns</span> Servers & queues
       </button>
-      <button type="button" disabled title="Batch processing requires Hangfire Pro">
-        <span class="material-symbols-outlined">account_tree</span> Batches · Pro
+      <button type="button" class="hangfire-recall" [disabled]="recallingSimbad" (click)="recallSimbad()">
+        <span class="material-symbols-outlined">wifi_find</span> {{ recallingSimbad ? 'Đang kiểm tra...' : 'Recall SIMBAD' }}
       </button>
     </nav>
-    <p class="hangfire-message">Batch processing is not available in the installed Hangfire edition; it requires Hangfire Pro.</p>
+    <p class="hangfire-message" [class.hangfire-message--error]="!researchJob.sourceReachable">
+      SIMBAD: {{ researchJob.sourceReachable ? 'Kết nối được — recurring job có thể trigger.' : (researchJob.sourceStatus || 'Không kết nối được.') }}
+    </p>
     <div class="hangfire-overview" *ngIf="hangfireTab === 'overview'">
       <div class="hangfire-section-heading">
         <div><h3>Overview</h3><span class="muted">Tổng quan xử lý nền và hiệu suất 24 giờ</span></div>
@@ -304,7 +280,7 @@
           <div><code>{{ job.cron }}</code><span class="hangfire-queue">{{ job.queue }}</span></div>
           <div class="hangfire-times"><span>{{ job.timeZoneId }}</span><span>Next: {{ job.nextExecution | date:'medium' }}</span><span>Last: {{ job.lastExecution | date:'medium' }}</span><span>Created: {{ job.createdAt | date:'medium' }}</span></div>
           <div class="hangfire-row__actions">
-            <button type="button" [disabled]="hangfireActionInProgress" (click)="triggerRecurringJob(job.id)">Trigger now</button>
+            <button type="button" [disabled]="hangfireActionInProgress || !canTriggerRecurring(job)" (click)="triggerRecurringJob(job.id)">Trigger now</button>
             <button type="button" class="hangfire-row__delete" [disabled]="hangfireActionInProgress" (click)="deleteRecurringJob(job.id)">Delete</button>
           </div>
           <p class="hangfire-recurring__error" *ngIf="job.error">{{ job.error }}</p>
@@ -352,3 +328,6 @@
     </a>
   </section>
 </main>
+<app-confirm-dialog *ngIf="pendingHangfireDelete"
+  [message]="'Bạn có chắc muốn xóa ' + (pendingHangfireDelete.kind === 'recurring' ? 'recurring job ' : 'Hangfire job ') + pendingHangfireDelete.id + '? Thao tác này không thể hoàn tác.'"
+  (confirmed)="confirmHangfireDelete()" (cancel)="pendingHangfireDelete = undefined"></app-confirm-dialog>

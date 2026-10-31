@@ -5,16 +5,27 @@ using CosmicWiki.Caching;
 using CosmicWiki.Stories.Api.Authorization;
 using CosmicWiki.Stories.Application;
 using CosmicWiki.Stories.Infrastructure.Persistence;
+using CosmicWiki.Stories.Infrastructure.Research;
+using Hangfire;
+using Hangfire.Redis.StackExchange;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
+builder.Logging.AddFilter("System.Net.Http.HttpClient.INasaApodProvider", LogLevel.Warning);
 
 builder.Services.AddStoriesApplication();
 builder.Services.AddStoriesInfrastructure(builder.Configuration);
 builder.Services.AddCosmicWikiCaching(builder.Configuration);
+builder.Services.AddHangfire(configuration =>
+{
+    configuration.UseSimpleAssemblyNameTypeSerializer();
+    configuration.UseRecommendedSerializerSettings();
+    configuration.UseRedisStorage(builder.Configuration["Hangfire:RedisConnection"] ?? "redis:6379");
+});
+builder.Services.AddHangfireServer(options => options.Queues = ["stories", "default"]);
 builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 
@@ -53,6 +64,19 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<StoriesDbContext>();
     await dbContext.Database.MigrateAsync();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<NasaApodOptions>>().Value;
+    if (options.Enabled)
+    {
+        scope.ServiceProvider.GetRequiredService<IRecurringJobManager>().AddOrUpdate<NasaApodStoryJob>(
+            "nasa-apod-stories", job => job.RunAsync(CancellationToken.None), Cron.Daily(3),
+            new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+        scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>()
+            .Enqueue<NasaApodStoryJob>(job => job.RunAsync(CancellationToken.None));
+    }
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();

@@ -60,7 +60,12 @@ public sealed class AstronomicalResearchJob : IAstronomicalResearchJob
             return;
         }
 
-        await RunLock.WaitAsync(cancellationToken);
+        if (!await RunLock.WaitAsync(0, cancellationToken))
+        {
+            _logger.LogInformation(
+                "Astronomical research job skipped because another run is already in progress.");
+            return;
+        }
         try
         {
             await RunBatchAsync(cancellationToken);

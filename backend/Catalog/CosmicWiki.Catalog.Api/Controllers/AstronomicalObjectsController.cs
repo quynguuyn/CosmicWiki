@@ -10,7 +10,7 @@ namespace CosmicWiki.Catalog.Api.Controllers;
 
 [ApiController]
 [Route("api/catalog/objects")]
-[Authorize(Policy = Permissions.CatalogRead)]
+[AllowAnonymous]
 public sealed class AstronomicalObjectsController(
     IAstronomicalObjectRepository objectRepository) : ControllerBase
 {

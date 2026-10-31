@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Caching;
@@ -19,7 +20,9 @@ builder.Services.AddCosmicWikiCaching(builder.Configuration);
 builder.Services.AddKafkaMessaging(builder.Configuration);
 
 builder.Services.AddHealthChecks();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 
@@ -86,6 +89,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {
