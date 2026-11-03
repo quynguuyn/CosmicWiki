@@ -36,7 +36,7 @@
     @if (mode() === 'support' && loading()) {
       <p class="support-chat-state">Đang mở cuộc trò chuyện…</p>
     } @else {
-      <div class="support-chat-messages" aria-live="polite">
+      <div #chatMessages class="support-chat-messages" aria-live="polite">
         @if (mode() === 'ai') {
           @if (aiMessages().length === 0) {
             <p class="support-chat-state">
@@ -45,10 +45,26 @@
             </p>
           }
           @for (message of aiMessages(); track message.id) {
-            <article class="support-message" [class.from-support]="message.role === 'assistant'">
+            <article class="support-message" [class.from-support]="message.role === 'assistant'"
+              [class.message-pending]="message.status === 'queued' || message.status === 'thinking'"
+              [class.message-failed]="message.status === 'failed'">
               <span>{{ message.role === 'assistant' ? 'Trợ lý AI' : 'Bạn' }}</span>
               <p>{{ message.content }}</p>
               <time>{{ message.createdAt | date:'shortTime' }}</time>
+              @if (message.status === 'queued') {
+                <small class="message-status">Đang chờ lượt gửi</small>
+              } @else if (message.status === 'failed') {
+                <small class="message-status">Chưa gửi được · hãy thử lại</small>
+              }
+            </article>
+          }
+          @if (mode() === 'ai' && sending()) {
+            <article class="support-message from-support ai-thinking" role="status" aria-label="AI đang trả lời">
+              <span>Trợ lý AI</span>
+              <p class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></p>
+              @if (queuedAiMessageCount > 0) {
+                <small class="message-status">{{ queuedAiMessageCount }} tin nhắn đang chờ</small>
+              }
             </article>
           }
         } @else {
@@ -71,13 +87,18 @@
         }
       </div>
       <form class="support-chat-compose" (ngSubmit)="send()">
-        <textarea [(ngModel)]="draft" name="supportMessage" maxlength="4000"
-          [placeholder]="mode() === 'ai' ? 'Hỏi về vũ trụ…' : 'Nhập tin nhắn…'"
-          title="Enter để gửi · Ctrl+Enter để xuống dòng"
-          aria-label="Tin nhắn" required (keydown.enter)="onComposerEnter($event)"></textarea>
-        <button type="submit" [disabled]="sending() || !draft.trim()">
-          {{ sending() ? 'Đang gửi…' : 'Gửi' }}
-        </button>
+        <div class="compose-field">
+          <textarea [(ngModel)]="draft" name="supportMessage" maxlength="4000"
+            [placeholder]="mode() === 'ai' ? 'Hỏi về vũ trụ…' : 'Nhập tin nhắn…'"
+            title="Enter để gửi · Ctrl+Enter để xuống dòng"
+            aria-label="Tin nhắn" required (keydown.enter)="onComposerEnter($event)"></textarea>
+          <button type="submit"
+            [disabled]="!draft.trim() || (mode() === 'ai' && queuedAiMessageCount >= maxQueuedAiMessages) || (mode() === 'support' && supportSending())"
+            aria-label="Gửi tin nhắn"
+            [title]="mode() === 'ai' && queuedAiMessageCount >= maxQueuedAiMessages ? 'Hàng đợi đang đầy' : 'Gửi tin nhắn'">
+            <span class="material-symbols-outlined">send</span>
+          </button>
+        </div>
       </form>
     }
     @if (error()) { <p class="support-chat-error" role="alert">{{ error() }}</p> }

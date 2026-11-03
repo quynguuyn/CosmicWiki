@@ -40,4 +40,5 @@ export interface AiChatMessage {
   role: 'user' | 'assistant';
   content: string;
   createdAt: Date;
+  status?: 'queued' | 'thinking' | 'sent' | 'failed';
 }
