@@ -62,12 +62,15 @@
           }
         </div>
         <form class="support-compose" (ngSubmit)="send()">
-          <textarea [(ngModel)]="draft" name="supportReply" maxlength="4000"
-            placeholder="Trả lời khách hàng…" title="Enter để gửi · Ctrl+Enter để xuống dòng"
-            (keydown.enter)="onComposerEnter($event)" required></textarea>
-          <button type="submit" [disabled]="sending() || !draft.trim()">
-            {{ sending() ? 'Đang gửi…' : 'Gửi' }}
-          </button>
+          <div class="support-compose-field">
+            <textarea [(ngModel)]="draft" name="supportReply" maxlength="4000"
+              placeholder="Trả lời khách hàng…" title="Enter để gửi · Ctrl+Enter để xuống dòng"
+              (keydown.enter)="onComposerEnter($event)" required></textarea>
+            <button type="submit" [disabled]="sending() || !draft.trim()"
+              aria-label="Gửi tin nhắn" title="Gửi tin nhắn">
+              <span class="material-symbols-outlined">{{ sending() ? 'hourglass_top' : 'send' }}</span>
+            </button>
+          </div>
         </form>
       } @else {
         <div class="support-empty">
