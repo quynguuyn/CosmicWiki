@@ -133,6 +133,7 @@ services:
       Kafka__BootstrapServers: kafka:29092
       Caching__Enabled: "true"
       Caching__Redis__ConnectionString: redis:6379
+      InternalProduct__ServiceKey: ${PRODUCT_SERVICE_KEY:-local-product-key}
     depends_on:
       oracle:
         condition: service_healthy
@@ -158,11 +159,27 @@ services:
       Hangfire__RedisConnection: redis:6379
       NasaApod__ApiKey: ${NASA_APOD_API_KEY:-}
       NasaApod__Enabled: "${NASA_APOD_ENABLED:-true}"
+      AiChat__OllamaBaseUrl: http://ollama:11434
+      AiChat__Model: ${AI_CHAT_MODEL:-qwen2.5:1.5b}
+      AiChat__ProductApiBaseUrl: http://product:8080/
     depends_on:
       oracle:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cosmicwiki-ollama
+    profiles: ["ai"]
+    volumes:
+      - ollamadata:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   discovery:
     build:
@@ -196,12 +213,13 @@ services:
       Jwt__PublicKeyPath: Keys/public_key.pem
       Kafka__BootstrapServers: kafka:29092
       InternalOrdering__ServiceKey: ${ORDERING_SERVICE_KEY:-local-ordering-key}
+      ProductService__BaseUrl: http://product:8080
+      ProductService__ServiceKey: ${PRODUCT_SERVICE_KEY:-local-product-key}
       PaymentProvider__Mode: ${PAYMENT_PROVIDER_MODE:-disabled}
       PaymentProvider__SecretKey: ${STRIPE_SECRET_KEY:-}
       PaymentProvider__ApiBaseUrl: https://api.stripe.com
       ConnectionStrings__OrderingDatabase: User Id=COSMICWIKI_ORDERING;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
       ConnectionStrings__PaymentsDatabase: User Id=COSMICWIKI_PAYMENTS;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1
-      ConnectionStrings__ProductDatabase: User Id=COSMICWIKI_PRODUCT;Password=CosmicWiki;Data Source=//oracle:1521/FREEPDB1;Validate Connection=true
       Caching__Enabled: "true"
       Caching__Redis__ConnectionString: redis:6379
       OrderEmail__Enabled: ${ORDER_EMAIL_ENABLED:-false}
@@ -220,6 +238,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      product:
+        condition: service_started
 
   payments:
     build:
@@ -333,3 +353,4 @@ services:
 volumes:
   oradata:
   redisdata:
+  ollamadata:

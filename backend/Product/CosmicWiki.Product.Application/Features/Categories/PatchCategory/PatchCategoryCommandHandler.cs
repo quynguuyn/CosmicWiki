@@ -1,5 +1,6 @@
 using CosmicWiki.Caching;
 using CosmicWiki.Product.Application.Abstractions.Persistence;
+using CosmicWiki.Product.Application.Features.Categories.Common;
 using MediatR;
 
 namespace CosmicWiki.Product.Application.Features.Categories.PatchCategory;
@@ -45,42 +46,15 @@ public sealed class PatchCategoryCommandHandler
         var description =
             request.Description ?? category.Description;
 
-        if (!string.Equals(
-                name,
-                category.Name,
-                StringComparison.Ordinal))
-        {
-            if (await _categoryRepository.ExistsByNameAsync(
-                    name,
-                    cancellationToken))
-            {
-                throw new InvalidOperationException(
-                    $"Category name '{name}' already exists.");
-            }
-        }
-
-        if (!string.Equals(
-                slug,
-                category.Slug,
-                StringComparison.Ordinal))
-        {
-            if (await _categoryRepository.ExistsBySlugAsync(
-                    slug,
-                    cancellationToken))
-            {
-                throw new InvalidOperationException(
-                    $"Category slug '{slug}' already exists.");
-            }
-        }
-
-        category.Update(
+        await CategoryUpdateWorkflow.ApplyAsync(
+            category,
             name,
             slug,
-            description);
-
-        await _unitOfWork.SaveChangesAsync(
+            description,
+            checkUnchangedValues: false,
+            _categoryRepository,
+            _unitOfWork,
+            _categoryCache,
             cancellationToken);
-
-        await _categoryCache.InvalidateAsync(request.Id, cancellationToken);
     }
 }

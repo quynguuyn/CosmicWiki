@@ -1,4 +1,5 @@
 using CosmicWiki.Stories.Application.Abstractions.Persistence;
+using CosmicWiki.Stories.Application.Features.NasaApod;
 using CosmicWiki.Stories.Domain.Entities;
 using CosmicWiki.Stories.Domain.Enums;
 using Hangfire;
@@ -61,4 +62,12 @@ public sealed class NasaApodStoryJob(
         await stories.AddAsync(story, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
+}
+
+public sealed class NasaApodStoryJobScheduler(
+    Hangfire.IBackgroundJobClient backgroundJobs) : INasaApodStoryJobScheduler
+{
+    public string Enqueue() =>
+        backgroundJobs.Enqueue<NasaApodStoryJob>(
+            job => job.RunAsync(CancellationToken.None));
 }

@@ -103,6 +103,12 @@
             Giao hàng
           </a>
           }
+          @if (auth.hasPermission('support.chat.manage')) {
+          <a routerLink="/support" (click)="userMenuOpen.set(false)">
+            <span class="material-symbols-outlined">support_agent</span>
+            Hàng đợi hỗ trợ
+          </a>
+          }
           @if (auth.hasPermission('shipping.write')) {
           <a routerLink="/admin" (click)="userMenuOpen.set(false)">
             <span class="material-symbols-outlined">dashboard</span>

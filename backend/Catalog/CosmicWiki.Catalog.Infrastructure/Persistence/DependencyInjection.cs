@@ -43,9 +43,12 @@ public static class DependencyInjection
                 client.Timeout = TimeSpan.FromSeconds(
                     Math.Clamp(options.RequestTimeoutSeconds, 5, 120));
             });
+        services.AddScoped<IAstronomicalResearchImageEnricher, AstronomicalResearchImageEnricher>();
+        services.AddScoped<IAstronomicalResearchCandidateProcessor, AstronomicalResearchCandidateProcessor>();
         services.AddScoped<IAstronomicalResearchJob, AstronomicalResearchJob>();
         services.AddScoped<IAstronomicalResearchAdminOperations, AstronomicalResearchAdminOperations>();
-        services.AddScoped<IHangfireDashboardOperations, HangfireDashboardOperations>();
+        services.AddScoped<IHangfireDashboardQueries, HangfireDashboardQueries>();
+        services.AddScoped<IHangfireDashboardCommands, HangfireDashboardCommands>();
 
         return services;
     }

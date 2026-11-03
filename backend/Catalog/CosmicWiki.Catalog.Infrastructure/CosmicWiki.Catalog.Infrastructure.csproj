@@ -2,7 +2,9 @@
 
   <ItemGroup>
     <PackageReference Include="Hangfire.Core" Version="1.8.17" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Caching\CosmicWiki.Caching.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
     <ProjectReference Include="..\CosmicWiki.Catalog.Application\CosmicWiki.Catalog.Application.csproj" />
     <ProjectReference Include="..\CosmicWiki.Catalog.Domain\CosmicWiki.Catalog.Domain.csproj" />

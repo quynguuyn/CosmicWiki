@@ -10,7 +10,7 @@ public interface IAstronomicalResearchAdminOperations
         CancellationToken cancellationToken);
 }
 
-public interface IHangfireDashboardOperations
+public interface IHangfireDashboardQueries
 {
     HangfireOverviewResponse GetHangfireOverview();
     HangfireJobDetailsResponse? GetHangfireJobDetails(string jobId);
@@ -23,6 +23,10 @@ public interface IHangfireDashboardOperations
         string? queue);
     HangfireRetriesPage GetHangfireRetries(int page, int pageSize);
     HangfireRecurringJobsPage GetRecurringJobs(int page, int pageSize);
+}
+
+public interface IHangfireDashboardCommands
+{
     void TriggerRecurringJob(string jobId);
     bool DeleteRecurringJob(string jobId);
     bool RequeueJob(string jobId);

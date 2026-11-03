@@ -22,6 +22,26 @@ public sealed class VisitDbContext(DbContextOptions<VisitDbContext> options) : D
         entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
         entity.Property(x => x.Email).HasMaxLength(320).IsRequired();
         entity.Property(x => x.Notes).HasMaxLength(2000);
-        entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32).IsRequired();
+        entity.Property(x => x.Status)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired()
+            .IsConcurrencyToken();
+    }
+
+    async Task<int> IVisitUnitOfWork.SaveChangesAsync(
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+            when (exception.Entries.Any(entry => entry.Entity is VisitRequest))
+        {
+            throw new InvalidOperationException(
+                "The visit request has already been updated.",
+                exception);
+        }
     }
 }

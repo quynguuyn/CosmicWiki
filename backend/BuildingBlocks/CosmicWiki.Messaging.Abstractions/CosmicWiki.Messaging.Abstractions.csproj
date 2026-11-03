@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\CosmicWiki.Messaging\Abstractions\**\*.cs" Link="Abstractions\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CosmicWiki.Messaging\Contracts\**\*.cs" Link="Contracts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\CosmicWiki.Messaging\KafkaTopics.cs" Link="KafkaTopics.cs" />
+  </ItemGroup>
+
+</Project>

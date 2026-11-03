@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
-using CosmicWiki.Ordering.Application.Abstractions;
+using CosmicWiki.Ordering.Application.Features.Orders;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using CosmicWiki.Ordering.Api.Internal;
@@ -15,7 +16,7 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 [AllowAnonymous]
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class InternalOrdersController(
-    IOrderPaymentIntentValidator validator,
+    ISender sender,
     IOptions<InternalOrderingOptions> options) : ControllerBase
 {
     [HttpGet("{orderId:guid}/payment-intent")]
@@ -57,11 +58,8 @@ public sealed class InternalOrdersController(
             return BadRequest();
         }
 
-        var valid = await validator.IsPaymentIntentValidAsync(
-            orderId,
-            paymentIntentId,
-            amount,
-            currency,
+        var valid = await sender.Send(
+            new ValidatePaymentIntentQuery(orderId, paymentIntentId, amount, currency),
             cancellationToken);
 
         return valid ? Ok() : NotFound();

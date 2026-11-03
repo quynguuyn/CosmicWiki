@@ -23,4 +23,5 @@ public static class Permissions
     public const string OrderingWrite = "ordering.write";
     public const string ShippingWrite = "shipping.write";
     public const string DeliveryWrite = "delivery.write";
+    public const string SupportChatManage = "support.chat.manage";
 }

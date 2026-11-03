@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\CosmicWiki.Caching\ICacheStore.cs" Link="ICacheStore.cs" />
+    <Compile Include="..\CosmicWiki.Caching\IProductCache.cs" Link="IProductCache.cs" />
+    <Compile Include="..\CosmicWiki.Caching\IStoryCache.cs" Link="IStoryCache.cs" />
+    <Compile Include="..\CosmicWiki.Caching\CachingOptions.cs" Link="CachingOptions.cs" />
+    <Compile Include="..\CosmicWiki.Caching\IStarCache.cs" Link="IStarCache.cs" />
+    <Compile Include="..\CosmicWiki.Caching\ICategoryCache.cs" Link="ICategoryCache.cs" />
+  </ItemGroup>
+
+</Project>

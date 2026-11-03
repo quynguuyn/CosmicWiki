@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Application.Events;
 using System.Linq;
 using Microsoft.Extensions.Logging;

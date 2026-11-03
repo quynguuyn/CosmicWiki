@@ -1,6 +1,6 @@
 using CosmicWiki.SharedKernel.Authorization;
-using CosmicWiki.Stories.Infrastructure.Research;
-using Hangfire;
+using CosmicWiki.Stories.Application.Features.NasaApod;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,25 +9,23 @@ namespace CosmicWiki.Stories.Api.Controllers;
 [ApiController]
 [Route("api/stories/admin/apod")]
 [Authorize(Policy = Permissions.StoryWrite)]
-public sealed class NasaApodAdminController(
-    INasaApodProvider provider,
-    IBackgroundJobClient jobs) : ControllerBase
+public sealed class NasaApodAdminController(ISender sender) : ControllerBase
 {
     [HttpGet("status")]
     public async Task<IActionResult> GetStatus(CancellationToken cancellationToken) =>
-        Ok(await provider.GetStatusAsync(cancellationToken));
+        Ok(await sender.Send(new GetNasaApodStatusQuery(), cancellationToken));
 
     [HttpPost("trigger")]
     public async Task<IActionResult> Trigger(CancellationToken cancellationToken)
     {
-        var status = await provider.GetStatusAsync(cancellationToken);
-        if (!status.IsReachable)
-            return Conflict(status);
+        var result = await sender.Send(
+            new TriggerNasaApodStoryCommand(), cancellationToken);
+        if (result.JobId is null)
+            return Conflict(result.Status);
 
         return Accepted(new
         {
-            jobId = jobs.Enqueue<NasaApodStoryJob>(
-                job => job.RunAsync(CancellationToken.None))
+            jobId = result.JobId
         });
     }
 }

@@ -1,8 +1,7 @@
-using CosmicWiki.Messaging;
 using CosmicWiki.Messaging.Abstractions;
-using CosmicWiki.Messaging.Contracts.Product;
 using CosmicWiki.Product.Application.Abstractions.Persistence;
 using CosmicWiki.Caching;
+using CosmicWiki.Product.Application.Features.Products.Common;
 using MediatR;
 
 namespace CosmicWiki.Product.Application.Features.Products.UpdateProduct;
@@ -45,42 +44,8 @@ public sealed class UpdateProductCommandHandler
                 $"Product '{request.Id}' was not found.");
         }
 
-        var sku = request.SKU.Trim();
-        var slug = request.Slug.Trim();
-
-        if (!string.Equals(
-                product.SKU,
-                sku,
-                StringComparison.OrdinalIgnoreCase) &&
-            await _productRepository.ExistsBySkuAsync(
-                sku,
-                cancellationToken))
-        {
-            throw new InvalidOperationException(
-                $"Product SKU '{sku}' already exists.");
-        }
-
-        if (!string.Equals(
-                product.Slug,
-                slug,
-                StringComparison.OrdinalIgnoreCase) &&
-            await _productRepository.ExistsBySlugAsync(
-                slug,
-                cancellationToken))
-        {
-            throw new InvalidOperationException(
-                $"Product slug '{slug}' already exists.");
-        }
-
-        if (!await _categoryRepository.ExistsAsync(
-                request.CategoryId,
-                cancellationToken))
-        {
-            throw new KeyNotFoundException(
-                $"Category '{request.CategoryId}' was not found.");
-        }
-
-        product.Update(
+        await ProductUpdateWorkflow.ApplyAsync(
+            product,
             request.SKU,
             request.Name,
             request.Slug,
@@ -89,19 +54,13 @@ public sealed class UpdateProductCommandHandler
             request.SalePrice,
             request.StockQuantity,
             request.CategoryId,
-            request.Status);
-
-        _outboxWriter.Add(
-            new ProductUpdatedIntegrationEvent(
-                Guid.NewGuid(), 1, DateTime.UtcNow, product.Id, product.Id, product.SKU,
-                product.Name, product.Slug, product.Description,
-                product.Images.OrderBy(x => x.DisplayOrder).Select(x => x.Url).FirstOrDefault()),
-            KafkaTopics.ProductUpdated);
-
-        await _unitOfWork.SaveChangesAsync(
-            cancellationToken);
-        await _productCache.InvalidateAsync(
-            product.Id,
+            request.Status,
+            validateCategory: true,
+            _productRepository,
+            _categoryRepository,
+            _unitOfWork,
+            _outboxWriter,
+            _productCache,
             cancellationToken);
     }
 }

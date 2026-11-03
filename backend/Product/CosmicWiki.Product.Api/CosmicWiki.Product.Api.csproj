@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Api.Common\CosmicWiki.Api.Common.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Caching\CosmicWiki.Caching.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
     <ProjectReference Include="..\CosmicWiki.Product.Application\CosmicWiki.Product.Application.csproj" />
     <ProjectReference Include="..\CosmicWiki.Product.Infrastructure\CosmicWiki.Product.Infrastructure.csproj" />
   </ItemGroup>

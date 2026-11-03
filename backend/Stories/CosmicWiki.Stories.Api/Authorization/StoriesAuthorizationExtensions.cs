@@ -18,6 +18,11 @@ public static class StoriesAuthorizationExtensions
                 policy.RequireAuthenticatedUser();
                 policy.RequireClaim("permission", Permissions.StoryWrite);
             });
+            options.AddPolicy(Permissions.SupportChatManage, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("permission", Permissions.SupportChatManage);
+            });
         });
         return services;
     }

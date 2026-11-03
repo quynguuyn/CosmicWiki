@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Abstractions\**\*.cs;Contracts\**\*.cs;KafkaTopics.cs" />
+    <ProjectReference Include="..\CosmicWiki.Messaging.Abstractions\CosmicWiki.Messaging.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="2.15.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />

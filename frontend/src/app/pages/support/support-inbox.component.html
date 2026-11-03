@@ -1,0 +1,78 @@
+<section class="support-page">
+  <header class="support-page-header">
+    <div>
+      <p class="eyebrow">CUSTOMER CARE</p>
+      <h1>Hàng đợi hỗ trợ</h1>
+      <p>Chat mới sẽ được phân công cho nhân viên đang sẵn sàng và có ít cuộc trò chuyện nhất.</p>
+    </div>
+    <button class="availability" type="button" [class.offline]="!acceptingChats()"
+      (click)="toggleAvailability()">
+      {{ acceptingChats() ? 'Đang nhận chat' : 'Tạm ngưng nhận chat' }}
+    </button>
+  </header>
+
+  @if (error()) { <p class="support-error" role="alert">{{ error() }}</p> }
+
+  <div class="support-layout">
+    <aside class="support-queue">
+      <h2>Cuộc trò chuyện <span>{{ queue().length }}</span></h2>
+      @if (queue().length === 0) {
+        <p class="queue-empty">Chưa có cuộc trò chuyện nào.</p>
+      }
+      @for (item of queue(); track item.id) {
+        <button type="button" class="queue-item" [class.selected]="selectedId() === item.id"
+          (click)="openConversation(item)">
+          <span class="queue-item-top">
+            <strong>{{ item.customerDisplayName || 'Khách hàng' }}</strong>
+            <time>{{ (item.lastMessageAtUtc ?? item.createdAtUtc) | date:'shortTime' }}</time>
+          </span>
+          <span class="queue-preview">
+            {{ item.status === 'Queued' ? 'Đang chờ nhận · ' : 'Đang xử lý · ' }}
+            {{ item.lastMessage || 'Khách đang chờ phản hồi của bạn' }}
+          </span>
+        </button>
+      }
+    </aside>
+
+    <section class="support-chat">
+      @if (active(); as conversation) {
+        <header class="support-chat-title">
+          <div>
+            <h2>{{ conversation.customerDisplayName || 'Khách hàng' }}</h2>
+            <small>
+              {{ conversation.status === 'Queued' ? 'Đang chờ nhận' : 'Đang xử lý' }}
+              · Nhân viên: {{ conversation.assignedSupportDisplayName || 'Chưa phân công' }}
+            </small>
+          </div>
+          <button type="button" (click)="closeConversation()">Kết thúc chat</button>
+        </header>
+        <div class="support-messages" aria-live="polite">
+          @if (!hasAgentReplied()) {
+            <p class="support-waiting" role="status">
+              Khách hàng {{ conversation.customerDisplayName || 'đang chờ' }} đang chờ phản hồi.
+              Hãy gửi lời chào để bắt đầu hỗ trợ.
+            </p>
+          }
+          @for (message of messages(); track message.id) {
+            <article class="support-message" [class.from-agent]="message.senderType === 'Support'">
+              <span>{{ message.senderDisplayName || (message.senderType === 'Support' ? 'Nhân viên hỗ trợ' : 'Khách hàng') }}</span>
+              <p>{{ message.body }}</p>
+              <time>{{ message.createdAtUtc | date:'short' }}</time>
+            </article>
+          }
+        </div>
+        <form class="support-compose" (ngSubmit)="send()">
+          <textarea [(ngModel)]="draft" name="supportReply" maxlength="4000"
+            placeholder="Trả lời khách hàng…" required></textarea>
+          <button type="submit" [disabled]="!draft.trim()">Gửi</button>
+        </form>
+      } @else {
+        <div class="support-empty">
+          <span class="material-symbols-outlined">forum</span>
+          <h2>Chọn cuộc trò chuyện</h2>
+          <p>Cuộc trò chuyện được phân công cho bạn sẽ hiển thị trong danh sách.</p>
+        </div>
+      }
+    </section>
+  </div>
+</section>

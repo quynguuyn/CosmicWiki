@@ -23,11 +23,16 @@ if (!builder.Environment.IsDevelopment())
 {
     var serviceKey = builder.Configuration["InternalOrdering:ServiceKey"] ??
         Environment.GetEnvironmentVariable("ORDERING_SERVICE_KEY");
+    var productServiceKey = builder.Configuration["ProductService:ServiceKey"] ??
+        Environment.GetEnvironmentVariable("PRODUCT_SERVICE_KEY");
     var kafkaProtocol = builder.Configuration["Kafka:SecurityProtocol"];
 
     if (string.IsNullOrWhiteSpace(serviceKey) ||
         serviceKey.Length < 32 ||
         serviceKey is "[SECRET_FROM_ENV]" or "local-ordering-key" ||
+        string.IsNullOrWhiteSpace(productServiceKey) ||
+        productServiceKey.Length < 32 ||
+        productServiceKey is "[SECRET_FROM_ENV]" or "local-product-key" ||
         string.Equals(kafkaProtocol, "Plaintext", StringComparison.OrdinalIgnoreCase))
     {
         throw new InvalidOperationException(

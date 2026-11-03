@@ -1,6 +1,6 @@
 using CosmicWiki.Ordering.Application.Events;
 
-namespace CosmicWiki.Ordering.Infrastructure.Notifications;
+namespace CosmicWiki.Ordering.Application.Abstractions;
 
 public interface IOrderEmailSender
 {

@@ -1,7 +1,9 @@
 ﻿using CosmicWiki.Messaging.Abstractions;
 using CosmicWiki.Product.Application.Abstractions.Persistence;
+using CosmicWiki.Product.Application.Abstractions;
 using CosmicWiki.Product.Infrastructure.Persistence.Outbox;
 using CosmicWiki.Product.Infrastructure.Persistence.Repositories;
+using CosmicWiki.Product.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,9 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
 
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ProductInternalOperations>();
+        services.AddScoped<IProductInternalOperations>(
+            serviceProvider => serviceProvider.GetRequiredService<ProductInternalOperations>());
         
         services.AddScoped<IOutboxWriter, ProductOutboxWriter>();
         

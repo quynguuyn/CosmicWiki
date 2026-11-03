@@ -5,6 +5,7 @@ using CosmicWiki.Api.Common.Middleware;
 using CosmicWiki.Caching;
 using CosmicWiki.Messaging.Kafka;
 using CosmicWiki.Product.Api.Authorization;
+using CosmicWiki.Product.Api.Internal;
 using CosmicWiki.Product.Application;
 using CosmicWiki.Product.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,6 +17,18 @@ builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 
 builder.Services.AddProductApplication();
 builder.Services.AddProductInfrastructure(builder.Configuration);
+builder.Services.Configure<InternalProductOptions>(
+    builder.Configuration.GetSection(InternalProductOptions.SectionName));
+var productServiceKey = builder.Configuration["InternalProduct:ServiceKey"] ??
+    Environment.GetEnvironmentVariable("PRODUCT_SERVICE_KEY");
+if (!builder.Environment.IsDevelopment() &&
+    (string.IsNullOrWhiteSpace(productServiceKey) ||
+     productServiceKey.Length < 32 ||
+     productServiceKey is "[SECRET_FROM_ENV]" or "local-product-key"))
+{
+    throw new InvalidOperationException(
+        "A production Product internal service key of at least 32 characters is required.");
+}
 builder.Services.AddCosmicWikiCaching(builder.Configuration);
 builder.Services.AddKafkaMessaging(builder.Configuration);
 

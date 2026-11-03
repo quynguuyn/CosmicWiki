@@ -53,20 +53,16 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                // Retry consume until topics exist
-                var result = await ConsumeWithRetryAsync(consumer, stoppingToken);
-                try
-                {
-                    await RetryAsync(() => HandleAsync(result, stoppingToken), stoppingToken);
-                    consumer.Commit(result);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "Moving failed Kafka message from {Topic} to its DLQ.", result.Topic);
-                    var eventId = Guid.TryParse(result.Message.Key, out var parsed) ? parsed : Guid.NewGuid();
-                    await _eventBus.PublishRawAsync(eventId, result.Message.Value, $"{result.Topic}.dlq", stoppingToken, result.Message.Key);
-                    consumer.Commit(result);
-                }
+                var result = await KafkaConsumerProcessing.ConsumeWithRetryAsync(
+                    consumer,
+                    stoppingToken);
+                await KafkaConsumerProcessing.ProcessWithRetryAndDeadLetterAsync(
+                    consumer,
+                    result,
+                    () => HandleAsync(result, stoppingToken),
+                    _eventBus,
+                    _logger,
+                    stoppingToken);
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -90,15 +86,31 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
         {
             case KafkaTopics.ProductCreated:
                 var created = Deserialize<ProductCreatedIntegrationEvent>(result.Message.Value);
-                await UpsertAsync(
-                    new ProductSearchData(created.ProductId, created.Name, created.Description,
-                        created.ImageUrl, created.OccurredAtUtc), dbContext, cancellationToken);
+                await SearchDocumentUpsert.ExecuteAsync(
+                    dbContext,
+                    created.ProductId,
+                    ProductSourceType,
+                    created.Name,
+                    created.Description,
+                    created.ImageUrl,
+                    created.OccurredAtUtc,
+                    catalog: null,
+                    catalogValue: null,
+                    cancellationToken: cancellationToken);
                 break;
             case KafkaTopics.ProductUpdated:
                 var updated = Deserialize<ProductUpdatedIntegrationEvent>(result.Message.Value);
-                await UpsertAsync(
-                    new ProductSearchData(updated.ProductId, updated.Name, updated.Description,
-                        updated.ImageUrl, updated.OccurredAtUtc), dbContext, cancellationToken);
+                await SearchDocumentUpsert.ExecuteAsync(
+                    dbContext,
+                    updated.ProductId,
+                    ProductSourceType,
+                    updated.Name,
+                    updated.Description,
+                    updated.ImageUrl,
+                    updated.OccurredAtUtc,
+                    catalog: null,
+                    catalogValue: null,
+                    cancellationToken: cancellationToken);
                 break;
             case KafkaTopics.ProductDeleted:
                 var deleted = Deserialize<ProductDeletedIntegrationEvent>(result.Message.Value);
@@ -115,81 +127,9 @@ public sealed class ProductSearchDocumentConsumer : BackgroundService
         }
     }
 
-    private static async Task UpsertAsync(
-        ProductSearchData integrationEvent,
-        DiscoveryDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        var document = await dbContext.SearchDocuments.SingleOrDefaultAsync(
-            x => x.SourceType == ProductSourceType && x.SourceId == integrationEvent.ProductId,
-            cancellationToken);
-
-        if (document is null)
-        {
-            dbContext.SearchDocuments.Add(SearchDocument.Create(
-                integrationEvent.ProductId,
-                ProductSourceType,
-                integrationEvent.Name,
-                integrationEvent.Description,
-                integrationEvent.ImageUrl,
-                integrationEvent.OccurredAtUtc));
-        }
-        else
-        {
-            document.Update(
-                integrationEvent.Name,
-                integrationEvent.Description,
-                integrationEvent.ImageUrl,
-                integrationEvent.OccurredAtUtc);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
     private static T Deserialize<T>(string payload)
     {
         return JsonSerializer.Deserialize<T>(payload)
             ?? throw new InvalidOperationException($"Could not deserialize {typeof(T).Name}.");
     }
-
-private static async Task RetryAsync(Func<Task> action, CancellationToken cancellationToken)
-    {
-        for (var attempt = 1; ; attempt++)
-        {
-            try { await action(); return; }
-            catch when (attempt < 3)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)), cancellationToken);
-            }
-        }
-    }
-
-    private static async Task<ConsumeResult<string, string>> ConsumeWithRetryAsync(IConsumer<string, string> consumer, CancellationToken stoppingToken)
-    {
-        const int maxRetries = 30;
-        const int retryDelaySeconds = 2;
-
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
-        {
-            try
-            {
-                return consumer.Consume(stoppingToken);
-            }
-            catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
-            {
-                if (attempt == maxRetries)
-                    throw;
-
-                await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), stoppingToken);
-            }
-        }
-        throw new InvalidOperationException("Failed to consume after max retries");
-    }
-
-    private sealed record ProductSearchData(
-        Guid ProductId,
-        string Name,
-        string? Description,
-        string? ImageUrl,
-        DateTime OccurredAtUtc);
 }

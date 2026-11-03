@@ -115,6 +115,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmicWiki.Newsletter.Domai
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmicWiki.Newsletter.Infrastructure", "Newsletter\CosmicWiki.Newsletter.Infrastructure\CosmicWiki.Newsletter.Infrastructure.csproj", "{99A155BE-C33E-4A31-AB0B-BE7EF42488FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmicWiki.Messaging.Abstractions", "BuildingBlocks\CosmicWiki.Messaging.Abstractions\CosmicWiki.Messaging.Abstractions.csproj", "{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmicWiki.Caching.Abstractions", "BuildingBlocks\CosmicWiki.Caching.Abstractions\CosmicWiki.Caching.Abstractions.csproj", "{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -653,6 +657,30 @@ Global
 		{99A155BE-C33E-4A31-AB0B-BE7EF42488FF}.Release|x64.Build.0 = Release|Any CPU
 		{99A155BE-C33E-4A31-AB0B-BE7EF42488FF}.Release|x86.ActiveCfg = Release|Any CPU
 		{99A155BE-C33E-4A31-AB0B-BE7EF42488FF}.Release|x86.Build.0 = Release|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Debug|x64.Build.0 = Debug|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Debug|x86.Build.0 = Debug|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Release|x64.ActiveCfg = Release|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Release|x64.Build.0 = Release|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Release|x86.ActiveCfg = Release|Any CPU
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E}.Release|x86.Build.0 = Release|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Debug|x64.Build.0 = Debug|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Debug|x86.Build.0 = Debug|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Release|x64.ActiveCfg = Release|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Release|x64.Build.0 = Release|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Release|x86.ActiveCfg = Release|Any CPU
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -702,5 +730,7 @@ Global
 		{FCD446EF-7721-4F7F-A18C-609AADA4C8F9} = {8B1187AE-68A4-1280-8AD3-96C82542B58A}
 		{3E56D5F1-5B97-44B2-838D-C09CB8010768} = {8B1187AE-68A4-1280-8AD3-96C82542B58A}
 		{99A155BE-C33E-4A31-AB0B-BE7EF42488FF} = {8B1187AE-68A4-1280-8AD3-96C82542B58A}
+		{B3038B18-B1C0-4AF7-B331-6C6FFA30209E} = {F495D3AD-F0A9-44B5-848F-23B3A76B326C}
+		{FBC4A51D-CFFE-4C5A-B729-C292BB945FEC} = {F495D3AD-F0A9-44B5-848F-23B3A76B326C}
 	EndGlobalSection
 EndGlobal

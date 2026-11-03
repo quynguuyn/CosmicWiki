@@ -29,3 +29,13 @@ export const deliveryGuard: CanActivateFn = () => {
       ? true
       : router.createUrlTree(['/forbidden']);
 };
+
+export const supportChatGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return !auth.isAuthenticated()
+    ? router.createUrlTree(['/login'])
+    : auth.hasPermission('support.chat.manage')
+      ? true
+      : router.createUrlTree(['/forbidden']);
+};

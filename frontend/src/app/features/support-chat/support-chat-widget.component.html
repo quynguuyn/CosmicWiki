@@ -1,0 +1,84 @@
+<button class="support-chat-launcher" type="button" (click)="toggle()"
+  [attr.aria-expanded]="open()" aria-label="Mở chat hỗ trợ">
+  <span class="material-symbols-outlined">{{ open() ? 'close' : 'chat' }}</span>
+  <span>{{ open() ? 'Đóng' : 'Trò chuyện' }}</span>
+</button>
+
+@if (open()) {
+  <section class="support-chat-panel cosmic-glass" aria-label="Trò chuyện">
+    <header class="support-chat-header">
+      <div>
+        <strong>{{ mode() === 'ai' ? 'Trợ lý vũ trụ AI' : 'Hỗ trợ khách hàng' }}</strong>
+        <small>
+          @if (mode() === 'ai') {
+            Hỏi đáp về thiên văn và vũ trụ
+          } @else {
+            @if (conversation()?.status === 'Queued') {
+              Đang chờ nhân viên
+            } @else if (conversation()?.assignedSupportDisplayName) {
+              Nhân viên: {{ conversation()?.assignedSupportDisplayName }}
+            } @else {
+              Nhân viên hỗ trợ
+            }
+          }
+        </small>
+      </div>
+      @if (mode() === 'support' && conversation()) {
+        <button type="button" (click)="closeConversation()" aria-label="Kết thúc cuộc trò chuyện">Kết thúc</button>
+      }
+    </header>
+
+    <nav class="support-chat-modes" aria-label="Chọn loại trò chuyện">
+      <button type="button" [class.selected]="mode() === 'ai'" (click)="selectMode('ai')">Trợ lý AI</button>
+      <button type="button" [class.selected]="mode() === 'support'" (click)="selectMode('support')">Nhân viên</button>
+    </nav>
+
+    @if (mode() === 'support' && loading()) {
+      <p class="support-chat-state">Đang mở cuộc trò chuyện…</p>
+    } @else {
+      <div class="support-chat-messages" aria-live="polite">
+        @if (mode() === 'ai') {
+          @if (aiMessages().length === 0) {
+            <p class="support-chat-state">
+              Xin chào! Mình có thể giúp bạn khám phá thiên văn học và vũ trụ.
+              Tin nhắn được gửi tới dịch vụ AI; vui lòng không chia sẻ thông tin nhạy cảm.
+            </p>
+          }
+          @for (message of aiMessages(); track message.id) {
+            <article class="support-message" [class.from-support]="message.role === 'assistant'">
+              <span>{{ message.role === 'assistant' ? 'Trợ lý AI' : 'Bạn' }}</span>
+              <p>{{ message.content }}</p>
+              <time>{{ message.createdAt | date:'shortTime' }}</time>
+            </article>
+          }
+        } @else {
+          @if (!hasSupportReply()) {
+            <p class="support-chat-state" role="status">
+              @if (conversation()?.status === 'Queued') {
+                Cuộc trò chuyện của bạn đang chờ nhân viên. Hãy gửi câu hỏi hoặc mô tả vấn đề; nhân viên sẽ trả lời tại đây khi nhận chat.
+              } @else {
+                Cuộc trò chuyện đã được giao cho {{ conversation()?.assignedSupportDisplayName || 'nhân viên hỗ trợ' }}. Bạn có thể gửi thêm thông tin trong lúc chờ phản hồi.
+              }
+            </p>
+          }
+          @for (message of messages(); track message.id) {
+            <article class="support-message" [class.from-support]="message.senderType === 'Support'">
+              <span>{{ message.senderDisplayName || (message.senderType === 'Support' ? 'Nhân viên hỗ trợ' : 'Bạn') }}</span>
+              <p>{{ message.body }}</p>
+              <time>{{ message.createdAtUtc | date:'shortTime' }}</time>
+            </article>
+          }
+        }
+      </div>
+      <form class="support-chat-compose" (ngSubmit)="send()">
+        <textarea [(ngModel)]="draft" name="supportMessage" maxlength="4000"
+          [placeholder]="mode() === 'ai' ? 'Hỏi về vũ trụ…' : 'Nhập tin nhắn…'"
+          aria-label="Tin nhắn" required></textarea>
+        <button type="submit" [disabled]="sending() || !draft.trim()">
+          {{ sending() ? 'Đang gửi…' : 'Gửi' }}
+        </button>
+      </form>
+    }
+    @if (error()) { <p class="support-chat-error" role="alert">{{ error() }}</p> }
+  </section>
+}

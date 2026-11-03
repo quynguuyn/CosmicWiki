@@ -24,7 +24,7 @@ export class AdminAccountsComponent implements OnInit {
   accounts: Account[] = []; roles: Role[] = []; permissions: Permission[] = []; rolePermissions: Permission[] = [];
   selected?: Account; selectedRole = ''; selectedPermissionRole = ''; selectedPermission = ''; roleFilter = ''; error = ''; saving = false;
   page = 1; readonly pageSize = 10; totalCount = 0; totalPages = 0; loading = false;
-  readonly roleFilters = ['', 'User', 'Admin', 'Delivery'];
+  readonly roleFilters = ['', 'User', 'Admin', 'Delivery', 'Support'];
 
   ngOnInit() { this.loadAccounts(); this.http.get<Role[]>(`${this.base}/api/auth/admin/roles`).subscribe({ next: r => this.roles = r }); this.http.get<Permission[]>(`${this.base}/api/auth/admin/permissions`).subscribe({ next: p => this.permissions = p }); }
   loadAccounts() {

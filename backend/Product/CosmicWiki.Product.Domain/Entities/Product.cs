@@ -67,30 +67,10 @@ public sealed class Product : AggregateRoot<Guid>
         string? description = null,
         ProductStatus status = ProductStatus.Draft)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(sku);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
-
-        if (originalPrice < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(originalPrice));
-
-        if (salePrice < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(salePrice));
-
-        if (salePrice > originalPrice)
-            throw new ArgumentException(
-                "Sale price cannot be greater than original price.");
-
-        if (stockQuantity < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(stockQuantity));
-
-        if (categoryId == Guid.Empty)
-            throw new ArgumentException(
-                "Category ID cannot be empty.",
-                nameof(categoryId));
+        ValidateIdentity(sku, name, slug);
+        ValidatePrice(originalPrice, salePrice);
+        ValidateStock(stockQuantity);
+        ValidateCategory(categoryId);
 
         return new Product(
             Guid.NewGuid(),
@@ -116,30 +96,10 @@ public sealed class Product : AggregateRoot<Guid>
         Guid categoryId,
         ProductStatus status)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(sku);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
-
-        if (originalPrice < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(originalPrice));
-
-        if (salePrice < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(salePrice));
-
-        if (salePrice > originalPrice)
-            throw new ArgumentException(
-                "Sale price cannot be greater than original price.");
-
-        if (stockQuantity < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(stockQuantity));
-
-        if (categoryId == Guid.Empty)
-            throw new ArgumentException(
-                "Category ID cannot be empty.",
-                nameof(categoryId));
+        ValidateIdentity(sku, name, slug);
+        ValidatePrice(originalPrice, salePrice);
+        ValidateStock(stockQuantity);
+        ValidateCategory(categoryId);
 
         SKU = sku.Trim();
         Name = name.Trim();
@@ -156,6 +116,21 @@ public sealed class Product : AggregateRoot<Guid>
         decimal originalPrice,
         decimal salePrice)
     {
+        ValidatePrice(originalPrice, salePrice);
+
+        OriginalPrice = originalPrice;
+        SalePrice = salePrice;
+    }
+
+    private static void ValidateIdentity(string sku, string name, string slug)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sku);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
+    }
+
+    private static void ValidatePrice(decimal originalPrice, decimal salePrice)
+    {
         if (originalPrice < 0)
             throw new ArgumentOutOfRangeException(
                 nameof(originalPrice));
@@ -167,16 +142,26 @@ public sealed class Product : AggregateRoot<Guid>
         if (salePrice > originalPrice)
             throw new ArgumentException(
                 "Sale price cannot be greater than original price.");
-
-        OriginalPrice = originalPrice;
-        SalePrice = salePrice;
     }
 
-    public void ChangeStock(int stockQuantity)
+    private static void ValidateStock(int stockQuantity)
     {
         if (stockQuantity < 0)
             throw new ArgumentOutOfRangeException(
                 nameof(stockQuantity));
+    }
+
+    private static void ValidateCategory(Guid categoryId)
+    {
+        if (categoryId == Guid.Empty)
+            throw new ArgumentException(
+                "Category ID cannot be empty.",
+                nameof(categoryId));
+    }
+
+    public void ChangeStock(int stockQuantity)
+    {
+        ValidateStock(stockQuantity);
 
         StockQuantity = stockQuantity;
     }
@@ -188,10 +173,7 @@ public sealed class Product : AggregateRoot<Guid>
 
     public void ChangeCategory(Guid categoryId)
     {
-        if (categoryId == Guid.Empty)
-            throw new ArgumentException(
-                "Category ID cannot be empty.",
-                nameof(categoryId));
+        ValidateCategory(categoryId);
 
         CategoryId = categoryId;
     }
