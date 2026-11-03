@@ -44,8 +44,8 @@ public sealed class OllamaChatAssistant(
                     model = _options.Model,
                     messages,
                     stream = false,
-                    keep_alive = "10m",
-                    options = new { temperature = 0.4, num_predict = 500 }
+                    keep_alive = "15m",
+                    options = new { temperature = 0.3, num_ctx = 4096, num_predict = 128 }
                 },
                 cancellationToken);
 
@@ -105,10 +105,11 @@ public sealed class OllamaChatAssistant(
         var prompt =
             "Bạn là trợ lý AI của CosmicWiki, một ứng dụng tiếng Việt giúp khám phá thiên văn, " +
             "đọc các bài viết về vũ trụ, xem nội dung NASA APOD và tìm hiểu sản phẩm trong cửa hàng. " +
-            "Trả lời bằng tiếng Việt, ngắn gọn, thân thiện. Không bịa thông tin; nếu chưa biết thì " +
-            "nói rõ. Chỉ tư vấn sản phẩm có trong danh sách dữ liệu hiện tại bên dưới, không tự " +
-            "đoán tồn kho hoặc giá. Nếu người dùng hỏi ngoài phạm vi CosmicWiki, thiên văn hoặc " +
-            "sản phẩm cửa hàng, lịch sự hướng họ về các chủ đề này.";
+            "Luôn trả lời bằng tiếng Việt, thân thiện và súc tích (tối đa 3 câu hoặc 5 dòng). " +
+            "Không bịa thông tin. Khi liệt kê sản phẩm, chỉ dùng tên và giá trong danh sách; " +
+            "không tạo thêm sản phẩm, mã hoặc giá. Khi tư vấn, chỉ đề xuất sản phẩm có sẵn. " +
+            "Nếu không biết, nói rõ; nếu ngoài phạm vi CosmicWiki, thiên văn hoặc cửa hàng, " +
+            "lịch sự hướng người dùng về các chủ đề này.";
 
         return string.IsNullOrWhiteSpace(productContext)
             ? prompt

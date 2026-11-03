@@ -72,6 +72,12 @@ export class SupportChatWidgetComponent implements OnDestroy {
     });
   }
 
+  onComposerEnter(event: Event): void {
+    if (!(event instanceof KeyboardEvent) || event.isComposing || event.ctrlKey) return;
+    event.preventDefault();
+    this.send();
+  }
+
   selectMode(mode: 'ai' | 'support'): void {
     this.mode.set(mode);
     this.error.set('');

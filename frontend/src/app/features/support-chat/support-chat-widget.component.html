@@ -73,7 +73,8 @@
       <form class="support-chat-compose" (ngSubmit)="send()">
         <textarea [(ngModel)]="draft" name="supportMessage" maxlength="4000"
           [placeholder]="mode() === 'ai' ? 'Hỏi về vũ trụ…' : 'Nhập tin nhắn…'"
-          aria-label="Tin nhắn" required></textarea>
+          title="Enter để gửi · Ctrl+Enter để xuống dòng"
+          aria-label="Tin nhắn" required (keydown.enter)="onComposerEnter($event)"></textarea>
         <button type="submit" [disabled]="sending() || !draft.trim()">
           {{ sending() ? 'Đang gửi…' : 'Gửi' }}
         </button>

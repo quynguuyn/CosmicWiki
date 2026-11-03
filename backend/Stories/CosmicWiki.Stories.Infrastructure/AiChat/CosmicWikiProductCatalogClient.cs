@@ -23,7 +23,7 @@ public sealed class CosmicWikiProductCatalogClient(
                 .Where(product =>
                     product.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) &&
                     product.StockQuantity > 0)
-                .Take(30)
+                .Take(20)
                 .Select(product =>
                 {
                     var price = product.SalePrice > 0 && product.SalePrice < product.OriginalPrice
@@ -31,7 +31,7 @@ public sealed class CosmicWikiProductCatalogClient(
                         : product.OriginalPrice;
                     var description = string.IsNullOrWhiteSpace(product.Description)
                         ? string.Empty
-                        : $"; mô tả: {product.Description.Trim()[..Math.Min(product.Description.Trim().Length, 240)]}";
+                        : $"; mô tả: {product.Description.Trim()[..Math.Min(product.Description.Trim().Length, 160)]}";
                     return $"- {product.Name} (mã: {product.SKU}, giá: " +
                            $"{price.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} ₫, " +
                            $"còn hàng: {product.StockQuantity}, slug: {product.Slug}{description}";

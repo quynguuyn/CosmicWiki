@@ -23,6 +23,7 @@ export class SupportInboxComponent implements OnInit, OnDestroy {
   readonly acceptingChats = signal(true);
   readonly error = signal('');
   readonly loading = signal(false);
+  readonly sending = signal(false);
   draft = '';
 
   ngOnInit(): void {
@@ -66,7 +67,8 @@ export class SupportInboxComponent implements OnInit, OnDestroy {
   send(): void {
     const conversation = this.active();
     const body = this.draft.trim();
-    if (!conversation || !body) return;
+    if (!conversation || !body || this.sending()) return;
+    this.sending.set(true);
     this.http.post<SupportChatMessage>(
       `${API}/agent/conversations/${conversation.id}/messages`, { body }
     ).subscribe({
@@ -74,9 +76,19 @@ export class SupportInboxComponent implements OnInit, OnDestroy {
         this.draft = '';
         this.messages.update(items => [...items, message]);
         this.refreshQueue();
+        this.sending.set(false);
       },
-      error: () => this.error.set('Không thể gửi tin nhắn.')
+      error: () => {
+        this.error.set('Không thể gửi tin nhắn.');
+        this.sending.set(false);
+      }
     });
+  }
+
+  onComposerEnter(event: Event): void {
+    if (!(event instanceof KeyboardEvent) || event.isComposing || event.ctrlKey) return;
+    event.preventDefault();
+    this.send();
   }
 
   closeConversation(): void {
