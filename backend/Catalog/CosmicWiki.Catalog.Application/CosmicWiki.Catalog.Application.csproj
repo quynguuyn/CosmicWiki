@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging.Abstractions\CosmicWiki.Messaging.Abstractions.csproj" />
     <ProjectReference Include="..\CosmicWiki.Catalog.Domain\CosmicWiki.Catalog.Domain.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Pagination\CosmicWiki.Pagination.csproj" />
-    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Caching\CosmicWiki.Caching.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Caching.Abstractions\CosmicWiki.Caching.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

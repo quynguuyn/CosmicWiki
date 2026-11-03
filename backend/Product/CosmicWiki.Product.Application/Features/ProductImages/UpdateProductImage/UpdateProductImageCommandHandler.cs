@@ -55,12 +55,11 @@ public sealed class UpdateProductImageCommandHandler
             request.Url,
             request.DisplayOrder);
 
-        ProductIndexingEvents.AddUpdated(_outboxWriter, product);
-
-        await _unitOfWork.SaveChangesAsync(
-            cancellationToken);
-        await _productCache.InvalidateAsync(
-            product.Id,
+        await ProductUpdateWorkflow.SaveAndInvalidateAsync(
+            product,
+            _unitOfWork,
+            _outboxWriter,
+            _productCache,
             cancellationToken);
     }
 }

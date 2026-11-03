@@ -1,15 +1,5 @@
 namespace CosmicWiki.Caching;
 
-public interface ICategoryCache
-{
-    Task<string> GetListKeyAsync(
-        CancellationToken cancellationToken = default);
-
-    Task InvalidateAsync(
-        Guid categoryId,
-        CancellationToken cancellationToken = default);
-}
-
 internal sealed class CategoryCache(ICacheStore store) : ICategoryCache
 {
     private const string ListVersionKey = "category:list:version";

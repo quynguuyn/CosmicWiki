@@ -31,8 +31,7 @@ public sealed class Category : AggregateRoot<Guid>
         string slug,
         string? description = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
+        ValidateNameAndSlug(name, slug);
 
         return new Category(
             Guid.NewGuid(),
@@ -46,11 +45,16 @@ public sealed class Category : AggregateRoot<Guid>
         string slug,
         string? description = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
+        ValidateNameAndSlug(name, slug);
 
         Name = name.Trim();
         Slug = slug.Trim();
         Description = description?.Trim();
+    }
+
+    private static void ValidateNameAndSlug(string name, string slug)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(slug);
     }
 }

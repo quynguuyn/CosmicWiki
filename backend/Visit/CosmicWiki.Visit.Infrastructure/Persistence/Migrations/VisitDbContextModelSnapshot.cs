@@ -234,6 +234,7 @@ namespace CosmicWiki.Visit.Infrastructure.Persistence.Migrations
                         .HasColumnType("TIMESTAMP(7)");
 
                     b.Property<string>("Status")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("NVARCHAR2(32)");

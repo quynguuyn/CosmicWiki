@@ -1,7 +1,6 @@
 using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Domain.Entities;
 using CosmicWiki.Ordering.Domain.Enums;
-using CosmicWiki.Payments.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace CosmicWiki.Ordering.Infrastructure.Persistence.Repositories;
@@ -12,7 +11,6 @@ public sealed class OrderRepository(
     IOrderNotificationPublisher notificationPublisher) :
     IOrderRepository,
     IOrderPaymentStatusUpdater,
-    IOrderPaymentValidator,
     IOrderPaymentIntentValidator
 {
     public async Task<bool> IsPaymentIntentValidAsync(Guid orderId, string paymentIntentId, decimal amount, string currency, CancellationToken cancellationToken)
@@ -88,7 +86,17 @@ public sealed class OrderRepository(
     }
 
     public void Add(Order order) => dbContext.Orders.Add(order);
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw new OrderConcurrencyException(exception);
+        }
+    }
 
     public async Task<bool> MarkPaidAsync(Guid orderId, CancellationToken cancellationToken)
     {

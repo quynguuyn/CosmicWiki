@@ -1,5 +1,6 @@
 using CosmicWiki.Caching;
 using CosmicWiki.Product.Application.Abstractions.Persistence;
+using CosmicWiki.Product.Application.Features.Categories.Common;
 using MediatR;
 
 namespace CosmicWiki.Product.Application.Features.Categories.UpdateCategory;
@@ -36,42 +37,15 @@ public sealed class UpdateCategoryCommandHandler
                 $"Category '{request.Id}' was not found.");
         }
 
-        if (await _categoryRepository.ExistsByNameAsync(
-                request.Name,
-                cancellationToken))
-        {
-            if (!string.Equals(
-                    category.Name,
-                    request.Name,
-                    StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException(
-                    $"Category name '{request.Name}' already exists.");
-            }
-        }
-
-        if (await _categoryRepository.ExistsBySlugAsync(
-                request.Slug,
-                cancellationToken))
-        {
-            if (!string.Equals(
-                    category.Slug,
-                    request.Slug,
-                    StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException(
-                    $"Category slug '{request.Slug}' already exists.");
-            }
-        }
-
-        category.Update(
+        await CategoryUpdateWorkflow.ApplyAsync(
+            category,
             request.Name,
             request.Slug,
-            request.Description);
-
-        await _unitOfWork.SaveChangesAsync(
+            request.Description,
+            checkUnchangedValues: true,
+            _categoryRepository,
+            _unitOfWork,
+            _categoryCache,
             cancellationToken);
-
-        await _categoryCache.InvalidateAsync(request.Id, cancellationToken);
     }
 }

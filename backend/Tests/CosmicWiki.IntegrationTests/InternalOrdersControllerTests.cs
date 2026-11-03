@@ -1,6 +1,9 @@
 using CosmicWiki.Ordering.Api.Controllers;
 using CosmicWiki.Ordering.Api.Internal;
 using CosmicWiki.Ordering.Application.Abstractions;
+using CosmicWiki.Ordering.Application.Features.Orders;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -72,8 +75,14 @@ public sealed class InternalOrdersControllerTests
     private static InternalOrdersController CreateController(
         RecordingPaymentIntentValidator validator)
     {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMediatR(configuration =>
+            configuration.RegisterServicesFromAssembly(typeof(ValidatePaymentIntentQueryHandler).Assembly));
+        services.AddSingleton<IOrderPaymentIntentValidator>(validator);
+        var sender = services.BuildServiceProvider().GetRequiredService<ISender>();
         var controller = new InternalOrdersController(
-            validator,
+            sender,
             Options.Create(new InternalOrderingOptions
             {
                 ServiceKey = "local-key"

@@ -29,7 +29,7 @@ public sealed class GetAstronomicalResearchRunHandler(IAstronomicalResearchAdmin
         operations.GetAstronomicalResearchRunAsync(request.JobId, cancellationToken);
 }
 
-public sealed class GetHangfireOverviewHandler(IHangfireDashboardOperations operations)
+public sealed class GetHangfireOverviewHandler(IHangfireDashboardQueries operations)
     : IRequestHandler<GetHangfireOverviewQuery, HangfireOverviewResponse>
 {
     public Task<HangfireOverviewResponse> Handle(
@@ -38,7 +38,7 @@ public sealed class GetHangfireOverviewHandler(IHangfireDashboardOperations oper
         Task.FromResult(operations.GetHangfireOverview());
 }
 
-public sealed class GetHangfireJobDetailsHandler(IHangfireDashboardOperations operations)
+public sealed class GetHangfireJobDetailsHandler(IHangfireDashboardQueries operations)
     : IRequestHandler<GetHangfireJobDetailsQuery, HangfireJobDetailsResponse?>
 {
     public Task<HangfireJobDetailsResponse?> Handle(
@@ -47,7 +47,7 @@ public sealed class GetHangfireJobDetailsHandler(IHangfireDashboardOperations op
         Task.FromResult(operations.GetHangfireJobDetails(request.JobId));
 }
 
-public sealed class GetHangfireJobsHandler(IHangfireDashboardOperations operations)
+public sealed class GetHangfireJobsHandler(IHangfireDashboardQueries operations)
     : IRequestHandler<GetHangfireJobsQuery, HangfireJobsPage?>
 {
     public Task<HangfireJobsPage?> Handle(
@@ -62,7 +62,7 @@ public sealed class GetHangfireJobsHandler(IHangfireDashboardOperations operatio
             request.Queue));
 }
 
-public sealed class GetHangfireRetriesHandler(IHangfireDashboardOperations operations)
+public sealed class GetHangfireRetriesHandler(IHangfireDashboardQueries operations)
     : IRequestHandler<GetHangfireRetriesQuery, HangfireRetriesPage>
 {
     public Task<HangfireRetriesPage> Handle(
@@ -71,7 +71,7 @@ public sealed class GetHangfireRetriesHandler(IHangfireDashboardOperations opera
         Task.FromResult(operations.GetHangfireRetries(request.Page, request.PageSize));
 }
 
-public sealed class GetHangfireRecurringJobsHandler(IHangfireDashboardOperations operations)
+public sealed class GetHangfireRecurringJobsHandler(IHangfireDashboardQueries operations)
     : IRequestHandler<GetHangfireRecurringJobsQuery, HangfireRecurringJobsPage>
 {
     public Task<HangfireRecurringJobsPage> Handle(
@@ -80,7 +80,7 @@ public sealed class GetHangfireRecurringJobsHandler(IHangfireDashboardOperations
         Task.FromResult(operations.GetRecurringJobs(request.Page, request.PageSize));
 }
 
-public sealed class TriggerHangfireRecurringJobHandler(IHangfireDashboardOperations operations)
+public sealed class TriggerHangfireRecurringJobHandler(IHangfireDashboardCommands operations)
     : IRequestHandler<TriggerHangfireRecurringJobCommand, Unit>
 {
     public Task<Unit> Handle(
@@ -92,7 +92,7 @@ public sealed class TriggerHangfireRecurringJobHandler(IHangfireDashboardOperati
     }
 }
 
-public sealed class DeleteHangfireRecurringJobHandler(IHangfireDashboardOperations operations)
+public sealed class DeleteHangfireRecurringJobHandler(IHangfireDashboardCommands operations)
     : IRequestHandler<DeleteHangfireRecurringJobCommand, bool>
 {
     public Task<bool> Handle(
@@ -101,7 +101,7 @@ public sealed class DeleteHangfireRecurringJobHandler(IHangfireDashboardOperatio
         Task.FromResult(operations.DeleteRecurringJob(request.JobId));
 }
 
-public sealed class RequeueHangfireJobHandler(IHangfireDashboardOperations operations)
+public sealed class RequeueHangfireJobHandler(IHangfireDashboardCommands operations)
     : IRequestHandler<RequeueHangfireJobCommand, bool>
 {
     public Task<bool> Handle(
@@ -110,7 +110,7 @@ public sealed class RequeueHangfireJobHandler(IHangfireDashboardOperations opera
         Task.FromResult(operations.RequeueJob(request.JobId));
 }
 
-public sealed class DeleteHangfireJobHandler(IHangfireDashboardOperations operations)
+public sealed class DeleteHangfireJobHandler(IHangfireDashboardCommands operations)
     : IRequestHandler<DeleteHangfireJobCommand, bool>
 {
     public Task<bool> Handle(

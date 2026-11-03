@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, deliveryGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, deliveryGuard, supportChatGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -42,6 +42,11 @@ export const routes: Routes = [
     path: 'delivery',
     canActivate: [deliveryGuard],
     loadComponent: () => import('./pages/delivery/delivery.component').then(m => m.DeliveryComponent)
+  },
+  {
+    path: 'support',
+    canActivate: [supportChatGuard],
+    loadComponent: () => import('./pages/support/support-inbox.component').then(m => m.SupportInboxComponent)
   },
   {
     path: 'admin/inventory',

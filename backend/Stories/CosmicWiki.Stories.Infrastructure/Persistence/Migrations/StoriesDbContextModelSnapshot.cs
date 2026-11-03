@@ -117,6 +117,153 @@ namespace CosmicWiki.Stories.Infrastructure.Persistence.Migrations
 
                     b.ToTable("STORIES", "COSMICWIKI_STORIES");
                 });
+
+            modelBuilder.Entity("CosmicWiki.Stories.Domain.Entities.SupportAgentPresence", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("USER_ID");
+
+                    b.Property<bool>("AcceptingChats")
+                        .HasColumnType("BOOLEAN")
+                        .HasColumnName("ACCEPTING_CHATS");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)")
+                        .HasColumnName("DISPLAY_NAME");
+
+                    b.Property<DateTime?>("LastAssignedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("LAST_ASSIGNED_AT_UTC");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("LAST_SEEN_AT_UTC");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("SUPPORT_AGENT_PRESENCE", "COSMICWIKI_STORIES");
+                });
+
+            modelBuilder.Entity("CosmicWiki.Stories.Domain.Entities.SupportConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("AssignedSupportDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)")
+                        .HasColumnName("ASSIGNED_SUPPORT_DISPLAY_NAME");
+
+                    b.Property<Guid?>("AssignedSupportId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ASSIGNED_SUPPORT_ID");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<string>("CustomerDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)")
+                        .HasColumnName("CUSTOMER_DISPLAY_NAME");
+
+                    b.Property<Guid?>("CustomerUserId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("CUSTOMER_USER_ID");
+
+                    b.Property<string>("GuestTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("NVARCHAR2(64)")
+                        .HasColumnName("GUEST_TOKEN_HASH");
+
+                    b.Property<DateTime?>("LastMessageAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("LAST_MESSAGE_AT_UTC");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATED_AT_UTC");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuestTokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("AssignedSupportId", "Status");
+
+                    b.HasIndex("CustomerUserId", "Status");
+
+                    b.HasIndex("Status", "CreatedAtUtc");
+
+                    b.ToTable("SUPPORT_CONVERSATIONS", "COSMICWIKI_STORIES");
+                });
+
+            modelBuilder.Entity("CosmicWiki.Stories.Domain.Entities.SupportMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("NCLOB")
+                        .HasColumnName("BODY");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("CONVERSATION_ID");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<string>("SenderDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)")
+                        .HasColumnName("SENDER_DISPLAY_NAME");
+
+                    b.Property<string>("SenderType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("SENDER_TYPE");
+
+                    b.Property<Guid?>("SenderUserId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("SENDER_USER_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc");
+
+                    b.ToTable("SUPPORT_MESSAGES", "COSMICWIKI_STORIES");
+                });
+
+            modelBuilder.Entity("CosmicWiki.Stories.Domain.Entities.SupportMessage", b =>
+                {
+                    b.HasOne("CosmicWiki.Stories.Domain.Entities.SupportConversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+                });
+
+            modelBuilder.Entity("CosmicWiki.Stories.Domain.Entities.SupportConversation", b =>
+                {
+                    b.Navigation("Messages");
+                });
 #pragma warning restore 612, 618
         }
     }

@@ -1,4 +1,4 @@
-namespace CosmicWiki.Payments.Application.Abstractions;
+namespace CosmicWiki.Ordering.Application.Abstractions;
 
 public interface IOrderPaymentStatusUpdater
 {

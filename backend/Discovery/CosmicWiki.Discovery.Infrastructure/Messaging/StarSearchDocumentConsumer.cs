@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Confluent.Kafka;
 using CosmicWiki.Discovery.Domain.Entities;
+using CosmicWiki.Discovery.Infrastructure.Persistence;
 using CosmicWiki.Messaging;
 using CosmicWiki.Messaging.Abstractions;
 using CosmicWiki.Messaging.Contracts.Catalog;
 using CosmicWiki.Messaging.Kafka;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -46,21 +46,16 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                // Retry consume until topic exists
-                var result = await ConsumeWithRetryAsync(consumer, stoppingToken);
-                try
-                {
-                    await RetryAsync(() => HandleAsync(result, stoppingToken), stoppingToken);
-                    consumer.Commit(result);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "Moving failed Kafka message from {Topic} to its DLQ.", result.Topic);
-                    var eventId = Guid.TryParse(result.Message.Key, out var parsed) ? parsed : Guid.NewGuid();
-                    await _eventBus.PublishRawAsync(eventId, result.Message.Value, $"{result.Topic}.dlq",
-                        stoppingToken, result.Message.Key);
-                    consumer.Commit(result);
-                }
+                var result = await KafkaConsumerProcessing.ConsumeWithRetryAsync(
+                    consumer,
+                    stoppingToken);
+                await KafkaConsumerProcessing.ProcessWithRetryAndDeadLetterAsync(
+                    consumer,
+                    result,
+                    () => HandleAsync(result, stoppingToken),
+                    _eventBus,
+                    _logger,
+                    stoppingToken);
             }
 
         }
@@ -129,66 +124,16 @@ public sealed class StarSearchDocumentConsumer : BackgroundService
 
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Persistence.DiscoveryDbContext>();
-        var document = await db.SearchDocuments.SingleOrDefaultAsync(
-            x => x.SourceType == sourceType && x.SourceId == sourceId, cancellationToken);
-
-        if (document is null)
-        {
-            db.SearchDocuments.Add(SearchDocument.Create(
-                sourceId,
-                sourceType,
-                name,
-                description,
-                imageUrl,
-                occurredAtUtc,
-                catalog,
-                catalogValue));
-        }
-        else
-        {
-            document.Update(
-                name,
-                description,
-                imageUrl,
-                occurredAtUtc,
-                catalog,
-                catalogValue);
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
-    }
-
-    private static async Task RetryAsync(Func<Task> action, CancellationToken cancellationToken)
-    {
-        for (var attempt = 1; ; attempt++)
-        {
-            try { await action(); return; }
-            catch when (attempt < 3)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)), cancellationToken);
-            }
-        }
-    }
-
-    private static async Task<ConsumeResult<string, string>> ConsumeWithRetryAsync(IConsumer<string, string> consumer, CancellationToken stoppingToken)
-    {
-        const int maxRetries = 30;
-        const int retryDelaySeconds = 2;
-
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
-        {
-            try
-            {
-                return consumer.Consume(stoppingToken);
-            }
-            catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
-            {
-                if (attempt == maxRetries)
-                    throw;
-
-                await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), stoppingToken);
-            }
-        }
-        throw new InvalidOperationException("Failed to consume after max retries");
+        await SearchDocumentUpsert.ExecuteAsync(
+            db,
+            sourceId,
+            sourceType,
+            name,
+            description,
+            imageUrl,
+            occurredAtUtc,
+            catalog,
+            catalogValue,
+            cancellationToken);
     }
 }

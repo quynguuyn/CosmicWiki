@@ -58,12 +58,11 @@ public sealed class PatchProductImageCommandHandler
             url,
             displayOrder);
 
-        ProductIndexingEvents.AddUpdated(_outboxWriter, product);
-
-        await _unitOfWork.SaveChangesAsync(
-            cancellationToken);
-        await _productCache.InvalidateAsync(
-            product.Id,
+        await ProductUpdateWorkflow.SaveAndInvalidateAsync(
+            product,
+            _unitOfWork,
+            _outboxWriter,
+            _productCache,
             cancellationToken);
     }
 }

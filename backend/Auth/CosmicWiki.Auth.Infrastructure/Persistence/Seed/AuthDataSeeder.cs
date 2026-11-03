@@ -147,7 +147,8 @@ public static class AuthDataSeeder
 
             (Permissions.OrderingWrite, "Create Orders"),
             (Permissions.ShippingWrite, "Update shipping statuses"),
-            (Permissions.DeliveryWrite, "Manage assigned deliveries")
+            (Permissions.DeliveryWrite, "Manage assigned deliveries"),
+            (Permissions.SupportChatManage, "Manage customer support conversations")
         };
 
         foreach (var (code, name) in permissions)
@@ -175,6 +176,7 @@ public static class AuthDataSeeder
         {
             ("Admin", "System administrator"),
             ("Delivery", "Delivery personnel"),
+            ("Support", "Customer support personnel"),
             ("User", "Standard user")
         };
 
@@ -210,6 +212,8 @@ public static class AuthDataSeeder
                 cancellationToken);
         var delivery = await dbContext.Roles
             .SingleAsync(x => x.Name == "Delivery", cancellationToken);
+        var support = await dbContext.Roles
+            .SingleAsync(x => x.Name == "Support", cancellationToken);
 
         var permissions = await dbContext.Permissions
             .ToDictionaryAsync(
@@ -243,6 +247,15 @@ public static class AuthDataSeeder
         {
             dbContext.RolePermissions.Add(
                 RolePermission.Create(delivery.Id, deliveryPermission.Id));
+        }
+
+        var supportPermission = permissions[Permissions.SupportChatManage];
+        if (!await dbContext.RolePermissions.AnyAsync(
+                x => x.RoleId == support.Id && x.PermissionId == supportPermission.Id,
+                cancellationToken))
+        {
+            dbContext.RolePermissions.Add(
+                RolePermission.Create(support.Id, supportPermission.Id));
         }
 
         var userPermissionCodes = new[]

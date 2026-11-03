@@ -1,16 +1,13 @@
 using CosmicWiki.Ordering.Application.Features.CreateOrder;
 using CosmicWiki.Ordering.Application.Events;
 using CosmicWiki.Ordering.Application.Abstractions;
+using CosmicWiki.Ordering.Application.Features.Orders;
 using CosmicWiki.Ordering.Domain.Enums;
-using CosmicWiki.Ordering.Infrastructure.Notifications;
-using CosmicWiki.Ordering.Infrastructure.Processing;
 using CosmicWiki.SharedKernel.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace CosmicWiki.Ordering.Api.Controllers;
 
@@ -18,11 +15,7 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 [Route("api/orders")]
 [Authorize(Policy = Permissions.OrderingWrite)]
 public sealed class OrdersController(
-    ISender sender,
-    IOrderRepository orders,
-    IInventoryReservationService inventory,
-    IOrderNotificationPublisher notificationPublisher,
-    IOptions<OrderLifecycleOptions> lifecycleOptions) : ControllerBase
+    ISender sender) : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<CreateOrderResult>> Create(
@@ -60,9 +53,10 @@ public sealed class OrdersController(
         Guid orderId,
         CancellationToken cancellationToken)
     {
-        var order = await orders.GetAsync(orderId, cancellationToken);
-        if (order is null)
+        var result = await sender.Send(new GetOrderQuery(orderId), cancellationToken);
+        if (result is null)
             return NotFound();
+        var order = result.Order;
 
         var subject = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
         if (!Guid.TryParse(subject, out var authenticatedCustomerId) ||
@@ -88,7 +82,7 @@ public sealed class OrdersController(
                 .OrderBy(x => x.ChangedAtUtc)
                 .ThenBy(x => x.Id)
                 .Select(x => new { status = x.Status.ToString(), x.ChangedAtUtc }),
-            paymentExpiresAtUtc = order.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
+            paymentExpiresAtUtc = result.PaymentExpiresAtUtc
         });
     }
 
@@ -99,29 +93,35 @@ public sealed class OrdersController(
         if (!Guid.TryParse(subject, out var authenticatedCustomerId))
             return Forbid();
 
-        var customerOrders = await orders.GetByCustomerIdAsync(authenticatedCustomerId, cancellationToken);
+        var customerOrders = await sender.Send(
+            new GetCustomerOrdersQuery(authenticatedCustomerId),
+            cancellationToken);
 
-        return Ok(customerOrders.Select(o => new
+        return Ok(customerOrders.Select(result =>
         {
-            orderId = o.Id,
-            status = o.Status.ToString(),
-            o.PaymentIntentId,
-            o.ClientSecret,
-            o.TotalAmount,
-            o.Currency,
-            o.PaidAtUtc,
-            o.CreatedAtUtc,
-            o.DeliveryPersonName,
-            o.DeliveryAddress,
-            o.DeliveryLatitude,
-            o.DeliveryLongitude,
-            o.DeliveryLocationUpdatedAtUtc,
-            lines = o.Lines.Select(ToLineResponse),
-            statusHistory = o.StatusHistory
+            var o = result.Order;
+            return new
+            {
+                orderId = o.Id,
+                status = o.Status.ToString(),
+                o.PaymentIntentId,
+                o.ClientSecret,
+                o.TotalAmount,
+                o.Currency,
+                o.PaidAtUtc,
+                o.CreatedAtUtc,
+                o.DeliveryPersonName,
+                o.DeliveryAddress,
+                o.DeliveryLatitude,
+                o.DeliveryLongitude,
+                o.DeliveryLocationUpdatedAtUtc,
+                lines = o.Lines.Select(ToLineResponse),
+                statusHistory = o.StatusHistory
                 .OrderBy(x => x.ChangedAtUtc)
                 .ThenBy(x => x.Id)
                 .Select(x => new { status = x.Status.ToString(), x.ChangedAtUtc }),
-            paymentExpiresAtUtc = o.CreatedAtUtc.AddMinutes(lifecycleOptions.Value.PendingPaymentTimeoutMinutes)
+                paymentExpiresAtUtc = result.PaymentExpiresAtUtc
+            };
         }));
     }
 
@@ -136,20 +136,11 @@ public sealed class OrdersController(
         lineTotal = line.LineTotal
     };
 
-    private static IReadOnlyCollection<OrderCreatedLine> ToEmailLines(Domain.Entities.Order order) =>
-        order.Lines.Select(line => new OrderCreatedLine(
-            line.SKU,
-            line.ProductName,
-            line.UnitPrice,
-            line.Quantity,
-            line.LineTotal)).ToArray();
-
     [HttpPatch("{orderId:guid}/status")]
     [Authorize(Policy = Permissions.ShippingWrite)]
     public async Task<IActionResult> UpdateStatus(
         Guid orderId,
         [FromBody] UpdateOrderStatusRequest? request,
-        [FromServices] IOrderEmailSender emailSender,
         CancellationToken cancellationToken)
     {
         if (request is null || !Enum.TryParse<OrderStatus>(request.Status, true, out var nextStatus))
@@ -157,38 +148,20 @@ public sealed class OrdersController(
         if (nextStatus == OrderStatus.Shipping)
             return Conflict(new { message = "A delivery person must claim the order from the delivery dashboard." });
 
-        var order = await orders.GetAsync(orderId, cancellationToken);
-        if (order is null)
-            return NotFound();
-
         try
         {
-            if (!order.TransitionTo(nextStatus))
-            {
-                if (nextStatus == OrderStatus.Cancelled)
-                    await inventory.ReleaseAsync(order.Id, cancellationToken);
-                return Ok(new { orderId = order.Id, status = order.Status.ToString() });
-            }
-
-            await orders.SaveChangesAsync(cancellationToken);
-            await notificationPublisher.PublishStatusChangedAsync(order, cancellationToken);
-            if (nextStatus == OrderStatus.Cancelled)
-                await inventory.ReleaseAsync(order.Id, cancellationToken);
-            await emailSender.SendOrderStatusChangedAsync(
-                order.Id,
-                order.CustomerEmail,
-                order.TotalAmount,
-                order.Currency,
-                order.Status.ToString(),
-                ToEmailLines(order),
+            var order = await sender.Send(
+                new UpdateOrderStatusCommand(orderId, nextStatus),
                 cancellationToken);
+            if (order is null)
+                return NotFound();
             return Ok(new { orderId = order.Id, status = order.Status.ToString() });
         }
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
         }
-        catch (DbUpdateConcurrencyException)
+        catch (OrderConcurrencyException)
         {
             return Conflict(new { message = "The order status changed. Refresh and try again." });
         }

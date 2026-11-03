@@ -7,14 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Caching\CosmicWiki.Caching.csproj" />
-      <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
+      <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Caching.Abstractions\CosmicWiki.Caching.Abstractions.csproj" />
+      <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging.Abstractions\CosmicWiki.Messaging.Abstractions.csproj" />
       <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Pagination\CosmicWiki.Pagination.csproj" />
       <ProjectReference Include="..\CosmicWiki.Product.Domain\CosmicWiki.Product.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="MediatR" Version="14.2.0" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
     </ItemGroup>
 
 </Project>

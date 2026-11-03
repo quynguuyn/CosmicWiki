@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Pagination\CosmicWiki.Pagination.csproj" />
     <ProjectReference Include="..\..\Product\CosmicWiki.Product.Application\CosmicWiki.Product.Application.csproj" />
     <ProjectReference Include="..\..\Product\CosmicWiki.Product.Domain\CosmicWiki.Product.Domain.csproj" />
+    <ProjectReference Include="..\..\Catalog\CosmicWiki.Catalog.Infrastructure\CosmicWiki.Catalog.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

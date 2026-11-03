@@ -1,28 +1,8 @@
 using System.Net.Http.Json;
+using CosmicWiki.Stories.Application.Features.NasaApod;
 using Microsoft.Extensions.Options;
 
 namespace CosmicWiki.Stories.Infrastructure.Research;
-
-public interface INasaApodProvider
-{
-    Task<NasaApodSourceStatus> GetStatusAsync(
-        CancellationToken cancellationToken = default);
-
-    Task<NasaApodEntry> GetTodayAsync(
-        CancellationToken cancellationToken = default);
-}
-
-public sealed record NasaApodSourceStatus(
-    bool IsReachable,
-    string? Message,
-    DateTime CheckedAtUtc);
-
-public sealed record NasaApodEntry(
-    DateOnly Date,
-    string Title,
-    string Explanation,
-    string? ImageUrl,
-    string? Copyright);
 
 public sealed class NasaApodProvider(
     HttpClient httpClient,

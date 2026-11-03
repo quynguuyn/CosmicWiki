@@ -9,7 +9,6 @@ using CosmicWiki.Ordering.Infrastructure.Persistence;
 using CosmicWiki.Ordering.Infrastructure.Persistence.Outbox;
 using CosmicWiki.Ordering.Infrastructure.Persistence.Repositories;
 using CosmicWiki.Ordering.Infrastructure.Processing;
-using CosmicWiki.Payments.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,11 +31,25 @@ public static class DependencyInjection
         services.AddScoped<OrderRepository>();
         services.AddScoped<IOrderRepository>(sp => sp.GetRequiredService<OrderRepository>());
         services.AddScoped<IOrderPaymentStatusUpdater>(sp => sp.GetRequiredService<OrderRepository>());
-        services.AddScoped<IOrderPaymentValidator>(sp => sp.GetRequiredService<OrderRepository>());
         services.AddScoped<IOrderPaymentIntentValidator>(sp => sp.GetRequiredService<OrderRepository>());
-        services.AddScoped<IProductSnapshotProvider, ProductSnapshotProvider>();
-        services.AddScoped<IInventoryReservationService, ProductInventoryReservationService>();
+        services.Configure<ProductServiceOptions>(
+            configuration.GetSection(ProductServiceOptions.SectionName));
+        services.AddHttpClient<ProductServiceClient>((serviceProvider, client) =>
+        {
+            var options = serviceProvider
+                .GetRequiredService<IOptions<ProductServiceOptions>>()
+                .Value;
+            if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri))
+                throw new InvalidOperationException("ProductService:BaseUrl must be an absolute URL.");
+            client.BaseAddress = new Uri(baseUri, "internal/product/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+        services.AddScoped<IProductSnapshotProvider>(sp =>
+            sp.GetRequiredService<ProductServiceClient>());
+        services.AddScoped<IInventoryReservationService>(sp =>
+            sp.GetRequiredService<ProductServiceClient>());
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<IOrderNotificationRepository, OrderNotificationRepository>();
         services.AddHostedService<InventoryReservationReaper>();
         services.Configure<PaymentProviderOptions>(
             configuration.GetSection(PaymentProviderOptions.SectionName));
@@ -69,6 +82,8 @@ public static class DependencyInjection
         services.AddHostedService<OrderCreatedNotificationConsumer>();
         services.Configure<OrderLifecycleOptions>(
             configuration.GetSection(OrderLifecycleOptions.SectionName));
+        services.AddSingleton<IOrderLifecycleSettings>(sp =>
+            sp.GetRequiredService<IOptions<OrderLifecycleOptions>>().Value);
         services.AddHostedService<OrderLifecycleProcessor>();
         services.Configure<OrderEmailOptions>(
             configuration.GetSection(OrderEmailOptions.SectionName));

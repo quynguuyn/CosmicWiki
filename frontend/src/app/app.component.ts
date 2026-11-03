@@ -5,11 +5,12 @@ import { filter } from 'rxjs';
 import { signal, inject } from '@angular/core';
 import { HeaderComponent } from './layout/header/header.component';
 import { FooterComponent } from './layout/footer/footer.component';
+import { SupportChatWidgetComponent } from './features/support-chat/support-chat-widget.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent, SupportChatWidgetComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

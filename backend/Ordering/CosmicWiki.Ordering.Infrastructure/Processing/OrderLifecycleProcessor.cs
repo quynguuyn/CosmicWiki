@@ -1,5 +1,4 @@
 using CosmicWiki.Ordering.Domain.Enums;
-using CosmicWiki.Ordering.Infrastructure.Notifications;
 using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +63,7 @@ public sealed class OrderLifecycleProcessor(
         {
             await orders.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (OrderConcurrencyException)
         {
             logger.LogInformation(
                 "Skipped expiration for order {OrderId} because its status changed concurrently.",

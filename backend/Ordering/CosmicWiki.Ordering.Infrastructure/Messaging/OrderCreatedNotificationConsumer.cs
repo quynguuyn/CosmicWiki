@@ -2,7 +2,7 @@ using System.Text.Json;
 using Confluent.Kafka;
 using CosmicWiki.Messaging.Kafka;
 using CosmicWiki.Ordering.Application.Events;
-using CosmicWiki.Ordering.Infrastructure.Notifications;
+using CosmicWiki.Ordering.Application.Abstractions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

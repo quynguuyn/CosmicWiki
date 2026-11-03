@@ -1,11 +1,10 @@
-using CosmicWiki.Ordering.Application.Abstractions;
 using CosmicWiki.Ordering.Domain.Enums;
-using CosmicWiki.Ordering.Application.Events;
-using CosmicWiki.Ordering.Infrastructure.Notifications;
+using CosmicWiki.Ordering.Application.Abstractions;
+using CosmicWiki.Ordering.Application.Features.Orders;
 using CosmicWiki.SharedKernel.Authorization;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CosmicWiki.Ordering.Api.Controllers;
 
@@ -13,16 +12,13 @@ namespace CosmicWiki.Ordering.Api.Controllers;
 [Route("api/admin/orders")]
 [Authorize(Policy = Permissions.ShippingWrite)]
 public sealed class AdminOrdersController(
-    IOrderRepository orders,
-    IInventoryReservationService inventory,
-    IOrderEmailSender emailSender,
-    IOrderNotificationPublisher notificationPublisher) : ControllerBase
+    ISender sender) : ControllerBase
 {
     [HttpGet("today")]
     public async Task<IActionResult> GetToday(CancellationToken cancellationToken)
     {
         var startOfDayUtc = DateTime.UtcNow.Date;
-        var today = await orders.GetCreatedSinceAsync(startOfDayUtc, cancellationToken);
+        var today = await sender.Send(new GetTodayOrdersQuery(startOfDayUtc), cancellationToken);
         return Ok(today.Select(ToResponse));
     }
 
@@ -43,20 +39,17 @@ public sealed class AdminOrdersController(
             ? null
             : Enum.Parse<OrderStatus>(status, true);
         var startOfDayUtc = DateTime.UtcNow.Date;
-        var (ordersPage, totalCount) = await orders.GetCreatedSincePageAsync(
-            startOfDayUtc,
-            parsedStatus,
-            (page - 1) * pageSize,
-            pageSize,
+        var result = await sender.Send(
+            new GetTodayOrdersPageQuery(startOfDayUtc, parsedStatus, (page - 1) * pageSize, pageSize),
             cancellationToken);
-        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var totalPages = (int)Math.Ceiling(result.TotalCount / (double)pageSize);
 
         return Ok(new
         {
-            items = ordersPage.Select(ToResponse),
+            items = result.Items.Select(ToResponse),
             page,
             pageSize,
-            totalCount,
+            totalCount = result.TotalCount,
             totalPages,
             hasPreviousPage = page > 1,
             hasNextPage = page < totalPages
@@ -74,33 +67,20 @@ public sealed class AdminOrdersController(
         if (nextStatus == OrderStatus.Shipping)
             return Conflict(new { message = "A delivery person must claim the order from the delivery dashboard." });
 
-        var order = await orders.GetAsync(orderId, cancellationToken);
-        if (order is null)
-            return NotFound();
-
         try
         {
-            if (!order.TransitionTo(nextStatus))
-            {
-                if (nextStatus == OrderStatus.Cancelled)
-                    await inventory.ReleaseAsync(order.Id, cancellationToken);
-                return Ok(ToResponse(order));
-            }
-
-            await orders.SaveChangesAsync(cancellationToken);
-            await notificationPublisher.PublishStatusChangedAsync(order, cancellationToken);
-            if (nextStatus == OrderStatus.Cancelled)
-                await inventory.ReleaseAsync(order.Id, cancellationToken);
-            await emailSender.SendOrderStatusChangedAsync(
-                order.Id, order.CustomerEmail, order.TotalAmount, order.Currency,
-                order.Status.ToString(), ToEmailLines(order), cancellationToken);
+            var order = await sender.Send(
+                new UpdateOrderStatusCommand(orderId, nextStatus),
+                cancellationToken);
+            if (order is null)
+                return NotFound();
             return Ok(ToResponse(order));
         }
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
         }
-        catch (DbUpdateConcurrencyException)
+        catch (OrderConcurrencyException)
         {
             return Conflict(new { message = "The order status changed. Refresh and try again." });
         }
@@ -129,12 +109,4 @@ public sealed class AdminOrdersController(
             lineTotal = line.LineTotal
         })
     };
-
-    private static IReadOnlyCollection<OrderCreatedLine> ToEmailLines(Domain.Entities.Order order) =>
-        order.Lines.Select(line => new OrderCreatedLine(
-            line.SKU,
-            line.ProductName,
-            line.UnitPrice,
-            line.Quantity,
-            line.LineTotal)).ToArray();
 }

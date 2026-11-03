@@ -40,11 +40,7 @@ public sealed class ProductImage : Entity<Guid>
                 "Product ID cannot be empty.",
                 nameof(productId));
 
-        ArgumentException.ThrowIfNullOrWhiteSpace(url);
-
-        if (displayOrder < 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(displayOrder));
+        ValidateUrlAndDisplayOrder(url, displayOrder);
 
         return new ProductImage(
             Guid.NewGuid(),
@@ -57,14 +53,21 @@ public sealed class ProductImage : Entity<Guid>
         string url,
         int displayOrder)
     {
+        ValidateUrlAndDisplayOrder(url, displayOrder);
+
+        Url = url.Trim();
+        Urls = new[] { Url };
+        DisplayOrder = displayOrder;
+    }
+
+    private static void ValidateUrlAndDisplayOrder(
+        string url,
+        int displayOrder)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
 
         if (displayOrder < 0)
             throw new ArgumentOutOfRangeException(
                 nameof(displayOrder));
-
-        Url = url.Trim();
-        Urls = new[] { Url };
-        DisplayOrder = displayOrder;
     }
 }

@@ -130,6 +130,16 @@ html {
   scroll-behavior: smooth;
 }
 
+app-header .header-inner {
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  app-header .header-inner {
+    padding: 1rem var(--gutter-mobile);
+  }
+}
+
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;

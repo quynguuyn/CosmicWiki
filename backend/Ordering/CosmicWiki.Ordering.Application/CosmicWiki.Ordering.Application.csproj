@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging\CosmicWiki.Messaging.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\CosmicWiki.Messaging.Abstractions\CosmicWiki.Messaging.Abstractions.csproj" />
     <ProjectReference Include="..\CosmicWiki.Ordering.Domain\CosmicWiki.Ordering.Domain.csproj" />
     <PackageReference Include="MediatR" Version="14.2.0" />
   </ItemGroup>
