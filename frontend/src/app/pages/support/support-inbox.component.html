@@ -63,8 +63,11 @@
         </div>
         <form class="support-compose" (ngSubmit)="send()">
           <textarea [(ngModel)]="draft" name="supportReply" maxlength="4000"
-            placeholder="Trả lời khách hàng…" required></textarea>
-          <button type="submit" [disabled]="!draft.trim()">Gửi</button>
+            placeholder="Trả lời khách hàng…" title="Enter để gửi · Ctrl+Enter để xuống dòng"
+            (keydown.enter)="onComposerEnter($event)" required></textarea>
+          <button type="submit" [disabled]="sending() || !draft.trim()">
+            {{ sending() ? 'Đang gửi…' : 'Gửi' }}
+          </button>
         </form>
       } @else {
         <div class="support-empty">

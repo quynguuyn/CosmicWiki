@@ -29,10 +29,6 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-
-  @media (max-width: 768px) {
-    padding: 1rem var(--gutter-mobile);
-  }
 }
 
 /* Brand */
